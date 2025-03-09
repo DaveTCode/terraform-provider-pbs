@@ -7,12 +7,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var (
@@ -199,25 +201,30 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"resources_assigned": schema.StringAttribute{
+			"resources_assigned": schema.MapAttribute{
 				Description: "The total for each kind of resource allocated to running and exiting jobs in this queue.",
 				Optional:    true,
+				ElementType: types.StringType,
 			},
-			"resources_available": schema.StringAttribute{
+			"resources_available": schema.MapAttribute{
 				Description: "The list of resources and amounts available to jobs running in this queue. The sum of the resource of each type used by all jobs running from this queue cannot exceed the total amount listed here. ",
 				Optional:    true,
+				ElementType: types.StringType,
 			},
-			"resources_default": schema.StringAttribute{
+			"resources_default": schema.MapAttribute{
 				MarkdownDescription: " The list of default resource values which are set as limits for a job residing in this queue and for which the job did not specify a limit.  If not set, the default limit for a job is determined by the first of the following attributes which is set: server's `resources_default`, queue's `resources_max`, server's `resources_max`. If none of these is set, the job gets unlimited resource usage.",
 				Optional:            true,
+				ElementType:         types.StringType,
 			},
-			"resources_max": schema.StringAttribute{
+			"resources_max": schema.MapAttribute{
 				Description: "The maximum amount of each resource that can be requested by a single job in this queue. This queue value supersedes any server wide maximum limit. ",
 				Optional:    true,
+				ElementType: types.StringType,
 			},
-			"resources_min": schema.StringAttribute{
+			"resources_min": schema.MapAttribute{
 				Description: "The minimum amount of each resource that can be requested by a single job in this queue. ",
 				Optional:    true,
+				ElementType: types.StringType,
 			},
 			"route_destinations": schema.StringAttribute{
 				Description: "The list of destinations to which jobs may be routed. Must be set to at least one valid destination.",
@@ -275,13 +282,19 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	queue, err := r.client.CreateQueue(queueModel.ToPbsQueue())
+	pbsQueueObj, diags := queueModel.ToPbsQueue(ctx)
+	resp.Diagnostics.Append(diags...)
+	queue, err := r.client.CreateQueue(pbsQueueObj)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating queue", "Could not create queue, unexpected error: "+err.Error())
 		return
 	}
 
-	queueModel = createQueueModel(queue)
+	queueModel, diags = createQueueModel(queue)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	diags = resp.State.Set(ctx, queueModel)
 	resp.Diagnostics.Append(diags...)
@@ -311,7 +324,9 @@ func (r *queueResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	queue = createQueueModel(q)
+	var diags diag.Diagnostics
+	queue, diags = createQueueModel(q)
+	resp.Diagnostics.Append(diags...)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &queue)...)
 }
@@ -321,7 +336,9 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	_, err := r.client.UpdateQueue(data.ToPbsQueue())
+	queue, diags := data.ToPbsQueue(ctx)
+	resp.Diagnostics.Append(diags...)
+	_, err := r.client.UpdateQueue(queue)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Update Resource",

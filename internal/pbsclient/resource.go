@@ -2,7 +2,6 @@ package pbsclient
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 )
 
@@ -12,41 +11,29 @@ type PbsResource struct {
 	Flag *string
 }
 
-var (
-	resourceNameRegex      = regexp.MustCompile(`Resource\s+(\w+)`)
-	resourceAttributeRegex = regexp.MustCompile(`(\w+)\s+=\s+(.+)`)
-)
-
 func parseResourceOutput(output []byte) ([]PbsResource, error) {
-	var currentResource PbsResource
+	parsedOutput := parseGenericQmgrOutput(string(output))
 	var resources []PbsResource
-	for line := range strings.SplitSeq(string(output), "\n") {
-		if resourceNameRegex.MatchString(line) {
-			if currentResource.Name != "" { // Is there a resource currently being processed? If so add it to the completed list
-				resources = append(resources, currentResource)
+
+	for _, r := range parsedOutput {
+		if r.objType == "Resource" {
+			current := PbsResource{
+				Name: r.name,
 			}
 
-			currentResource = PbsResource{
-				Name: resourceNameRegex.FindStringSubmatch(line)[1],
+			for k, v := range r.attributes {
+				if s, ok := v.(string); ok {
+					switch strings.ToLower(k) {
+					case "type":
+						current.Type = s
+					case "flag":
+						current.Flag = &s
+					}
+				}
 			}
-		} else if resourceAttributeRegex.MatchString(line) {
-			subMatch := resourceAttributeRegex.FindStringSubmatch(line)
-			attribute := subMatch[1]
-			value := subMatch[2]
 
-			switch strings.ToLower(attribute) {
-			case "type":
-				currentResource.Type = value
-			case "flag":
-				currentResource.Flag = &value
-			default:
-				// TODO - What to do with attributes we don't recognise?
-			}
+			resources = append(resources, current)
 		}
-	}
-
-	if currentResource.Name != "" {
-		resources = append(resources, currentResource)
 	}
 
 	return resources, nil

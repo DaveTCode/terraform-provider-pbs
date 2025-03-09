@@ -2,7 +2,6 @@ package pbsclient
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -49,11 +48,11 @@ type PbsQueue struct {
 	QueuedJobsThreshold    *string
 	QueuedJobsThresholdRes *string
 	QueueType              string
-	ResourcesAssigned      *string
-	ResourcesAvailable     *string
-	ResourcesDefault       *string
-	ResourcesMax           *string
-	ResourcesMin           *string
+	ResourcesAssigned      map[string]string
+	ResourcesAvailable     map[string]string
+	ResourcesDefault       map[string]string
+	ResourcesMax           map[string]string
+	ResourcesMin           map[string]string
 	RouteDestinations      *string
 	RouteHeldJobs          *bool
 	RouteLifetime          *int32
@@ -64,246 +63,239 @@ type PbsQueue struct {
 	TotalJobs              int32
 }
 
-var (
-	queueNameRegex = regexp.MustCompile(`Queue\s+(\w+)`)
-	attributeRegex = regexp.MustCompile(`\s+(\w+)\s*=\s*(.*)`)
-)
-
-func parseQueueOutput(output string) ([]PbsQueue, error) {
-	var currentQueue PbsQueue
+func parseQueueOutput(output []byte) ([]PbsQueue, error) {
+	parsedOutput := parseGenericQmgrOutput(string(output))
 	var queues []PbsQueue
-	for line := range strings.SplitSeq(string(output), "\n") {
-		if queueNameRegex.MatchString(line) {
-			if currentQueue.Name != "" { // Is there a queue currently being processed? If so add it to the completed list
-				queues = append(queues, currentQueue)
+
+	for _, r := range parsedOutput {
+		if r.objType == "Queue" {
+			current := PbsQueue{
+				Name: r.name,
 			}
 
-			currentQueue = PbsQueue{
-				Name: queueNameRegex.FindStringSubmatch(line)[1],
+			for k, value := range r.attributes {
+				if s, ok := value.(string); ok {
+					switch strings.ToLower(k) {
+					case "acl_group_enable":
+						boolValue, err := strconv.ParseBool(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to bool %s", k, err.Error())
+						}
+						current.AclGroupEnable = &boolValue
+					case "acl_groups":
+						current.AclGroups = &s
+					case "acl_host_enable":
+						boolValue, err := strconv.ParseBool(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to bool %s", k, err.Error())
+						}
+						current.AclHostEnable = &boolValue
+					case "acl_hosts":
+						current.AclHosts = &s
+					case "acl_user_enable":
+						boolValue, err := strconv.ParseBool(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to bool %s", k, err.Error())
+						}
+						current.AclUserEnable = &boolValue
+					case "acl_users":
+						current.AclUsers = &s
+					case "alt_router":
+						current.AltRouter = &s
+					case "backfill_depth":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.BackfillDepth = &i32Value
+					case "checkpoint_min":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.CheckpointMin = &i32Value
+					case "default_chunk":
+						current.DefaultChunk = &s
+					case "enabled": //                bool
+						boolValue, err := strconv.ParseBool(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to bool %s", k, err.Error())
+						}
+						current.Enabled = boolValue
+					case "from_route_only":
+						boolValue, err := strconv.ParseBool(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to bool %s", k, err.Error())
+						}
+						current.FromRouteOnly = &boolValue
+					case "kill_delay":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.KillDelay = &i32Value
+					case "max_array_size":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.MaxArraySize = &i32Value
+					case "max_group_res":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.MaxGroupRes = &i32Value
+					case "max_group_res_soft":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.MaxGroupResSoft = &i32Value
+					case "max_group_run":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.MaxGroupRun = &i32Value
+					case "max_group_run_soft":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.MaxGroupRunSoft = &i32Value
+					case "max_queuable":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.MaxQueuable = &i32Value
+					case "max_queued":
+						current.MaxQueued = &s
+					case "max_queued_res":
+						current.MaxQueuedRes = &s
+					case "max_run":
+						current.MaxRun = &s
+					case "max_run_res":
+						current.MaxRunRes = &s
+					case "max_run_res_soft":
+						current.MaxRunResSoft = &s
+					case "max_run_soft":
+						current.MaxRunSoft = &s
+					case "max_running":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.MaxRunning = &i32Value
+					case "max_user_res":
+						current.MaxUserRes = &s
+					case "max_user_res_soft":
+						current.MaxUserResSoft = &s
+					case "max_user_run":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.MaxUserRun = &i32Value
+					case "max_user_run_soft":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.MaxUserRunSoft = &i32Value
+					case "node_group_key":
+						current.NodeGroupKey = &s
+					case "partition":
+						current.Partition = &s
+					case "priority":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.Priority = &i32Value
+					case "queued_jobs_threshold":
+						current.QueuedJobsThreshold = &s
+					case "queued_jobs_threshold_res":
+						current.QueuedJobsThresholdRes = &s
+					case "queue_type":
+						current.QueueType = s
+					case "route_destinations":
+						current.RouteDestinations = &s
+					case "route_held_jobs":
+						boolValue, err := strconv.ParseBool(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to bool %s", k, err.Error())
+						}
+						current.RouteHeldJobs = &boolValue
+					case "route_lifetime":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.RouteLifetime = &i32Value
+					case "route_retry_time":
+						intValue, err := strconv.Atoi(s)
+						i32Value := int32(intValue)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.RouteRetryTime = &i32Value
+					case "route_waiting_jobs":
+						boolValue, err := strconv.ParseBool(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to bool %s", k, err.Error())
+						}
+						current.RouteWaitingJobs = &boolValue
+					case "started":
+						boolValue, err := strconv.ParseBool(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to bool %s", k, err.Error())
+						}
+						current.Started = boolValue
+					case "state_count":
+						current.StateCount = s
+					case "total_jobs":
+						intValue, err := strconv.Atoi(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
+						}
+						current.TotalJobs = int32(intValue)
+					default:
+						// TODO - What to do with attributes we don't recognise?
+					}
+				} else if a, ok := value.(map[string]string); ok {
+					switch strings.ToLower(k) {
+					case "resources_assigned":
+						current.ResourcesAssigned = a
+					case "resources_available":
+						current.ResourcesAvailable = a
+					case "resources_default":
+						current.ResourcesDefault = a
+					case "resources_max":
+						current.ResourcesMax = a
+					case "resources_min":
+						current.ResourcesMin = a
+					}
+				}
 			}
-		} else if attributeRegex.MatchString(line) {
-			subMatch := attributeRegex.FindStringSubmatch(line)
-			attribute := subMatch[1]
-			value := subMatch[2]
 
-			switch strings.ToLower(attribute) {
-			case "acl_group_enable":
-				boolValue, err := strconv.ParseBool(value)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to bool %s", attribute, err.Error())
-				}
-				currentQueue.AclGroupEnable = &boolValue
-			case "acl_groups":
-				currentQueue.AclGroups = &value
-			case "acl_host_enable":
-				boolValue, err := strconv.ParseBool(value)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to bool %s", attribute, err.Error())
-				}
-				currentQueue.AclHostEnable = &boolValue
-			case "acl_hosts":
-				currentQueue.AclHosts = &value
-			case "acl_user_enable":
-				boolValue, err := strconv.ParseBool(value)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to bool %s", attribute, err.Error())
-				}
-				currentQueue.AclUserEnable = &boolValue
-			case "acl_users":
-				currentQueue.AclUsers = &value
-			case "alt_router":
-				currentQueue.AltRouter = &value
-			case "backfill_depth":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.BackfillDepth = &i32Value
-			case "checkpoint_min":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.CheckpointMin = &i32Value
-			case "default_chunk":
-				currentQueue.DefaultChunk = &value
-			case "enabled": //                bool
-				boolValue, err := strconv.ParseBool(value)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to bool %s", attribute, err.Error())
-				}
-				currentQueue.Enabled = boolValue
-			case "from_route_only":
-				boolValue, err := strconv.ParseBool(value)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to bool %s", attribute, err.Error())
-				}
-				currentQueue.FromRouteOnly = &boolValue
-			case "kill_delay":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.KillDelay = &i32Value
-			case "max_array_size":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.MaxArraySize = &i32Value
-			case "max_group_res":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.MaxGroupRes = &i32Value
-			case "max_group_res_soft":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.MaxGroupResSoft = &i32Value
-			case "max_group_run":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.MaxGroupRun = &i32Value
-			case "max_group_run_soft":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.MaxGroupRunSoft = &i32Value
-			case "max_queuable":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.MaxQueuable = &i32Value
-			case "max_queued":
-				currentQueue.MaxQueued = &value
-			case "max_queued_res":
-				currentQueue.MaxQueuedRes = &value
-			case "max_run":
-				currentQueue.MaxRun = &value
-			case "max_run_res":
-				currentQueue.MaxRunRes = &value
-			case "max_run_res_soft":
-				currentQueue.MaxRunResSoft = &value
-			case "max_run_soft":
-				currentQueue.MaxRunSoft = &value
-			case "max_running":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.MaxRunning = &i32Value
-			case "max_user_res":
-				currentQueue.MaxUserRes = &value
-			case "max_user_res_soft":
-				currentQueue.MaxUserResSoft = &value
-			case "max_user_run":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.MaxUserRun = &i32Value
-			case "max_user_run_soft":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.MaxUserRunSoft = &i32Value
-			case "node_group_key":
-				currentQueue.NodeGroupKey = &value
-			case "partition":
-				currentQueue.Partition = &value
-			case "priority":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.Priority = &i32Value
-			case "queued_jobs_threshold":
-				currentQueue.QueuedJobsThreshold = &value
-			case "queued_jobs_threshold_res":
-				currentQueue.QueuedJobsThresholdRes = &value
-			case "queue_type":
-				currentQueue.QueueType = value
-			case "resources_assigned":
-				currentQueue.ResourcesAssigned = &value
-			case "resources_available":
-				currentQueue.ResourcesAvailable = &value
-			case "resources_default":
-				currentQueue.ResourcesDefault = &value
-			case "resources_max":
-				currentQueue.ResourcesMax = &value
-			case "resources_min":
-				currentQueue.ResourcesMin = &value
-			case "route_destinations":
-				currentQueue.RouteDestinations = &value
-			case "route_held_jobs":
-				boolValue, err := strconv.ParseBool(value)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to bool %s", attribute, err.Error())
-				}
-				currentQueue.RouteHeldJobs = &boolValue
-			case "route_lifetime":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.RouteLifetime = &i32Value
-			case "route_retry_time":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.RouteRetryTime = &i32Value
-			case "route_waiting_jobs":
-				boolValue, err := strconv.ParseBool(value)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to bool %s", attribute, err.Error())
-				}
-				currentQueue.RouteWaitingJobs = &boolValue
-			case "started":
-				boolValue, err := strconv.ParseBool(value)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to bool %s", attribute, err.Error())
-				}
-				currentQueue.Started = boolValue
-			case "state_count":
-				currentQueue.StateCount = value
-			case "total_jobs":
-				intValue, err := strconv.Atoi(value)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				currentQueue.TotalJobs = int32(intValue)
-			default:
-				// TODO - What to do with attributes we don't recognise?
-			}
+			queues = append(queues, current)
 		}
-	}
-
-	if currentQueue.Name != "" {
-		queues = append(queues, currentQueue)
 	}
 
 	return queues, nil
@@ -311,21 +303,18 @@ func parseQueueOutput(output string) ([]PbsQueue, error) {
 
 // GetQueue returns a single queue by name
 func (client *PbsClient) GetQueue(name string) (PbsQueue, error) {
-	var queue PbsQueue
-	queueOutput, err := client.runCommand(fmt.Sprintf(GET_QUEUE_QMGR_CMD, name))
+	all, err := client.GetQueues()
 	if err != nil {
-		return queue, err
+		return PbsQueue{}, err
 	}
 
-	queues, err := parseQueueOutput(string(queueOutput))
-	if err != nil {
-		return queue, err
-	}
-	if len(queues) != 1 {
-		return queue, fmt.Errorf("queue %s not found", name)
+	for _, r := range all {
+		if r.Name == name {
+			return r, nil
+		}
 	}
 
-	return queues[0], nil
+	return PbsQueue{}, nil
 }
 
 // GetQueues returns all queues configured on the PBS server
@@ -335,7 +324,7 @@ func (client *PbsClient) GetQueues() ([]PbsQueue, error) {
 		return nil, err
 	}
 
-	queues, err := parseQueueOutput(string(queueOutput))
+	queues, err := parseQueueOutput(queueOutput)
 	if err != nil {
 		return nil, err
 	}
@@ -424,6 +413,23 @@ func (client *PbsClient) UpdateQueue(updatedQueue PbsQueue) (PbsQueue, error) {
 			command = generateUpdateStringAttributeCommand("queue", updatedQueue.Name, v.attribute, &oldValue, &newValue)
 		case *string:
 			command = generateUpdateStringAttributeCommand("queue", updatedQueue.Name, v.attribute, v.old.(*string), v.new.(*string))
+		case map[string]string:
+			oldValue := v.old.(map[string]string)
+			newValue := v.new.(map[string]string)
+			for k, oldAttrVal := range oldValue {
+				newAttrVal, ok := newValue[k]
+				if !ok {
+					command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'unset queue %s %s.%s'", updatedQueue.Name, v.attribute, k)
+				} else if oldAttrVal != newAttrVal {
+					command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s %s.%s=%s'", updatedQueue.Name, v.attribute, k, newAttrVal)
+				}
+			}
+			for k, newAttrVal := range newValue {
+				if _, ok := oldValue[k]; !ok {
+					command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s %s.%s=%s'", updatedQueue.Name, v.attribute, k, newAttrVal)
+				}
+			}
+
 		default:
 			return oldQueue, fmt.Errorf("unsupported type %T", v.old)
 		}
@@ -520,6 +526,11 @@ func (client *PbsClient) CreateQueue(newQueue PbsQueue) (PbsQueue, error) {
 			s := v.new.(*string)
 			if s != nil {
 				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s %s=%s'", newQueue.Name, v.attribute, *s)
+			}
+		case map[string]string:
+			m := v.new.(map[string]string)
+			for k, subval := range m {
+				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s %s.%s=%s'", newQueue.Name, v.attribute, k, subval)
 			}
 		default:
 			return newQueue, fmt.Errorf("unsupported type %T", v.new)

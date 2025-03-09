@@ -1,63 +1,65 @@
 package provider
 
 import (
+	"context"
 	"terraform-provider-pbs/internal/pbsclient"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type queueModel struct {
-	AclGroupEnable         types.Bool   `tfsdk:"acl_group_enable"`
-	AclGroups              types.String `tfsdk:"acl_groups"`
-	AclHostEnable          types.Bool   `tfsdk:"acl_host_enable"`
-	AclHosts               types.String `tfsdk:"acl_hosts"`
-	AclUserEnable          types.Bool   `tfsdk:"acl_user_enable"`
-	AclUsers               types.String `tfsdk:"acl_users"`
-	AltRouter              types.String `tfsdk:"alt_router"`
-	BackfillDepth          types.Int32  `tfsdk:"backfill_depth"`
-	CheckpointMin          types.Int32  `tfsdk:"checkpoint_min"`
-	DefaultChunk           types.String `tfsdk:"default_chunk"`
-	Enabled                types.Bool   `tfsdk:"enabled"`
-	FromRouteOnly          types.Bool   `tfsdk:"from_route_only"`
-	KillDelay              types.Int32  `tfsdk:"kill_delay"`
-	MaxArraySize           types.Int32  `tfsdk:"max_array_size"`
-	MaxGroupRes            types.Int32  `tfsdk:"max_group_res"`
-	MaxGroupResSoft        types.Int32  `tfsdk:"max_group_res_soft"`
-	MaxGroupRun            types.Int32  `tfsdk:"max_group_run"`
-	MaxGroupRunSoft        types.Int32  `tfsdk:"max_group_run_soft"`
-	MaxQueuable            types.Int32  `tfsdk:"max_queuable"`
-	MaxQueued              types.String `tfsdk:"max_queued"`
-	MaxQueuedRes           types.String `tfsdk:"max_queued_res"`
-	MaxRun                 types.String `tfsdk:"max_run"`
-	MaxRunRes              types.String `tfsdk:"max_run_res"`
-	MaxRunResSoft          types.String `tfsdk:"max_run_res_soft"`
-	MaxRunSoft             types.String `tfsdk:"max_run_soft"`
-	MaxRunning             types.Int32  `tfsdk:"max_running"`
-	MaxUserRes             types.String `tfsdk:"max_user_res"`
-	MaxUserResSoft         types.String `tfsdk:"max_user_res_soft"`
-	MaxUserRun             types.Int32  `tfsdk:"max_user_run"`
-	MaxUserRunSoft         types.Int32  `tfsdk:"max_user_run_soft"`
-	Name                   types.String `tfsdk:"name"`
-	NodeGroupKey           types.String `tfsdk:"node_group_key"`
-	Partition              types.String `tfsdk:"partition"`
-	Priority               types.Int32  `tfsdk:"priority"`
-	QueuedJobsThreshold    types.String `tfsdk:"queued_jobs_threshold"`
-	QueuedJobsThresholdRes types.String `tfsdk:"queued_jobs_threshold_res"`
-	QueueType              types.String `tfsdk:"queue_type"`
-	ResourcesAssigned      types.String `tfsdk:"resources_assigned"`
-	ResourcesAvailable     types.String `tfsdk:"resources_available"`
-	ResourcesDefault       types.String `tfsdk:"resources_default"`
-	ResourcesMax           types.String `tfsdk:"resources_max"`
-	ResourcesMin           types.String `tfsdk:"resources_min"`
-	RouteDestinations      types.String `tfsdk:"route_destinations"`
-	RouteHeldJobs          types.Bool   `tfsdk:"route_held_jobs"`
-	RouteLifetime          types.Int32  `tfsdk:"route_lifetime"`
-	RouteRetryTime         types.Int32  `tfsdk:"route_retry_time"`
-	RouteWaitingJobs       types.Bool   `tfsdk:"route_waiting_jobs"`
-	Started                types.Bool   `tfsdk:"started"`
+	AclGroupEnable         types.Bool              `tfsdk:"acl_group_enable"`
+	AclGroups              types.String            `tfsdk:"acl_groups"`
+	AclHostEnable          types.Bool              `tfsdk:"acl_host_enable"`
+	AclHosts               types.String            `tfsdk:"acl_hosts"`
+	AclUserEnable          types.Bool              `tfsdk:"acl_user_enable"`
+	AclUsers               types.String            `tfsdk:"acl_users"`
+	AltRouter              types.String            `tfsdk:"alt_router"`
+	BackfillDepth          types.Int32             `tfsdk:"backfill_depth"`
+	CheckpointMin          types.Int32             `tfsdk:"checkpoint_min"`
+	DefaultChunk           types.String            `tfsdk:"default_chunk"`
+	Enabled                types.Bool              `tfsdk:"enabled"`
+	FromRouteOnly          types.Bool              `tfsdk:"from_route_only"`
+	KillDelay              types.Int32             `tfsdk:"kill_delay"`
+	MaxArraySize           types.Int32             `tfsdk:"max_array_size"`
+	MaxGroupRes            types.Int32             `tfsdk:"max_group_res"`
+	MaxGroupResSoft        types.Int32             `tfsdk:"max_group_res_soft"`
+	MaxGroupRun            types.Int32             `tfsdk:"max_group_run"`
+	MaxGroupRunSoft        types.Int32             `tfsdk:"max_group_run_soft"`
+	MaxQueuable            types.Int32             `tfsdk:"max_queuable"`
+	MaxQueued              types.String            `tfsdk:"max_queued"`
+	MaxQueuedRes           types.String            `tfsdk:"max_queued_res"`
+	MaxRun                 types.String            `tfsdk:"max_run"`
+	MaxRunRes              types.String            `tfsdk:"max_run_res"`
+	MaxRunResSoft          types.String            `tfsdk:"max_run_res_soft"`
+	MaxRunSoft             types.String            `tfsdk:"max_run_soft"`
+	MaxRunning             types.Int32             `tfsdk:"max_running"`
+	MaxUserRes             types.String            `tfsdk:"max_user_res"`
+	MaxUserResSoft         types.String            `tfsdk:"max_user_res_soft"`
+	MaxUserRun             types.Int32             `tfsdk:"max_user_run"`
+	MaxUserRunSoft         types.Int32             `tfsdk:"max_user_run_soft"`
+	Name                   types.String            `tfsdk:"name"`
+	NodeGroupKey           types.String            `tfsdk:"node_group_key"`
+	Partition              types.String            `tfsdk:"partition"`
+	Priority               types.Int32             `tfsdk:"priority"`
+	QueuedJobsThreshold    types.String            `tfsdk:"queued_jobs_threshold"`
+	QueuedJobsThresholdRes types.String            `tfsdk:"queued_jobs_threshold_res"`
+	QueueType              types.String            `tfsdk:"queue_type"`
+	ResourcesAssigned      map[string]types.String `tfsdk:"resources_assigned"`
+	ResourcesAvailable     map[string]types.String `tfsdk:"resources_available"`
+	ResourcesDefault       map[string]types.String `tfsdk:"resources_default"`
+	ResourcesMax           map[string]types.String `tfsdk:"resources_max"`
+	ResourcesMin           map[string]types.String `tfsdk:"resources_min"`
+	RouteDestinations      types.String            `tfsdk:"route_destinations"`
+	RouteHeldJobs          types.Bool              `tfsdk:"route_held_jobs"`
+	RouteLifetime          types.Int32             `tfsdk:"route_lifetime"`
+	RouteRetryTime         types.Int32             `tfsdk:"route_retry_time"`
+	RouteWaitingJobs       types.Bool              `tfsdk:"route_waiting_jobs"`
+	Started                types.Bool              `tfsdk:"started"`
 }
 
-func (m queueModel) ToPbsQueue() pbsclient.PbsQueue {
+func (m queueModel) ToPbsQueue(ctx context.Context) (pbsclient.PbsQueue, diag.Diagnostics) {
 	queue := pbsclient.PbsQueue{
 		Name:                   m.Name.ValueString(),
 		Enabled:                m.Enabled.ValueBool(),
@@ -97,11 +99,6 @@ func (m queueModel) ToPbsQueue() pbsclient.PbsQueue {
 		Priority:               m.Priority.ValueInt32Pointer(),
 		QueuedJobsThreshold:    m.QueuedJobsThreshold.ValueStringPointer(),
 		QueuedJobsThresholdRes: m.QueuedJobsThresholdRes.ValueStringPointer(),
-		ResourcesAssigned:      m.ResourcesAssigned.ValueStringPointer(),
-		ResourcesAvailable:     m.ResourcesAvailable.ValueStringPointer(),
-		ResourcesDefault:       m.ResourcesDefault.ValueStringPointer(),
-		ResourcesMax:           m.ResourcesMax.ValueStringPointer(),
-		ResourcesMin:           m.ResourcesMin.ValueStringPointer(),
 		RouteDestinations:      m.RouteDestinations.ValueStringPointer(),
 		RouteHeldJobs:          m.RouteHeldJobs.ValueBoolPointer(),
 		RouteLifetime:          m.RouteLifetime.ValueInt32Pointer(),
@@ -109,10 +106,34 @@ func (m queueModel) ToPbsQueue() pbsclient.PbsQueue {
 		RouteWaitingJobs:       m.RouteWaitingJobs.ValueBoolPointer(),
 	}
 
-	return queue
+	var diags diag.Diagnostics
+	queue.ResourcesAssigned = make(map[string]string)
+	for k, v := range m.ResourcesAssigned {
+		queue.ResourcesAssigned[k] = v.ValueString()
+	}
+	queue.ResourcesAvailable = make(map[string]string)
+	for k, v := range m.ResourcesAvailable {
+		queue.ResourcesAvailable[k] = v.ValueString()
+	}
+	queue.ResourcesDefault = make(map[string]string)
+	for k, v := range m.ResourcesDefault {
+		queue.ResourcesDefault[k] = v.ValueString()
+	}
+	queue.ResourcesMax = make(map[string]string)
+	for k, v := range m.ResourcesMax {
+		queue.ResourcesMax[k] = v.ValueString()
+	}
+	queue.ResourcesMin = make(map[string]string)
+	for k, v := range m.ResourcesMin {
+		queue.ResourcesMin[k] = v.ValueString()
+	}
+
+	return queue, diags
 }
 
-func createQueueModel(queue pbsclient.PbsQueue) queueModel {
+func createQueueModel(queue pbsclient.PbsQueue) (queueModel, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	model := queueModel{
 		Name:      types.StringValue(queue.Name),
 		Enabled:   types.BoolValue(queue.Enabled),
@@ -223,19 +244,39 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 		model.QueuedJobsThresholdRes = types.StringValue(*queue.QueuedJobsThresholdRes)
 	}
 	if queue.ResourcesAssigned != nil {
-		model.ResourcesAssigned = types.StringValue(*queue.ResourcesAssigned)
+		elements := make(map[string]types.String, 0)
+		for k, v := range queue.ResourcesAssigned {
+			elements[k] = types.StringValue(v)
+		}
+		model.ResourcesAssigned = elements
 	}
 	if queue.ResourcesAvailable != nil {
-		model.ResourcesAvailable = types.StringValue(*queue.ResourcesAvailable)
+		elements := make(map[string]types.String, 0)
+		for k, v := range queue.ResourcesAvailable {
+			elements[k] = types.StringValue(v)
+		}
+		model.ResourcesAvailable = elements
 	}
 	if queue.ResourcesDefault != nil {
-		model.ResourcesDefault = types.StringValue(*queue.ResourcesDefault)
+		elements := make(map[string]types.String, 0)
+		for k, v := range queue.ResourcesDefault {
+			elements[k] = types.StringValue(v)
+		}
+		model.ResourcesDefault = elements
 	}
 	if queue.ResourcesMax != nil {
-		model.ResourcesMax = types.StringValue(*queue.ResourcesMax)
+		elements := make(map[string]types.String, 0)
+		for k, v := range queue.ResourcesMax {
+			elements[k] = types.StringValue(v)
+		}
+		model.ResourcesMax = elements
 	}
 	if queue.ResourcesMin != nil {
-		model.ResourcesMin = types.StringValue(*queue.ResourcesMin)
+		elements := make(map[string]types.String, 0)
+		for k, v := range queue.ResourcesMin {
+			elements[k] = types.StringValue(v)
+		}
+		model.ResourcesMin = elements
 	}
 	if queue.RouteDestinations != nil {
 		model.RouteDestinations = types.StringValue(*queue.RouteDestinations)
@@ -253,5 +294,5 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 		model.RouteWaitingJobs = types.BoolValue(*queue.RouteWaitingJobs)
 	}
 
-	return model
+	return model, diags
 }

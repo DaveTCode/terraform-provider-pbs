@@ -3,7 +3,9 @@ package pbsclient
 import (
 	"fmt"
 	"io"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -105,4 +107,71 @@ func generateUpdateStringAttributeCommand(obj string, name string, attribute str
 	}
 
 	return ""
+}
+
+var (
+	nameRegex              = regexp.MustCompile(`^(\w+)\s+(\w+)$`)
+	attributeRegex         = regexp.MustCompile(`^    (\w+)\s+=\s+(.+)$`)
+	dotAttributeRegex      = regexp.MustCompile(`^    (\w+)\.(\w+)\s+=\s+(.+)$`)
+	continueAttributeRegex = regexp.MustCompile(`^        (.+)$`)
+)
+
+type qmgrResult struct {
+	objType    string
+	name       string
+	attributes map[string]any
+}
+
+func parseGenericQmgrOutput(output string) []qmgrResult {
+	lines := strings.Split(string(output), "\n")
+	results := make([]qmgrResult, 0)
+	current := qmgrResult{}
+	var prevAttribute string
+	for _, line := range lines {
+		if nameRegex.MatchString(line) {
+			if current.name != "" {
+				results = append(results, current)
+			}
+			current = qmgrResult{
+				objType:    nameRegex.FindStringSubmatch(line)[1],
+				name:       nameRegex.FindStringSubmatch(line)[2],
+				attributes: make(map[string]any, 0),
+			}
+		} else if attributeRegex.MatchString(line) {
+			subMatch := attributeRegex.FindStringSubmatch(line)
+			attribute := subMatch[1]
+			value := subMatch[2]
+			current.attributes[attribute] = value
+			prevAttribute = attribute
+		} else if dotAttributeRegex.MatchString(line) {
+			subMatch := dotAttributeRegex.FindStringSubmatch(line)
+			attribute := subMatch[1]
+			subAttribute := subMatch[2]
+			value := subMatch[3]
+			if _, ok := current.attributes[attribute]; ok {
+				if attrMap, ok := current.attributes[attribute].(map[string]string); ok {
+					attrMap[subAttribute] = value
+				} else {
+					attrMap := make(map[string]string)
+					attrMap[subAttribute] = value
+					current.attributes[attribute] = attrMap
+				}
+			} else {
+				attrMap := make(map[string]string)
+				attrMap[subAttribute] = value
+				current.attributes[attribute] = attrMap
+			}
+			prevAttribute = attribute
+		} else if continueAttributeRegex.MatchString(line) {
+			if prevAttribute != "" {
+				current.attributes[prevAttribute] = current.attributes[prevAttribute].(string) + continueAttributeRegex.FindStringSubmatch(line)[1]
+			}
+		}
+	}
+
+	if current.name != "" {
+		results = append(results, current)
+	}
+
+	return results
 }

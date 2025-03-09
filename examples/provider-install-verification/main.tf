@@ -26,16 +26,28 @@ resource "pbs_queue" "newq" {
   max_running = 11
 }
 
+import {
+  id = "test"
+  to = pbs_queue.test
+}
+
 resource "pbs_queue" "test" {
   name       = "test"
   queue_type = "Execution"
   enabled    = true
   started    = true
+  resources_default = {
+    ncpus   = 1
+    nodect  = 1
+    nodes   = 1
+    walltime = "02:00:00"
+  }
 }
 
 locals {
   hni_resources = [
     "hni_pkts_recv_by_tc_0",
+    "hni_pkts_sent_by_tc_0",
   ]
 }
 

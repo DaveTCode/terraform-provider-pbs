@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"terraform-provider-pbs/internal/pbsclient"
 )
@@ -140,20 +141,25 @@ func (d *queueDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 			"queue_type": schema.StringAttribute{
 				Computed: true,
 			},
-			"resources_assigned": schema.StringAttribute{
-				Computed: true,
+			"resources_assigned": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"resources_available": schema.StringAttribute{
-				Computed: true,
+			"resources_available": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"resources_default": schema.StringAttribute{
-				Computed: true,
+			"resources_default": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"resources_max": schema.StringAttribute{
-				Computed: true,
+			"resources_max": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"resources_min": schema.StringAttribute{
-				Computed: true,
+			"resources_min": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
 			"route_destinations": schema.StringAttribute{
 				Computed: true,
@@ -186,7 +192,9 @@ func (d *queueDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 
 	for _, queue := range queues {
-		queueData.Queues = append(queueData.Queues, createQueueModel(queue))
+		model, diag := createQueueModel(queue)
+		resp.Diagnostics.Append(diag...)
+		queueData.Queues = append(queueData.Queues, model)
 	}
 }
 

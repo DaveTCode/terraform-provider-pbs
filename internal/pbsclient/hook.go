@@ -2,7 +2,6 @@ package pbsclient
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -20,80 +19,67 @@ type PbsHook struct {
 	User       *string
 }
 
-var (
-	hookNameRegex      = regexp.MustCompile(`Hook\s+(\w+)`)
-	hookAttributeRegex = regexp.MustCompile(`(\w+)\s+=\s+(.+)`)
-)
-
 func parseHookOutput(output []byte) ([]PbsHook, error) {
-	var current PbsHook
+	parsedOutput := parseGenericQmgrOutput(string(output))
 	var hooks []PbsHook
-	for line := range strings.SplitSeq(string(output), "\n") {
-		if hookNameRegex.MatchString(line) {
-			if current.Name != "" { // Is there a hook currently being processed? If so add it to the completed list
+
+	for _, r := range parsedOutput {
+		if r.objType == "Hook" {
+			current := PbsHook{
+				Name: r.name,
+			}
+
+			for k, v := range r.attributes {
+				if s, ok := v.(string); ok {
+					switch strings.ToLower(k) {
+					case "alarm":
+						intValue, err := strconv.Atoi(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert alarm value to int %s", err.Error())
+						}
+						i32Value := int32(intValue)
+						current.Alarm = &i32Value
+
+					case "debug":
+						boolValue, err := strconv.ParseBool(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert debug value to bool %s", err.Error())
+						}
+						current.Debug = &boolValue
+					case "enabled":
+						boolValue, err := strconv.ParseBool(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert enabled value to bool %s", err.Error())
+						}
+						current.Enabled = &boolValue
+					case "event":
+						current.Event = &s
+					case "fail_action":
+						current.FailAction = &s
+					case "freq":
+						intValue, err := strconv.Atoi(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert freq value to int %s", err.Error())
+						}
+						i32Value := int32(intValue)
+						current.Freq = &i32Value
+					case "order":
+						intValue, err := strconv.Atoi(s)
+						if err != nil {
+							return nil, fmt.Errorf("failed to convert order value to int %s", err.Error())
+						}
+						i32Value := int32(intValue)
+						current.Order = &i32Value
+					case "type":
+						current.Type = &s
+					case "user":
+						current.User = &s
+					}
+				}
+
 				hooks = append(hooks, current)
 			}
-
-			current = PbsHook{
-				Name: hookNameRegex.FindStringSubmatch(line)[1],
-			}
-		} else if hookAttributeRegex.MatchString(line) {
-			subMatch := hookAttributeRegex.FindStringSubmatch(line)
-			attribute := subMatch[1]
-			value := subMatch[2]
-
-			switch strings.ToLower(attribute) {
-			case "alarm":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				current.Alarm = &i32Value
-			case "debug":
-				boolValue, err := strconv.ParseBool(value)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to bool %s", attribute, err.Error())
-				}
-				current.Debug = &boolValue
-			case "enabled":
-				boolValue, err := strconv.ParseBool(value)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to bool %s", attribute, err.Error())
-				}
-				current.Enabled = &boolValue
-			case "event":
-				current.Event = &value
-			case "fail_action":
-				current.FailAction = &value
-			case "freq":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				current.Freq = &i32Value
-			case "name":
-				current.Name = value
-			case "order":
-				intValue, err := strconv.Atoi(value)
-				i32Value := int32(intValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to convert %s value to int %s", attribute, err.Error())
-				}
-				current.Order = &i32Value
-			case "type":
-				current.Type = &value
-			case "user":
-				current.User = &value
-			default:
-				// TODO - What to do with attributes we don't recognise?
-			}
 		}
-	}
-
-	if current.Name != "" {
-		hooks = append(hooks, current)
 	}
 
 	return hooks, nil
