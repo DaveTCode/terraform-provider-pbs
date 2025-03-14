@@ -387,10 +387,9 @@ func (d *serverDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	serverModel, diag := createServerModel(resultData)
-	resp.Diagnostics.Append(diag...)
+	serverModel := createServerModel(resultData)
 
-	diag = resp.State.Set(ctx, &serverModel)
+	diag := resp.State.Set(ctx, &serverModel)
 	resp.Diagnostics.Append(diag...)
 }
 

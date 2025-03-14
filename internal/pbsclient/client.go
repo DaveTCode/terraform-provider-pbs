@@ -207,8 +207,8 @@ func parseGenericQmgrOutput(output string) []qmgrResult {
 			prevAttribute = attribute
 		} else if continueAttributeRegex.MatchString(line) {
 			if prevAttribute != "" {
-				if _, ok := current.attributes[prevAttribute].(string); ok {
-					current.attributes[prevAttribute] = current.attributes[prevAttribute].(string) + continueAttributeRegex.FindStringSubmatch(line)[1]
+				if s, ok := current.attributes[prevAttribute].(string); ok {
+					current.attributes[prevAttribute] = s + continueAttributeRegex.FindStringSubmatch(line)[1]
 				}
 			}
 		}
@@ -221,84 +221,84 @@ func parseGenericQmgrOutput(output string) []qmgrResult {
 	return results
 }
 
-func generateCreateCommands(new any, qmgrObjectType string, qmgrObjectName string, qmgrAttribute string) ([]string, error) {
+func generateCreateCommands(newObj any, qmgrObjectType string, qmgrObjectName string, qmgrAttribute string) ([]string, error) {
 	commands := []string{}
-	switch new := new.(type) {
+	switch newObj := newObj.(type) {
 	case *bool:
-		if new != nil {
-			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, strconv.FormatBool(*new)))
+		if newObj != nil {
+			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, strconv.FormatBool(*newObj)))
 		}
 	case *int32:
-		if new != nil {
-			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, strconv.Itoa(int(*new))))
+		if newObj != nil {
+			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, strconv.Itoa(int(*newObj))))
 		}
 	case *int64:
-		if new != nil {
-			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, strconv.FormatInt(*new, 10)))
+		if newObj != nil {
+			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, strconv.FormatInt(*newObj, 10)))
 		}
 	case *string:
-		if new != nil {
-			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, *new))
+		if newObj != nil {
+			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, *newObj))
 		}
 	case map[string]string:
-		for k, subval := range new {
+		for k, subval := range newObj {
 			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, subval))
 		}
 	default:
-		return commands, fmt.Errorf("unsupported type %T", new)
+		return commands, fmt.Errorf("unsupported type %T", newObj)
 	}
 
 	return commands, nil
 }
 
-func generateUpdateAttributeCommand(old any, new any, qmgrObjectType string, qmgrObjectName string, qmgrAttribute string) ([]string, error) {
-	switch old := old.(type) {
+func generateUpdateAttributeCommand(oldAttr any, newAttr any, qmgrObjectType string, qmgrObjectName string, qmgrAttribute string) ([]string, error) {
+	switch old := oldAttr.(type) {
 	case bool:
-		if newValue, ok := new.(bool); ok {
+		if newValue, ok := newAttr.(bool); ok {
 			return generateUpdateBoolAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, &old, &newValue), nil
 		} else {
-			return nil, fmt.Errorf("unsupported type %T", new)
+			return nil, fmt.Errorf("unsupported type %T", newAttr)
 		}
 	case *bool:
-		if newValue, ok := new.(*bool); ok {
+		if newValue, ok := newAttr.(*bool); ok {
 			return generateUpdateBoolAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, newValue), nil
 		} else {
-			return nil, fmt.Errorf("unsupported type %T", new)
+			return nil, fmt.Errorf("unsupported type %T", newAttr)
 		}
 	case int32:
-		if newValue, ok := new.(int32); ok {
+		if newValue, ok := newAttr.(int32); ok {
 			return generateUpdateInt32AttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, &old, &newValue), nil
 		} else {
-			return nil, fmt.Errorf("unsupported type %T", new)
+			return nil, fmt.Errorf("unsupported type %T", newAttr)
 		}
 	case *int32:
-		if newValue, ok := new.(*int32); ok {
+		if newValue, ok := newAttr.(*int32); ok {
 			return generateUpdateInt32AttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, newValue), nil
 		} else {
-			return nil, fmt.Errorf("unsupported type %T", new)
+			return nil, fmt.Errorf("unsupported type %T", newAttr)
 		}
 	case *int64:
-		if newValue, ok := new.(*int64); ok {
+		if newValue, ok := newAttr.(*int64); ok {
 			return generateUpdateInt64AttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, newValue), nil
 		} else {
-			return nil, fmt.Errorf("unsupported type %T", new)
+			return nil, fmt.Errorf("unsupported type %T", newAttr)
 		}
 	case string:
-		if newValue, ok := new.(string); ok {
+		if newValue, ok := newAttr.(string); ok {
 			return generateUpdateStringAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, &old, &newValue), nil
 		} else {
-			return nil, fmt.Errorf("unsupported type %T", new)
+			return nil, fmt.Errorf("unsupported type %T", newAttr)
 		}
 	case *string:
-		if newValue, ok := new.(*string); ok {
+		if newValue, ok := newAttr.(*string); ok {
 			return generateUpdateStringAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, newValue), nil
 		} else {
-			return nil, fmt.Errorf("unsupported type %T", new)
+			return nil, fmt.Errorf("unsupported type %T", newAttr)
 		}
 	case map[string]string:
-		newValue, ok := new.(map[string]string)
+		newValue, ok := newAttr.(map[string]string)
 		if !ok {
-			return nil, fmt.Errorf("unsupported type %T", new)
+			return nil, fmt.Errorf("unsupported type %T", newAttr)
 		}
 
 		commands := []string{}

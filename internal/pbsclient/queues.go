@@ -300,7 +300,7 @@ func parseQueueOutput(output []byte) ([]PbsQueue, error) {
 	return queues, nil
 }
 
-// GetQueue returns a single queue by name
+// GetQueue returns a single queue by name.
 func (client *PbsClient) GetQueue(name string) (PbsQueue, error) {
 	all, err := client.GetQueues()
 	if err != nil {
@@ -316,7 +316,7 @@ func (client *PbsClient) GetQueue(name string) (PbsQueue, error) {
 	return PbsQueue{}, nil
 }
 
-// GetQueues returns all queues configured on the PBS server
+// GetQueues returns all queues configured on the PBS server.
 func (client *PbsClient) GetQueues() ([]PbsQueue, error) {
 	queueOutput, errOutput, err := client.runCommand(GET_QUEUES_QMGR_CMD)
 	if err != nil {
@@ -331,8 +331,8 @@ func (client *PbsClient) GetQueues() ([]PbsQueue, error) {
 	return queues, nil
 }
 
-func (client *PbsClient) UpdateQueue(updatedQueue PbsQueue) (PbsQueue, error) {
-	oldQueue, err := client.GetQueue(updatedQueue.Name)
+func (client *PbsClient) UpdateQueue(newQueue PbsQueue) (PbsQueue, error) {
+	oldQueue, err := client.GetQueue(newQueue.Name)
 	if err != nil {
 		return oldQueue, err
 	}
@@ -340,59 +340,59 @@ func (client *PbsClient) UpdateQueue(updatedQueue PbsQueue) (PbsQueue, error) {
 	var commands = []string{}
 	fields := []struct {
 		attribute string
-		old       any
-		new       any
+		oldAttr   any
+		newAttr   any
 	}{
-		{"acl_group_enable", oldQueue.AclGroupEnable, updatedQueue.AclGroupEnable},
-		{"acl_groups", oldQueue.AclGroups, updatedQueue.AclGroups},
-		{"acl_host_enable", oldQueue.AclHostEnable, updatedQueue.AclHostEnable},
-		{"acl_hosts", oldQueue.AclHosts, updatedQueue.AclHosts},
-		{"acl_user_enable", oldQueue.AclUserEnable, updatedQueue.AclUserEnable},
-		{"acl_users", oldQueue.AclUsers, updatedQueue.AclUsers},
-		{"alt_router", oldQueue.AltRouter, updatedQueue.AltRouter},
-		{"backfill_depth", oldQueue.BackfillDepth, updatedQueue.BackfillDepth},
-		{"checkpoint_min", oldQueue.CheckpointMin, updatedQueue.CheckpointMin},
-		{"default_chunk", oldQueue.DefaultChunk, updatedQueue.DefaultChunk},
-		{"enabled", oldQueue.Enabled, updatedQueue.Enabled},
-		{"from_route_only", oldQueue.FromRouteOnly, updatedQueue.FromRouteOnly},
-		{"kill_delay", oldQueue.KillDelay, updatedQueue.KillDelay},
-		{"max_array_size", oldQueue.MaxArraySize, updatedQueue.MaxArraySize},
-		{"max_group_res", oldQueue.MaxGroupRes, updatedQueue.MaxGroupRes},
-		{"max_group_res_soft", oldQueue.MaxGroupResSoft, updatedQueue.MaxGroupResSoft},
-		{"max_group_run", oldQueue.MaxGroupRun, updatedQueue.MaxGroupRun},
-		{"max_group_run_soft", oldQueue.MaxGroupRunSoft, updatedQueue.MaxGroupRunSoft},
-		{"max_queuable", oldQueue.MaxQueuable, updatedQueue.MaxQueuable},
-		{"max_queued", oldQueue.MaxQueued, updatedQueue.MaxQueued},
-		{"max_queued_res", oldQueue.MaxQueuedRes, updatedQueue.MaxQueuedRes},
-		{"max_run", oldQueue.MaxRun, updatedQueue.MaxRun},
-		{"max_run_res", oldQueue.MaxRunRes, updatedQueue.MaxRunRes},
-		{"max_run_res_soft", oldQueue.MaxRunResSoft, updatedQueue.MaxRunResSoft},
-		{"max_run_soft", oldQueue.MaxRunSoft, updatedQueue.MaxRunSoft},
-		{"max_running", oldQueue.MaxRunning, updatedQueue.MaxRunning},
-		{"max_user_res", oldQueue.MaxUserRes, updatedQueue.MaxUserRes},
-		{"max_user_res_soft", oldQueue.MaxUserResSoft, updatedQueue.MaxUserResSoft},
-		{"max_user_run", oldQueue.MaxUserRun, updatedQueue.MaxUserRun},
-		{"max_user_run_soft", oldQueue.MaxUserRunSoft, updatedQueue.MaxUserRunSoft},
-		{"node_group_key", oldQueue.NodeGroupKey, updatedQueue.NodeGroupKey},
-		{"partition", oldQueue.Partition, updatedQueue.Partition},
-		{"priority", oldQueue.Priority, updatedQueue.Priority},
-		{"queued_jobs_threshold", oldQueue.QueuedJobsThreshold, updatedQueue.QueuedJobsThreshold},
-		{"queued_jobs_threshold_res", oldQueue.QueuedJobsThresholdRes, updatedQueue.QueuedJobsThresholdRes},
-		{"queue_type", oldQueue.QueueType, updatedQueue.QueueType},
-		{"resources_assigned", oldQueue.ResourcesAssigned, updatedQueue.ResourcesAssigned},
-		{"resources_available", oldQueue.ResourcesAvailable, updatedQueue.ResourcesAvailable},
-		{"resources_default", oldQueue.ResourcesDefault, updatedQueue.ResourcesDefault},
-		{"resources_max", oldQueue.ResourcesMax, updatedQueue.ResourcesMax},
-		{"resources_min", oldQueue.ResourcesMin, updatedQueue.ResourcesMin},
-		{"route_destinations", oldQueue.RouteDestinations, updatedQueue.RouteDestinations},
-		{"route_held_jobs", oldQueue.RouteHeldJobs, updatedQueue.RouteHeldJobs},
-		{"route_lifetime", oldQueue.RouteLifetime, updatedQueue.RouteLifetime},
-		{"route_retry_time", oldQueue.RouteRetryTime, updatedQueue.RouteRetryTime},
-		{"route_waiting_jobs", oldQueue.RouteWaitingJobs, updatedQueue.RouteWaitingJobs},
-		{"started", oldQueue.Started, updatedQueue.Started},
+		{"acl_group_enable", oldQueue.AclGroupEnable, newQueue.AclGroupEnable},
+		{"acl_groups", oldQueue.AclGroups, newQueue.AclGroups},
+		{"acl_host_enable", oldQueue.AclHostEnable, newQueue.AclHostEnable},
+		{"acl_hosts", oldQueue.AclHosts, newQueue.AclHosts},
+		{"acl_user_enable", oldQueue.AclUserEnable, newQueue.AclUserEnable},
+		{"acl_users", oldQueue.AclUsers, newQueue.AclUsers},
+		{"alt_router", oldQueue.AltRouter, newQueue.AltRouter},
+		{"backfill_depth", oldQueue.BackfillDepth, newQueue.BackfillDepth},
+		{"checkpoint_min", oldQueue.CheckpointMin, newQueue.CheckpointMin},
+		{"default_chunk", oldQueue.DefaultChunk, newQueue.DefaultChunk},
+		{"enabled", oldQueue.Enabled, newQueue.Enabled},
+		{"from_route_only", oldQueue.FromRouteOnly, newQueue.FromRouteOnly},
+		{"kill_delay", oldQueue.KillDelay, newQueue.KillDelay},
+		{"max_array_size", oldQueue.MaxArraySize, newQueue.MaxArraySize},
+		{"max_group_res", oldQueue.MaxGroupRes, newQueue.MaxGroupRes},
+		{"max_group_res_soft", oldQueue.MaxGroupResSoft, newQueue.MaxGroupResSoft},
+		{"max_group_run", oldQueue.MaxGroupRun, newQueue.MaxGroupRun},
+		{"max_group_run_soft", oldQueue.MaxGroupRunSoft, newQueue.MaxGroupRunSoft},
+		{"max_queuable", oldQueue.MaxQueuable, newQueue.MaxQueuable},
+		{"max_queued", oldQueue.MaxQueued, newQueue.MaxQueued},
+		{"max_queued_res", oldQueue.MaxQueuedRes, newQueue.MaxQueuedRes},
+		{"max_run", oldQueue.MaxRun, newQueue.MaxRun},
+		{"max_run_res", oldQueue.MaxRunRes, newQueue.MaxRunRes},
+		{"max_run_res_soft", oldQueue.MaxRunResSoft, newQueue.MaxRunResSoft},
+		{"max_run_soft", oldQueue.MaxRunSoft, newQueue.MaxRunSoft},
+		{"max_running", oldQueue.MaxRunning, newQueue.MaxRunning},
+		{"max_user_res", oldQueue.MaxUserRes, newQueue.MaxUserRes},
+		{"max_user_res_soft", oldQueue.MaxUserResSoft, newQueue.MaxUserResSoft},
+		{"max_user_run", oldQueue.MaxUserRun, newQueue.MaxUserRun},
+		{"max_user_run_soft", oldQueue.MaxUserRunSoft, newQueue.MaxUserRunSoft},
+		{"node_group_key", oldQueue.NodeGroupKey, newQueue.NodeGroupKey},
+		{"partition", oldQueue.Partition, newQueue.Partition},
+		{"priority", oldQueue.Priority, newQueue.Priority},
+		{"queued_jobs_threshold", oldQueue.QueuedJobsThreshold, newQueue.QueuedJobsThreshold},
+		{"queued_jobs_threshold_res", oldQueue.QueuedJobsThresholdRes, newQueue.QueuedJobsThresholdRes},
+		{"queue_type", oldQueue.QueueType, newQueue.QueueType},
+		{"resources_assigned", oldQueue.ResourcesAssigned, newQueue.ResourcesAssigned},
+		{"resources_available", oldQueue.ResourcesAvailable, newQueue.ResourcesAvailable},
+		{"resources_default", oldQueue.ResourcesDefault, newQueue.ResourcesDefault},
+		{"resources_max", oldQueue.ResourcesMax, newQueue.ResourcesMax},
+		{"resources_min", oldQueue.ResourcesMin, newQueue.ResourcesMin},
+		{"route_destinations", oldQueue.RouteDestinations, newQueue.RouteDestinations},
+		{"route_held_jobs", oldQueue.RouteHeldJobs, newQueue.RouteHeldJobs},
+		{"route_lifetime", oldQueue.RouteLifetime, newQueue.RouteLifetime},
+		{"route_retry_time", oldQueue.RouteRetryTime, newQueue.RouteRetryTime},
+		{"route_waiting_jobs", oldQueue.RouteWaitingJobs, newQueue.RouteWaitingJobs},
+		{"started", oldQueue.Started, newQueue.Started},
 	}
 	for _, v := range fields {
-		newCommands, err := generateUpdateAttributeCommand(v.old, v.new, "queue", updatedQueue.Name, v.attribute)
+		newCommands, err := generateUpdateAttributeCommand(v.oldAttr, v.newAttr, "queue", newQueue.Name, v.attribute)
 		if err != nil {
 			return oldQueue, err
 		}
@@ -416,64 +416,64 @@ func (client *PbsClient) UpdateQueue(updatedQueue PbsQueue) (PbsQueue, error) {
 	return oldQueue, nil
 }
 
-func (client *PbsClient) CreateQueue(new PbsQueue) (PbsQueue, error) {
+func (client *PbsClient) CreateQueue(newQueue PbsQueue) (PbsQueue, error) {
 	var commands = []string{
-		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create queue %s queue_type=%s'", new.Name, new.QueueType),
-		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s enabled=%s'", new.Name, strconv.FormatBool(new.Enabled)),
-		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s started=%s'", new.Name, strconv.FormatBool(new.Started)),
+		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create queue %s queue_type=%s'", newQueue.Name, newQueue.QueueType),
+		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s enabled=%s'", newQueue.Name, strconv.FormatBool(newQueue.Enabled)),
+		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s started=%s'", newQueue.Name, strconv.FormatBool(newQueue.Started)),
 	}
 
 	fields := []struct {
 		attribute string
-		new       any
+		newAttr   any
 	}{
-		{"acl_group_enable", new.AclGroupEnable},
-		{"acl_groups", new.AclGroups},
-		{"acl_host_enable", new.AclHostEnable},
-		{"acl_hosts", new.AclHosts},
-		{"acl_user_enable", new.AclUserEnable},
-		{"acl_users", new.AclUsers},
-		{"alt_router", new.AltRouter},
-		{"backfill_depth", new.BackfillDepth},
-		{"checkpoint_min", new.CheckpointMin},
-		{"default_chunk", new.DefaultChunk},
-		{"from_route_only", new.FromRouteOnly},
-		{"kill_delay", new.KillDelay},
-		{"max_array_size", new.MaxArraySize},
-		{"max_group_res", new.MaxGroupRes},
-		{"max_group_res_soft", new.MaxGroupResSoft},
-		{"max_group_run", new.MaxGroupRun},
-		{"max_group_run_soft", new.MaxGroupRunSoft},
-		{"max_queuable", new.MaxQueuable},
-		{"max_queued", new.MaxQueued},
-		{"max_queued_res", new.MaxQueuedRes},
-		{"max_run", new.MaxRun},
-		{"max_run_res", new.MaxRunRes},
-		{"max_run_res_soft", new.MaxRunResSoft},
-		{"max_run_soft", new.MaxRunSoft},
-		{"max_running", new.MaxRunning},
-		{"max_user_res", new.MaxUserRes},
-		{"max_user_res_soft", new.MaxUserResSoft},
-		{"max_user_run", new.MaxUserRun},
-		{"max_user_run_soft", new.MaxUserRunSoft},
-		{"node_group_key", new.NodeGroupKey},
-		{"partition", new.Partition},
-		{"priority", new.Priority},
-		{"queued_jobs_threshold", new.QueuedJobsThreshold},
-		{"queued_jobs_threshold_res", new.QueuedJobsThresholdRes},
-		{"resources_assigned", new.ResourcesAssigned},
-		{"resources_available", new.ResourcesAvailable},
-		{"resources_default", new.ResourcesDefault},
-		{"resources_max", new.ResourcesMax},
-		{"resources_min", new.ResourcesMin},
-		{"route_destinations", new.RouteDestinations},
-		{"route_held_jobs", new.RouteHeldJobs},
-		{"route_lifetime", new.RouteLifetime},
-		{"route_retry_time", new.RouteRetryTime},
-		{"route_waiting_jobs", new.RouteWaitingJobs},
+		{"acl_group_enable", newQueue.AclGroupEnable},
+		{"acl_groups", newQueue.AclGroups},
+		{"acl_host_enable", newQueue.AclHostEnable},
+		{"acl_hosts", newQueue.AclHosts},
+		{"acl_user_enable", newQueue.AclUserEnable},
+		{"acl_users", newQueue.AclUsers},
+		{"alt_router", newQueue.AltRouter},
+		{"backfill_depth", newQueue.BackfillDepth},
+		{"checkpoint_min", newQueue.CheckpointMin},
+		{"default_chunk", newQueue.DefaultChunk},
+		{"from_route_only", newQueue.FromRouteOnly},
+		{"kill_delay", newQueue.KillDelay},
+		{"max_array_size", newQueue.MaxArraySize},
+		{"max_group_res", newQueue.MaxGroupRes},
+		{"max_group_res_soft", newQueue.MaxGroupResSoft},
+		{"max_group_run", newQueue.MaxGroupRun},
+		{"max_group_run_soft", newQueue.MaxGroupRunSoft},
+		{"max_queuable", newQueue.MaxQueuable},
+		{"max_queued", newQueue.MaxQueued},
+		{"max_queued_res", newQueue.MaxQueuedRes},
+		{"max_run", newQueue.MaxRun},
+		{"max_run_res", newQueue.MaxRunRes},
+		{"max_run_res_soft", newQueue.MaxRunResSoft},
+		{"max_run_soft", newQueue.MaxRunSoft},
+		{"max_running", newQueue.MaxRunning},
+		{"max_user_res", newQueue.MaxUserRes},
+		{"max_user_res_soft", newQueue.MaxUserResSoft},
+		{"max_user_run", newQueue.MaxUserRun},
+		{"max_user_run_soft", newQueue.MaxUserRunSoft},
+		{"node_group_key", newQueue.NodeGroupKey},
+		{"partition", newQueue.Partition},
+		{"priority", newQueue.Priority},
+		{"queued_jobs_threshold", newQueue.QueuedJobsThreshold},
+		{"queued_jobs_threshold_res", newQueue.QueuedJobsThresholdRes},
+		{"resources_assigned", newQueue.ResourcesAssigned},
+		{"resources_available", newQueue.ResourcesAvailable},
+		{"resources_default", newQueue.ResourcesDefault},
+		{"resources_max", newQueue.ResourcesMax},
+		{"resources_min", newQueue.ResourcesMin},
+		{"route_destinations", newQueue.RouteDestinations},
+		{"route_held_jobs", newQueue.RouteHeldJobs},
+		{"route_lifetime", newQueue.RouteLifetime},
+		{"route_retry_time", newQueue.RouteRetryTime},
+		{"route_waiting_jobs", newQueue.RouteWaitingJobs},
 	}
 	for _, v := range fields {
-		c, err := generateCreateCommands(v.new, "node", new.Name, v.attribute)
+		c, err := generateCreateCommands(v.newAttr, "node", newQueue.Name, v.attribute)
 		if err != nil {
 			return PbsQueue{}, err
 		}
@@ -489,12 +489,12 @@ func (client *PbsClient) CreateQueue(new PbsQueue) (PbsQueue, error) {
 		return PbsQueue{}, fmt.Errorf("%s, %s, %s", err, strings.Join(commands, ","), completeErrOutput)
 	}
 
-	new, err = client.GetQueue(new.Name)
+	newQueue, err = client.GetQueue(newQueue.Name)
 	if err != nil {
-		return new, err
+		return newQueue, err
 	}
 
-	return new, nil
+	return newQueue, nil
 }
 
 func (client *PbsClient) DeleteQueue(name string) error {

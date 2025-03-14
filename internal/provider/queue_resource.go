@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -290,11 +289,7 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	queueModel, diags = createQueueModel(queue)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	queueModel = createQueueModel(queue)
 
 	diags = resp.State.Set(ctx, queueModel)
 	resp.Diagnostics.Append(diags...)
@@ -324,10 +319,7 @@ func (r *queueResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	var diags diag.Diagnostics
-	queue, diags = createQueueModel(q)
-	resp.Diagnostics.Append(diags...)
-
+	queue = createQueueModel(q)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &queue)...)
 }
 

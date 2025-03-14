@@ -189,10 +189,9 @@ func (d *queueDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	queueModel, diag := createQueueModel(resultData)
-	resp.Diagnostics.Append(diag...)
+	queueModel := createQueueModel(resultData)
 
-	diag = resp.State.Set(ctx, &queueModel)
+	diag := resp.State.Set(ctx, &queueModel)
 	resp.Diagnostics.Append(diag...)
 }
 

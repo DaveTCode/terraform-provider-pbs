@@ -111,27 +111,27 @@ func (c *PbsClient) GetHooks() ([]PbsHook, error) {
 	return parseHookOutput(out)
 }
 
-func (c *PbsClient) CreateHook(new PbsHook) (PbsHook, error) {
+func (c *PbsClient) CreateHook(newHook PbsHook) (PbsHook, error) {
 	var commands = []string{
-		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create hook %s'", new.Name),
+		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create hook %s'", newHook.Name),
 	}
 
 	fields := []struct {
 		attribute string
-		new       any
+		newAttr   any
 	}{
-		{"alarm", new.Alarm},
-		{"debug", new.Debug},
-		{"enabled", new.Enabled},
-		{"event", new.Event},
-		{"fail_action", new.FailAction},
-		{"freq", new.Freq},
-		{"order", new.Order},
-		{"type", new.Type},
-		{"user", new.User},
+		{"alarm", newHook.Alarm},
+		{"debug", newHook.Debug},
+		{"enabled", newHook.Enabled},
+		{"event", newHook.Event},
+		{"fail_action", newHook.FailAction},
+		{"freq", newHook.Freq},
+		{"order", newHook.Order},
+		{"type", newHook.Type},
+		{"user", newHook.User},
 	}
 	for _, v := range fields {
-		c, err := generateCreateCommands(v.new, "hook", new.Name, v.attribute)
+		c, err := generateCreateCommands(v.newAttr, "hook", newHook.Name, v.attribute)
 		if err != nil {
 			return PbsHook{}, err
 		}
@@ -147,35 +147,35 @@ func (c *PbsClient) CreateHook(new PbsHook) (PbsHook, error) {
 		return PbsHook{}, fmt.Errorf("%s %s %s", err, completeErrOutput, strings.Join(commands, ","))
 	}
 
-	return c.GetHook(new.Name)
+	return c.GetHook(newHook.Name)
 }
 
-func (c *PbsClient) UpdateHook(new PbsHook) (PbsHook, error) {
-	old, err := c.GetHook(new.Name)
+func (c *PbsClient) UpdateHook(newHook PbsHook) (PbsHook, error) {
+	oldHook, err := c.GetHook(newHook.Name)
 	if err != nil {
-		return old, err
+		return oldHook, err
 	}
 
 	var commands = []string{}
 	fields := []struct {
 		attribute string
-		old       any
-		new       any
+		oldAttr   any
+		newAttr   any
 	}{
-		{"alarm", old.Alarm, new.Alarm},
-		{"debug", old.Debug, new.Debug},
-		{"enabled", old.Enabled, new.Enabled},
-		{"event", old.Event, new.Event},
-		{"fail_action", old.FailAction, new.FailAction},
-		{"freq", old.Freq, new.Freq},
-		{"order", old.Order, new.Order},
-		{"type", old.Type, new.Type},
-		{"user", old.User, new.User},
+		{"alarm", oldHook.Alarm, newHook.Alarm},
+		{"debug", oldHook.Debug, newHook.Debug},
+		{"enabled", oldHook.Enabled, newHook.Enabled},
+		{"event", oldHook.Event, newHook.Event},
+		{"fail_action", oldHook.FailAction, newHook.FailAction},
+		{"freq", oldHook.Freq, newHook.Freq},
+		{"order", oldHook.Order, newHook.Order},
+		{"type", oldHook.Type, newHook.Type},
+		{"user", oldHook.User, newHook.User},
 	}
 	for _, v := range fields {
-		newCommands, err := generateUpdateAttributeCommand(v.old, v.new, "queue", new.Name, v.attribute)
+		newCommands, err := generateUpdateAttributeCommand(v.oldAttr, v.newAttr, "hook", newHook.Name, v.attribute)
 		if err != nil {
-			return old, err
+			return oldHook, err
 		}
 		commands = append(commands, newCommands...)
 	}
@@ -186,10 +186,10 @@ func (c *PbsClient) UpdateHook(new PbsHook) (PbsHook, error) {
 		for _, e := range errOutput {
 			completeErrOutput += string(e)
 		}
-		return old, fmt.Errorf("%s %s %s", err, completeErrOutput, strings.Join(commands, ","))
+		return oldHook, fmt.Errorf("%s %s %s", err, completeErrOutput, strings.Join(commands, ","))
 	}
 
-	return c.GetHook(old.Name)
+	return c.GetHook(oldHook.Name)
 }
 
 func (c *PbsClient) DeleteHook(name string) error {

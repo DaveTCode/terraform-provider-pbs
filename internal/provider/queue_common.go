@@ -131,9 +131,7 @@ func (m queueModel) ToPbsQueue(ctx context.Context) (pbsclient.PbsQueue, diag.Di
 	return queue, diags
 }
 
-func createQueueModel(queue pbsclient.PbsQueue) (queueModel, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	model := queueModel{
 		Name:      types.StringValue(queue.Name),
 		Enabled:   types.BoolValue(queue.Enabled),
@@ -217,5 +215,5 @@ func createQueueModel(queue pbsclient.PbsQueue) (queueModel, diag.Diagnostics) {
 		model.ResourcesMin = elements
 	}
 
-	return model, diags
+	return model
 }

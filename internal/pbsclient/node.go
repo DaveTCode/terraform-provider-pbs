@@ -216,42 +216,42 @@ func (c *PbsClient) GetNodes() ([]PbsNode, error) {
 	return parseNodeOutput(out)
 }
 
-func (c *PbsClient) CreateNode(new PbsNode) (PbsNode, error) {
+func (c *PbsClient) CreateNode(newNode PbsNode) (PbsNode, error) {
 	var extraSettingsOnBaseCmd string
-	if new.Mom != nil {
-		extraSettingsOnBaseCmd += fmt.Sprintf("mom=%s ", *new.Mom)
+	if newNode.Mom != nil {
+		extraSettingsOnBaseCmd += fmt.Sprintf("mom=%s ", *newNode.Mom)
 	}
-	if new.Port != nil {
-		extraSettingsOnBaseCmd += fmt.Sprintf("port=%d ", *new.Port)
+	if newNode.Port != nil {
+		extraSettingsOnBaseCmd += fmt.Sprintf("port=%d ", *newNode.Port)
 	}
 
 	var commands = []string{
-		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create node %s %s'", new.Name, extraSettingsOnBaseCmd),
+		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create node %s %s'", newNode.Name, extraSettingsOnBaseCmd),
 	}
 
 	fields := []struct {
 		attribute string
-		new       any
+		newAttr   any
 	}{
-		{"comment", new.Comment},
-		{"current_aoe", new.CurrentAoe},
-		{"current_eoe", new.CurrentEoe},
-		{"in_multi_node_host", new.InMultiNodeHost},
-		{"jobs", new.Jobs},
-		{"no_multinode_jobs", new.NoMultinodeJobs},
-		{"partition", new.Partition},
-		{"p_names", new.PNames},
-		{"power_off_eligible", new.PowerOffEligible},
-		{"power_provisioning", new.PowerProvisioning},
-		{"priority", new.Priority},
-		{"provision_enable", new.ProvisionEnable},
-		{"queue", new.Queue},
-		{"resources_available", new.ResourcesAvailable},
-		{"resv", new.Resv},
-		{"resv_enable", new.ResvEnable},
+		{"comment", newNode.Comment},
+		{"current_aoe", newNode.CurrentAoe},
+		{"current_eoe", newNode.CurrentEoe},
+		{"in_multi_node_host", newNode.InMultiNodeHost},
+		{"jobs", newNode.Jobs},
+		{"no_multinode_jobs", newNode.NoMultinodeJobs},
+		{"partition", newNode.Partition},
+		{"p_names", newNode.PNames},
+		{"power_off_eligible", newNode.PowerOffEligible},
+		{"power_provisioning", newNode.PowerProvisioning},
+		{"priority", newNode.Priority},
+		{"provision_enable", newNode.ProvisionEnable},
+		{"queue", newNode.Queue},
+		{"resources_available", newNode.ResourcesAvailable},
+		{"resv", newNode.Resv},
+		{"resv_enable", newNode.ResvEnable},
 	}
 	for _, v := range fields {
-		c, err := generateCreateCommands(v.new, "node", new.Name, v.attribute)
+		c, err := generateCreateCommands(v.newAttr, "node", newNode.Name, v.attribute)
 		if err != nil {
 			return PbsNode{}, err
 		}
@@ -267,67 +267,48 @@ func (c *PbsClient) CreateNode(new PbsNode) (PbsNode, error) {
 		return PbsNode{}, fmt.Errorf("%s, %s, %s", err, strings.Join(commands, ","), completeErrOutput)
 	}
 
-	return c.GetNode(new.Name)
+	return c.GetNode(newNode.Name)
 }
 
-func (c *PbsClient) UpdateNode(new PbsNode) (PbsNode, error) {
-	old, err := c.GetNode(new.Name)
+func (c *PbsClient) UpdateNode(newNode PbsNode) (PbsNode, error) {
+	oldNode, err := c.GetNode(newNode.Name)
 	if err != nil {
-		return old, err
+		return oldNode, err
 	}
 
 	var commands = []string{}
 	fields := []struct {
 		attribute string
-		old       any
-		new       any
+		oldAttr   any
+		newAttr   any
 	}{
-		{"comment", old.Comment, new.Comment},
-		{"current_aoe", old.CurrentAoe, new.CurrentAoe},
-		{"current_eoe", old.CurrentEoe, new.CurrentEoe},
-		{"in_multi_node_host", old.InMultiNodeHost, new.InMultiNodeHost},
-		{"no_multinode_jobs", old.NoMultinodeJobs, new.NoMultinodeJobs},
-		{"partition", old.Partition, new.Partition},
-		{"p_names", old.PNames, new.PNames},
-		{"power_off_eligible", old.PowerOffEligible, new.PowerOffEligible},
-		{"power_provisioning", old.PowerProvisioning, new.PowerProvisioning},
-		{"priority", old.Priority, new.Priority},
-		{"provision_enable", old.ProvisionEnable, new.ProvisionEnable},
-		{"queue", old.Queue, new.Queue},
-		{"resources_available", old.ResourcesAvailable, new.ResourcesAvailable},
-		{"resv_enable", old.ResvEnable, new.ResvEnable},
+		{"comment", oldNode.Comment, newNode.Comment},
+		{"current_aoe", oldNode.CurrentAoe, newNode.CurrentAoe},
+		{"current_eoe", oldNode.CurrentEoe, newNode.CurrentEoe},
+		{"in_multi_node_host", oldNode.InMultiNodeHost, newNode.InMultiNodeHost},
+		{"no_multinode_jobs", oldNode.NoMultinodeJobs, newNode.NoMultinodeJobs},
+		{"partition", oldNode.Partition, newNode.Partition},
+		{"p_names", oldNode.PNames, newNode.PNames},
+		{"power_off_eligible", oldNode.PowerOffEligible, newNode.PowerOffEligible},
+		{"power_provisioning", oldNode.PowerProvisioning, newNode.PowerProvisioning},
+		{"priority", oldNode.Priority, newNode.Priority},
+		{"provision_enable", oldNode.ProvisionEnable, newNode.ProvisionEnable},
+		{"queue", oldNode.Queue, newNode.Queue},
+		{"resources_available", oldNode.ResourcesAvailable, newNode.ResourcesAvailable},
+		{"resv_enable", oldNode.ResvEnable, newNode.ResvEnable},
 	}
+
+	// Horrible hack because host and vnode are properties in the resources_available map but actually set by the MoM not the user
+	delete(oldNode.ResourcesAvailable, "host")
+	delete(oldNode.ResourcesAvailable, "vnode")
+	delete(newNode.ResourcesAvailable, "host")
+	delete(newNode.ResourcesAvailable, "vnode")
 	for _, v := range fields {
-		switch v.old.(type) {
-		case *bool:
-			commands = append(commands, generateUpdateBoolAttributeCommand("node", new.Name, v.attribute, v.old.(*bool), v.new.(*bool))...)
-		case *int32:
-			commands = append(commands, generateUpdateInt32AttributeCommand("node", new.Name, v.attribute, v.old.(*int32), v.new.(*int32))...)
-		case *string:
-			commands = append(commands, generateUpdateStringAttributeCommand("node", new.Name, v.attribute, v.old.(*string), v.new.(*string))...)
-		case map[string]string:
-			oldValue := v.old.(map[string]string)
-			newValue := v.new.(map[string]string)
-			for k, oldAttrVal := range oldValue {
-				// Special case because host/vnode are set by mom on the node not by the user
-				if k == "host" || k == "vnode" {
-					continue
-				}
-				newAttrVal, ok := newValue[k]
-				if !ok {
-					commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'unset node %s %s.%s'", new.Name, v.attribute, k))
-				} else if oldAttrVal != newAttrVal {
-					commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set node %s %s.%s=%s'", new.Name, v.attribute, k, newAttrVal))
-				}
-			}
-			for k, newAttrVal := range newValue {
-				if _, ok := oldValue[k]; !ok {
-					commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set node %s %s.%s=%s'", new.Name, v.attribute, k, newAttrVal))
-				}
-			}
-		default:
-			return old, fmt.Errorf("unsupported type %T", v.old)
+		newCommands, err := generateUpdateAttributeCommand(v.oldAttr, v.newAttr, "node", newNode.Name, v.attribute)
+		if err != nil {
+			return oldNode, err
 		}
+		commands = append(commands, newCommands...)
 	}
 
 	_, errOutput, err := c.runCommands(commands) // TODO - Reject bad chars to avoid command injection
@@ -336,15 +317,15 @@ func (c *PbsClient) UpdateNode(new PbsNode) (PbsNode, error) {
 		for _, e := range errOutput {
 			completeErrOutput += string(e)
 		}
-		return old, fmt.Errorf("%s, %s, %s", err, strings.Join(commands, ","), completeErrOutput)
+		return oldNode, fmt.Errorf("%s, %s, %s", err, strings.Join(commands, ","), completeErrOutput)
 	}
 
-	old, err = c.GetNode(old.Name)
+	oldNode, err = c.GetNode(oldNode.Name)
 	if err != nil {
-		return old, err
+		return oldNode, err
 	}
 
-	return old, nil
+	return oldNode, nil
 }
 
 func (c *PbsClient) DeleteNode(name string) error {

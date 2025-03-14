@@ -4,7 +4,6 @@ import (
 	"context"
 	"terraform-provider-pbs/internal/pbsclient"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -193,9 +192,7 @@ func (m serverModel) ToPbsServer(ctx context.Context) pbsclient.PbsServer {
 	return server
 }
 
-func createServerModel(server pbsclient.PbsServer) (serverModel, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func createServerModel(server pbsclient.PbsServer) serverModel {
 	model := serverModel{Name: types.StringValue(server.Name)}
 
 	model.AclHostEnable = types.BoolPointerValue(server.AclHostEnable)
@@ -304,5 +301,5 @@ func createServerModel(server pbsclient.PbsServer) (serverModel, diag.Diagnostic
 		model.ResourcesMax = elements
 	}
 
-	return model, diags
+	return model
 }
