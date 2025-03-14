@@ -19,7 +19,7 @@ type pbsHookModel struct {
 	User       types.String `tfsdk:"user"`
 }
 
-func (m pbsHookModel) ToPbsResource() pbsclient.PbsHook {
+func (m pbsHookModel) ToPbsHook() pbsclient.PbsHook {
 	return pbsclient.PbsHook{
 		Name:       m.Name.ValueString(),
 		Type:       m.Type.ValueStringPointer(),

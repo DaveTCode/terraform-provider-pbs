@@ -230,3 +230,46 @@ func TestParseQmgrMultiLineResource(t *testing.T) {
 	}
 
 }
+
+var pinnedi32 = int32(1)
+var pinnedstr = "a"
+var pinnedbool = true
+var updateTests = []struct {
+	old      any
+	new      any
+	expected []string
+}{
+	{true, true, []string{}},
+	{int32(1), int32(1), []string{}},
+	{"a", "a", []string{}},
+	{int32(1), int32(2), []string{"/opt/pbs/bin/qmgr -c 'set queue workq test=2'"}},
+	{&pinnedi32, (*int32)(nil), []string{"/opt/pbs/bin/qmgr -c 'unset queue workq test'"}},
+	{(*int32)(nil), &pinnedi32, []string{"/opt/pbs/bin/qmgr -c 'set queue workq test=1'"}},
+	{"a", "b", []string{"/opt/pbs/bin/qmgr -c 'set queue workq test=\"b\"'"}},
+	{&pinnedstr, (*string)(nil), []string{"/opt/pbs/bin/qmgr -c 'unset queue workq test'"}},
+	{(*string)(nil), &pinnedstr, []string{"/opt/pbs/bin/qmgr -c 'set queue workq test=\"a\"'"}},
+	{true, false, []string{"/opt/pbs/bin/qmgr -c 'set queue workq test=false'"}},
+	{&pinnedbool, (*bool)(nil), []string{"/opt/pbs/bin/qmgr -c 'unset queue workq test'"}},
+	{(*bool)(nil), &pinnedbool, []string{"/opt/pbs/bin/qmgr -c 'set queue workq test=true'"}},
+}
+
+func TestGenerateUpdateAttributeCommand(t *testing.T) {
+	for _, tt := range updateTests {
+		commands, err := generateUpdateAttributeCommand(tt.old, tt.new, "queue", "workq", "test")
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+			return
+		}
+		if len(commands) != len(tt.expected) {
+			t.Errorf("expected %d command but got %d", len(tt.expected), len(commands))
+			return
+		}
+
+		for i, command := range commands {
+			if command != tt.expected[i] {
+				t.Errorf("got %q, wanted %q", command, tt.expected[i])
+			}
+		}
+	}
+}

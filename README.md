@@ -10,11 +10,10 @@ The following table illustrates the various resources that this provider eventua
 | Resource             | Create | Read | Update | Delete | Data Source |
 |----------------------|--------|------|--------|--------|-------------|
 | Queue                | y      | y    | y      | y      | y           |
-| vNode                | x      | x    | x      | x      | x           |
+| vNode                | y      | y    | y      | y      | y           |
 | Custom Resource      | y      | y    | y      | y      | y           |
 | Hooks                | y      | y    | y      | y      | y           |
-| Server Attributes    | x      | x    | x      | x      | x           |
-| Scheduler Attributes | x      | x    | x      | x      | x           |
+| Server Attributes    | y      | y    | y      | y      | y           |
 | Hook files           | x      | x    | x      | x      | x           |
 
 This repository will probably never provision jobs/reservations etc as those are deemed outside of the general "configuration of PBS" steps.

@@ -8,7 +8,6 @@ import (
 
 const GET_QUEUE_QMGR_CMD = "/opt/pbs/bin/qmgr -c 'list queue %s'"
 const GET_QUEUES_QMGR_CMD = "/opt/pbs/bin/qmgr -c 'list queue @default'"
-const CREATE_QUEUE_QMGR_CMD = "/opt/pbs/bin/qmgr -c 'create queue %s queue_type=%s'"
 
 type PbsQueue struct {
 	AclGroupEnable         *bool
@@ -319,9 +318,9 @@ func (client *PbsClient) GetQueue(name string) (PbsQueue, error) {
 
 // GetQueues returns all queues configured on the PBS server
 func (client *PbsClient) GetQueues() ([]PbsQueue, error) {
-	queueOutput, err := client.runCommand(GET_QUEUES_QMGR_CMD)
+	queueOutput, errOutput, err := client.runCommand(GET_QUEUES_QMGR_CMD)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute command against PBS server %s: %s", err.Error(), errOutput)
 	}
 
 	queues, err := parseQueueOutput(queueOutput)
@@ -393,56 +392,20 @@ func (client *PbsClient) UpdateQueue(updatedQueue PbsQueue) (PbsQueue, error) {
 		{"started", oldQueue.Started, updatedQueue.Started},
 	}
 	for _, v := range fields {
-		command := ""
-		switch v.old.(type) {
-		case bool:
-			oldValue := v.old.(bool)
-			newValue := v.new.(bool)
-			command = generateUpdateBoolAttributeCommand("queue", updatedQueue.Name, v.attribute, &oldValue, &newValue)
-		case *bool:
-			command = generateUpdateBoolAttributeCommand("queue", updatedQueue.Name, v.attribute, v.old.(*bool), v.new.(*bool))
-		case int32:
-			oldValue := v.old.(int32)
-			newValue := v.new.(int32)
-			command = generateUpdateInt32AttributeCommand("queue", updatedQueue.Name, v.attribute, &oldValue, &newValue)
-		case *int32:
-			command = generateUpdateInt32AttributeCommand("queue", updatedQueue.Name, v.attribute, v.old.(*int32), v.new.(*int32))
-		case string:
-			oldValue := v.old.(string)
-			newValue := v.new.(string)
-			command = generateUpdateStringAttributeCommand("queue", updatedQueue.Name, v.attribute, &oldValue, &newValue)
-		case *string:
-			command = generateUpdateStringAttributeCommand("queue", updatedQueue.Name, v.attribute, v.old.(*string), v.new.(*string))
-		case map[string]string:
-			oldValue := v.old.(map[string]string)
-			newValue := v.new.(map[string]string)
-			for k, oldAttrVal := range oldValue {
-				newAttrVal, ok := newValue[k]
-				if !ok {
-					command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'unset queue %s %s.%s'", updatedQueue.Name, v.attribute, k)
-				} else if oldAttrVal != newAttrVal {
-					command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s %s.%s=%s'", updatedQueue.Name, v.attribute, k, newAttrVal)
-				}
-			}
-			for k, newAttrVal := range newValue {
-				if _, ok := oldValue[k]; !ok {
-					command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s %s.%s=%s'", updatedQueue.Name, v.attribute, k, newAttrVal)
-				}
-			}
-
-		default:
-			return oldQueue, fmt.Errorf("unsupported type %T", v.old)
+		newCommands, err := generateUpdateAttributeCommand(v.old, v.new, "queue", updatedQueue.Name, v.attribute)
+		if err != nil {
+			return oldQueue, err
 		}
-
-		if command != "" {
-			commands = append(commands, command)
-		}
-
+		commands = append(commands, newCommands...)
 	}
 
-	_, err = client.runCommands(commands) // TODO - Reject bad chars to avoid command injection
+	_, errOutput, err := client.runCommands(commands) // TODO - Reject bad chars to avoid command injection
 	if err != nil {
-		return oldQueue, err
+		completeErrOutput := ""
+		for _, e := range errOutput {
+			completeErrOutput += string(e)
+		}
+		return oldQueue, fmt.Errorf("%s, %s, %s", err, strings.Join(commands, ","), completeErrOutput)
 	}
 
 	oldQueue, err = client.GetQueue(oldQueue.Name)
@@ -453,111 +416,91 @@ func (client *PbsClient) UpdateQueue(updatedQueue PbsQueue) (PbsQueue, error) {
 	return oldQueue, nil
 }
 
-func (client *PbsClient) CreateQueue(newQueue PbsQueue) (PbsQueue, error) {
+func (client *PbsClient) CreateQueue(new PbsQueue) (PbsQueue, error) {
 	var commands = []string{
-		fmt.Sprintf(CREATE_QUEUE_QMGR_CMD, newQueue.Name, newQueue.QueueType),
-		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s enabled=%s'", newQueue.Name, strconv.FormatBool(newQueue.Enabled)),
-		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s started=%s'", newQueue.Name, strconv.FormatBool(newQueue.Started)),
+		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create queue %s queue_type=%s'", new.Name, new.QueueType),
+		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s enabled=%s'", new.Name, strconv.FormatBool(new.Enabled)),
+		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s started=%s'", new.Name, strconv.FormatBool(new.Started)),
 	}
 
 	fields := []struct {
 		attribute string
 		new       any
 	}{
-		{"acl_group_enable", newQueue.AclGroupEnable},
-		{"acl_groups", newQueue.AclGroups},
-		{"acl_host_enable", newQueue.AclHostEnable},
-		{"acl_hosts", newQueue.AclHosts},
-		{"acl_user_enable", newQueue.AclUserEnable},
-		{"acl_users", newQueue.AclUsers},
-		{"alt_router", newQueue.AltRouter},
-		{"backfill_depth", newQueue.BackfillDepth},
-		{"checkpoint_min", newQueue.CheckpointMin},
-		{"default_chunk", newQueue.DefaultChunk},
-		{"from_route_only", newQueue.FromRouteOnly},
-		{"kill_delay", newQueue.KillDelay},
-		{"max_array_size", newQueue.MaxArraySize},
-		{"max_group_res", newQueue.MaxGroupRes},
-		{"max_group_res_soft", newQueue.MaxGroupResSoft},
-		{"max_group_run", newQueue.MaxGroupRun},
-		{"max_group_run_soft", newQueue.MaxGroupRunSoft},
-		{"max_queuable", newQueue.MaxQueuable},
-		{"max_queued", newQueue.MaxQueued},
-		{"max_queued_res", newQueue.MaxQueuedRes},
-		{"max_run", newQueue.MaxRun},
-		{"max_run_res", newQueue.MaxRunRes},
-		{"max_run_res_soft", newQueue.MaxRunResSoft},
-		{"max_run_soft", newQueue.MaxRunSoft},
-		{"max_running", newQueue.MaxRunning},
-		{"max_user_res", newQueue.MaxUserRes},
-		{"max_user_res_soft", newQueue.MaxUserResSoft},
-		{"max_user_run", newQueue.MaxUserRun},
-		{"max_user_run_soft", newQueue.MaxUserRunSoft},
-		{"node_group_key", newQueue.NodeGroupKey},
-		{"partition", newQueue.Partition},
-		{"priority", newQueue.Priority},
-		{"queued_jobs_threshold", newQueue.QueuedJobsThreshold},
-		{"queued_jobs_threshold_res", newQueue.QueuedJobsThresholdRes},
-		{"resources_assigned", newQueue.ResourcesAssigned},
-		{"resources_available", newQueue.ResourcesAvailable},
-		{"resources_default", newQueue.ResourcesDefault},
-		{"resources_max", newQueue.ResourcesMax},
-		{"resources_min", newQueue.ResourcesMin},
-		{"route_destinations", newQueue.RouteDestinations},
-		{"route_held_jobs", newQueue.RouteHeldJobs},
-		{"route_lifetime", newQueue.RouteLifetime},
-		{"route_retry_time", newQueue.RouteRetryTime},
-		{"route_waiting_jobs", newQueue.RouteWaitingJobs},
+		{"acl_group_enable", new.AclGroupEnable},
+		{"acl_groups", new.AclGroups},
+		{"acl_host_enable", new.AclHostEnable},
+		{"acl_hosts", new.AclHosts},
+		{"acl_user_enable", new.AclUserEnable},
+		{"acl_users", new.AclUsers},
+		{"alt_router", new.AltRouter},
+		{"backfill_depth", new.BackfillDepth},
+		{"checkpoint_min", new.CheckpointMin},
+		{"default_chunk", new.DefaultChunk},
+		{"from_route_only", new.FromRouteOnly},
+		{"kill_delay", new.KillDelay},
+		{"max_array_size", new.MaxArraySize},
+		{"max_group_res", new.MaxGroupRes},
+		{"max_group_res_soft", new.MaxGroupResSoft},
+		{"max_group_run", new.MaxGroupRun},
+		{"max_group_run_soft", new.MaxGroupRunSoft},
+		{"max_queuable", new.MaxQueuable},
+		{"max_queued", new.MaxQueued},
+		{"max_queued_res", new.MaxQueuedRes},
+		{"max_run", new.MaxRun},
+		{"max_run_res", new.MaxRunRes},
+		{"max_run_res_soft", new.MaxRunResSoft},
+		{"max_run_soft", new.MaxRunSoft},
+		{"max_running", new.MaxRunning},
+		{"max_user_res", new.MaxUserRes},
+		{"max_user_res_soft", new.MaxUserResSoft},
+		{"max_user_run", new.MaxUserRun},
+		{"max_user_run_soft", new.MaxUserRunSoft},
+		{"node_group_key", new.NodeGroupKey},
+		{"partition", new.Partition},
+		{"priority", new.Priority},
+		{"queued_jobs_threshold", new.QueuedJobsThreshold},
+		{"queued_jobs_threshold_res", new.QueuedJobsThresholdRes},
+		{"resources_assigned", new.ResourcesAssigned},
+		{"resources_available", new.ResourcesAvailable},
+		{"resources_default", new.ResourcesDefault},
+		{"resources_max", new.ResourcesMax},
+		{"resources_min", new.ResourcesMin},
+		{"route_destinations", new.RouteDestinations},
+		{"route_held_jobs", new.RouteHeldJobs},
+		{"route_lifetime", new.RouteLifetime},
+		{"route_retry_time", new.RouteRetryTime},
+		{"route_waiting_jobs", new.RouteWaitingJobs},
 	}
 	for _, v := range fields {
-		command := ""
-		switch v.new.(type) {
-		case *bool:
-			b := v.new.(*bool)
-			if b != nil {
-				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s %s=%s'", newQueue.Name, v.attribute, strconv.FormatBool(*b))
-			}
-		case *int32:
-			i := v.new.(*int32)
-			if i != nil {
-				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s %s=%s'", newQueue.Name, v.attribute, strconv.Itoa(int(*i)))
-			}
-		case *string:
-			s := v.new.(*string)
-			if s != nil {
-				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s %s=%s'", newQueue.Name, v.attribute, *s)
-			}
-		case map[string]string:
-			m := v.new.(map[string]string)
-			for k, subval := range m {
-				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s %s.%s=%s'", newQueue.Name, v.attribute, k, subval)
-			}
-		default:
-			return newQueue, fmt.Errorf("unsupported type %T", v.new)
+		c, err := generateCreateCommands(v.new, "node", new.Name, v.attribute)
+		if err != nil {
+			return PbsQueue{}, err
 		}
+		commands = append(commands, c...)
+	}
 
-		if command != "" {
-			commands = append(commands, command)
+	_, errOutput, err := client.runCommands(commands) // TODO - Reject bad chars to avoid command injection
+	if err != nil {
+		completeErrOutput := ""
+		for _, e := range errOutput {
+			completeErrOutput += string(e)
 		}
+		return PbsQueue{}, fmt.Errorf("%s, %s, %s", err, strings.Join(commands, ","), completeErrOutput)
 	}
 
-	_, err := client.runCommands(commands) // TODO - Reject bad chars to avoid command injection
+	new, err = client.GetQueue(new.Name)
 	if err != nil {
-		var newQueue PbsQueue
-		return newQueue, err
-	}
-	newQueue, err = client.GetQueue(newQueue.Name)
-	if err != nil {
-		return newQueue, err
+		return new, err
 	}
 
-	return newQueue, nil
+	return new, nil
 }
 
 func (client *PbsClient) DeleteQueue(name string) error {
-	_, err := client.runCommand(fmt.Sprintf("/opt/pbs/bin/qmgr -c 'delete queue %s'", name))
+	_, errOutput, err := client.runCommand(fmt.Sprintf("/opt/pbs/bin/qmgr -c 'delete queue %s'", name))
 	if err != nil {
-		return err
+		return fmt.Errorf("%s %s", err, errOutput)
 	}
 
 	return nil

@@ -19,10 +19,6 @@ type queueDataSource struct {
 	client *pbsclient.PbsClient
 }
 
-type queueDataSourceModel struct {
-	Queues []queueModel `tfsdk:"queues"`
-}
-
 func (d *queueDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_queue"
 }
@@ -184,18 +180,20 @@ func (d *queueDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 }
 
 func (d *queueDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	queueData := queueDataSourceModel{}
-	queues, err := d.client.GetQueues()
+	sourceData := queueModel{}
+	resp.Diagnostics.Append(req.Config.Get(ctx, &sourceData)...)
+
+	resultData, err := d.client.GetQueue(sourceData.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to connect to PBS server and get queue information", err.Error())
+		resp.Diagnostics.AddError("Unable to connect to PBS server and get hook information", err.Error())
 		return
 	}
 
-	for _, queue := range queues {
-		model, diag := createQueueModel(queue)
-		resp.Diagnostics.Append(diag...)
-		queueData.Queues = append(queueData.Queues, model)
-	}
+	queueModel, diag := createQueueModel(resultData)
+	resp.Diagnostics.Append(diag...)
+
+	diag = resp.State.Set(ctx, &queueModel)
+	resp.Diagnostics.Append(diag...)
 }
 
 func (d *queueDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {

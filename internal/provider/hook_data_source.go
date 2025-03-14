@@ -18,10 +18,6 @@ type pbsHookDataSource struct {
 	client *pbsclient.PbsClient
 }
 
-type pbsHookDataSourceModel struct {
-	Hooks []pbsHookModel `tfsdk:"hooks"`
-}
-
 func (d *pbsHookDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_hook"
 }
@@ -64,16 +60,19 @@ func (d *pbsHookDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 }
 
 func (d *pbsHookDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	pbsHookData := pbsHookDataSourceModel{}
-	pbsHooks, err := d.client.GetHooks()
+	sourceData := pbsHookModel{}
+	resp.Diagnostics.Append(req.Config.Get(ctx, &sourceData)...)
+
+	resultData, err := d.client.GetHook(sourceData.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to connect to PBS server and get hook information", err.Error())
 		return
 	}
 
-	for _, hook := range pbsHooks {
-		pbsHookData.Hooks = append(pbsHookData.Hooks, createPbsHookModel(hook))
-	}
+	model := createPbsHookModel(resultData)
+
+	diag := resp.State.Set(ctx, &model)
+	resp.Diagnostics.Append(diag...)
 }
 
 func (d *pbsHookDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {

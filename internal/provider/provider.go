@@ -209,6 +209,9 @@ func (p *pbsProvider) DataSources(_ context.Context) []func() datasource.DataSou
 	return []func() datasource.DataSource{
 		NewQueueDataSource,
 		NewPbsResourceDataSource,
+		NewPbsHookDataSource,
+		NewPbsNodeDataSource,
+		NewServerDataSource,
 	}
 }
 
@@ -216,5 +219,8 @@ func (p *pbsProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewQueueResource,
 		NewPbsResourceResource,
+		NewPbsHookResource,
+		NewPbsNodeResource,
+		NewServerResource,
 	}
 }

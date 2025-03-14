@@ -18,10 +18,6 @@ type pbsResourceDataSource struct {
 	client *pbsclient.PbsClient
 }
 
-type pbsResourceDataSourceModel struct {
-	Resources []pbsResourceModel `tfsdk:"resources"`
-}
-
 func (d *pbsResourceDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_resource"
 }
@@ -43,16 +39,19 @@ func (d *pbsResourceDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 }
 
 func (d *pbsResourceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	pbsResourceData := pbsResourceDataSourceModel{}
-	pbsResources, err := d.client.GetResources()
+	sourceData := pbsResourceModel{}
+	resp.Diagnostics.Append(req.Config.Get(ctx, &sourceData)...)
+
+	resultData, err := d.client.GetResource(sourceData.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to connect to PBS server and get resource information", err.Error())
+		resp.Diagnostics.AddError("Unable to connect to PBS server and get hook information", err.Error())
 		return
 	}
 
-	for _, resource := range pbsResources {
-		pbsResourceData.Resources = append(pbsResourceData.Resources, createPbsResoureModel(resource))
-	}
+	model := createPbsResoureModel(resultData)
+
+	diag := resp.State.Set(ctx, &model)
+	resp.Diagnostics.Append(diag...)
 }
 
 func (d *pbsResourceDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {

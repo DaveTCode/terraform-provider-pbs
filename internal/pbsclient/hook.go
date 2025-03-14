@@ -75,10 +75,12 @@ func parseHookOutput(output []byte) ([]PbsHook, error) {
 					case "user":
 						current.User = &s
 					}
+				} else {
+					return nil, fmt.Errorf("WHAT IS THIS TYPE %T", v)
 				}
-
-				hooks = append(hooks, current)
 			}
+
+			hooks = append(hooks, current)
 		}
 	}
 
@@ -101,9 +103,9 @@ func (c *PbsClient) GetHook(name string) (PbsHook, error) {
 }
 
 func (c *PbsClient) GetHooks() ([]PbsHook, error) {
-	out, err := c.runCommand("/opt/pbs/bin/qmgr -c 'list hook @default'")
+	out, errOutput, err := c.runCommand("/opt/pbs/bin/qmgr -c 'list hook @default'")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %s", err, errOutput)
 	}
 
 	return parseHookOutput(out)
@@ -111,7 +113,7 @@ func (c *PbsClient) GetHooks() ([]PbsHook, error) {
 
 func (c *PbsClient) CreateHook(new PbsHook) (PbsHook, error) {
 	var commands = []string{
-		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create hook %s", new.Name),
+		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create hook %s'", new.Name),
 	}
 
 	fields := []struct {
@@ -129,35 +131,20 @@ func (c *PbsClient) CreateHook(new PbsHook) (PbsHook, error) {
 		{"user", new.User},
 	}
 	for _, v := range fields {
-		command := ""
-		switch v.new.(type) {
-		case *bool:
-			b := v.new.(*bool)
-			if b != nil {
-				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set hook %s %s=%s'", new.Name, v.attribute, strconv.FormatBool(*b))
-			}
-		case *int32:
-			i := v.new.(*int32)
-			if i != nil {
-				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set hook %s %s=%s'", new.Name, v.attribute, strconv.Itoa(int(*i)))
-			}
-		case *string:
-			s := v.new.(*string)
-			if s != nil {
-				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set hook %s %s=%s'", new.Name, v.attribute, *s)
-			}
-		default:
-			return new, fmt.Errorf("unsupported type %T", v.new)
+		c, err := generateCreateCommands(v.new, "hook", new.Name, v.attribute)
+		if err != nil {
+			return PbsHook{}, err
 		}
-
-		if command != "" {
-			commands = append(commands, command)
-		}
+		commands = append(commands, c...)
 	}
 
-	_, err := c.runCommands(commands) // TODO - Reject bad chars to avoid command injection
+	_, errOutput, err := c.runCommands(commands) // TODO - Reject bad chars to avoid command injection
 	if err != nil {
-		return PbsHook{}, err
+		completeErrOutput := ""
+		for _, e := range errOutput {
+			completeErrOutput += string(e)
+		}
+		return PbsHook{}, fmt.Errorf("%s %s %s", err, completeErrOutput, strings.Join(commands, ","))
 	}
 
 	return c.GetHook(new.Name)
@@ -186,42 +173,30 @@ func (c *PbsClient) UpdateHook(new PbsHook) (PbsHook, error) {
 		{"user", old.User, new.User},
 	}
 	for _, v := range fields {
-		command := ""
-		switch v.old.(type) {
-		case *bool:
-			command = generateUpdateBoolAttributeCommand("hook", new.Name, v.attribute, v.old.(*bool), v.new.(*bool))
-		case *int32:
-			command = generateUpdateInt32AttributeCommand("hook", new.Name, v.attribute, v.old.(*int32), v.new.(*int32))
-		case *string:
-			command = generateUpdateStringAttributeCommand("hook", new.Name, v.attribute, v.old.(*string), v.new.(*string))
-		default:
-			return old, fmt.Errorf("unsupported type %T", v.old)
+		newCommands, err := generateUpdateAttributeCommand(v.old, v.new, "queue", new.Name, v.attribute)
+		if err != nil {
+			return old, err
 		}
+		commands = append(commands, newCommands...)
+	}
 
-		if command != "" {
-			commands = append(commands, command)
+	_, errOutput, err := c.runCommands(commands) // TODO - Reject bad chars to avoid command injection
+	if err != nil {
+		completeErrOutput := ""
+		for _, e := range errOutput {
+			completeErrOutput += string(e)
 		}
-
+		return old, fmt.Errorf("%s %s %s", err, completeErrOutput, strings.Join(commands, ","))
 	}
 
-	_, err = c.runCommands(commands) // TODO - Reject bad chars to avoid command injection
-	if err != nil {
-		return old, err
-	}
-
-	old, err = c.GetHook(old.Name)
-	if err != nil {
-		return old, err
-	}
-
-	return old, nil
+	return c.GetHook(old.Name)
 }
 
 func (c *PbsClient) DeleteHook(name string) error {
 	cmd := fmt.Sprintf("/opt/pbs/bin/qmgr -c 'delete hook %s'", name)
-	_, err := c.runCommand(cmd)
+	_, errOutput, err := c.runCommand(cmd)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s %s", err, errOutput)
 	}
 
 	return nil

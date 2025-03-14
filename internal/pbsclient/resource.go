@@ -55,9 +55,9 @@ func (c *PbsClient) GetResource(name string) (PbsResource, error) {
 }
 
 func (c *PbsClient) GetResources() ([]PbsResource, error) {
-	out, err := c.runCommand("/opt/pbs/bin/qmgr -c 'list resource @default'")
+	out, errOutput, err := c.runCommand("/opt/pbs/bin/qmgr -c 'list resource @default'")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %s", err, errOutput)
 	}
 
 	return parseResourceOutput(out)
@@ -65,16 +65,16 @@ func (c *PbsClient) GetResources() ([]PbsResource, error) {
 
 func (c *PbsClient) CreateResource(newResource PbsResource) (PbsResource, error) {
 	cmd := fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create resource %s type=%s'", newResource.Name, newResource.Type)
-	_, err := c.runCommand(cmd)
+	_, errOutput, err := c.runCommand(cmd)
 	if err != nil {
-		return PbsResource{}, err
+		return PbsResource{}, fmt.Errorf("%s %s", err, errOutput)
 	}
 
 	if newResource.Flag != nil {
 		cmd = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set resource %s flag=%s'", newResource.Name, *newResource.Flag)
-		_, err = c.runCommand(cmd)
+		_, errOutput, err := c.runCommand(cmd)
 		if err != nil {
-			return PbsResource{}, err
+			return PbsResource{}, fmt.Errorf("%s %s", err, errOutput)
 		}
 	}
 
@@ -88,21 +88,21 @@ func (c *PbsClient) UpdateResource(r PbsResource) (PbsResource, error) {
 	}
 
 	if oldResource.Type != r.Type {
-		_, err = c.runCommand(fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set resource %s type=%s'", r.Name, r.Type))
+		_, errOutput, err := c.runCommand(fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set resource %s type=%s'", r.Name, r.Type))
 		if err != nil {
-			return PbsResource{}, err
+			return PbsResource{}, fmt.Errorf("%s %s", err, errOutput)
 		}
 	}
 
 	if oldResource.Flag != nil && r.Flag == nil {
-		_, err = c.runCommand(fmt.Sprintf("/opt/pbs/bin/qmgr -c 'unset resource %s flag'", r.Name))
+		_, errOutput, err := c.runCommand(fmt.Sprintf("/opt/pbs/bin/qmgr -c 'unset resource %s flag'", r.Name))
 		if err != nil {
-			return PbsResource{}, err
+			return PbsResource{}, fmt.Errorf("%s %s", err, errOutput)
 		}
 	} else {
-		_, err = c.runCommand(fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set resource %s flag=%s'", r.Name, *r.Flag))
+		_, errOutput, err := c.runCommand(fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set resource %s flag=%s'", r.Name, *r.Flag))
 		if err != nil {
-			return PbsResource{}, err
+			return PbsResource{}, fmt.Errorf("%s %s", err, errOutput)
 		}
 	}
 
@@ -110,10 +110,9 @@ func (c *PbsClient) UpdateResource(r PbsResource) (PbsResource, error) {
 }
 
 func (c *PbsClient) DeleteResource(name string) error {
-	cmd := fmt.Sprintf("/opt/pbs/bin/qmgr -c 'delete resource %s'", name)
-	_, err := c.runCommand(cmd)
+	_, errOutput, err := c.runCommand(fmt.Sprintf("/opt/pbs/bin/qmgr -c 'delete resource %s'", name))
 	if err != nil {
-		return err
+		return fmt.Errorf("%s %s", err, errOutput)
 	}
 
 	return nil

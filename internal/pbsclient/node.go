@@ -38,7 +38,6 @@ type PbsNode struct {
 	ResvEnable          *bool
 	Sharing             *string
 	State               *string
-	ToplogyInfo         *string
 }
 
 func parseNodeOutput(output []byte) ([]PbsNode, error) {
@@ -167,8 +166,6 @@ func parseNodeOutput(output []byte) ([]PbsNode, error) {
 						current.Sharing = &s
 					case "state":
 						current.State = &s
-					case "toplogy_info":
-						current.ToplogyInfo = &s
 					default:
 						// TODO - Not sure whether we care about unsupported attributes
 					}
@@ -207,17 +204,29 @@ func (c *PbsClient) GetNode(name string) (PbsNode, error) {
 }
 
 func (c *PbsClient) GetNodes() ([]PbsNode, error) {
-	out, err := c.runCommand("/opt/pbs/bin/qmgr -c 'list node @default'")
+	out, errOutput, err := c.runCommand("/opt/pbs/bin/qmgr -c 'list node @default'")
 	if err != nil {
-		return nil, err
+		// PBS returns an error when checking for a list of nodes if there aren't any.
+		if strings.Contains(string(errOutput), "Server has no node list") {
+			return []PbsNode{}, nil
+		}
+		return nil, fmt.Errorf("%s %s %s", err, errOutput, out)
 	}
 
 	return parseNodeOutput(out)
 }
 
 func (c *PbsClient) CreateNode(new PbsNode) (PbsNode, error) {
+	var extraSettingsOnBaseCmd string
+	if new.Mom != nil {
+		extraSettingsOnBaseCmd += fmt.Sprintf("mom=%s ", *new.Mom)
+	}
+	if new.Port != nil {
+		extraSettingsOnBaseCmd += fmt.Sprintf("port=%d ", *new.Port)
+	}
+
 	var commands = []string{
-		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create node %s", new.Name),
+		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create node %s %s'", new.Name, extraSettingsOnBaseCmd),
 	}
 
 	fields := []struct {
@@ -229,63 +238,33 @@ func (c *PbsClient) CreateNode(new PbsNode) (PbsNode, error) {
 		{"current_eoe", new.CurrentEoe},
 		{"in_multi_node_host", new.InMultiNodeHost},
 		{"jobs", new.Jobs},
-		{"last_state_change_time", new.LastStateChangeTime},
-		{"last_used_time", new.LastUsedTime},
-		{"license", new.License},
-		{"license_info", new.LicenseInfo},
-		{"lic_type", new.LicType},
-		{"maintenance_jobs", new.MaintenanceJobs},
-		{"mom", new.Mom},
 		{"no_multinode_jobs", new.NoMultinodeJobs},
-		{"n_type", new.NType},
 		{"partition", new.Partition},
-		{"pbs_version", new.PbsVersion},
-		{"p_cpus", new.PCpus},
 		{"p_names", new.PNames},
-		{"port", new.Port},
 		{"power_off_eligible", new.PowerOffEligible},
 		{"power_provisioning", new.PowerProvisioning},
 		{"priority", new.Priority},
 		{"provision_enable", new.ProvisionEnable},
 		{"queue", new.Queue},
-		{"resources_assigned", new.ResourcesAssigned},
 		{"resources_available", new.ResourcesAvailable},
 		{"resv", new.Resv},
 		{"resv_enable", new.ResvEnable},
-		{"sharing", new.Sharing},
-		{"state", new.State},
-		{"toplogy_info", new.ToplogyInfo},
 	}
 	for _, v := range fields {
-		command := ""
-		switch v.new.(type) {
-		case *bool:
-			b := v.new.(*bool)
-			if b != nil {
-				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set node %s %s=%s'", new.Name, v.attribute, strconv.FormatBool(*b))
-			}
-		case *int32:
-			i := v.new.(*int32)
-			if i != nil {
-				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set node %s %s=%s'", new.Name, v.attribute, strconv.Itoa(int(*i)))
-			}
-		case *string:
-			s := v.new.(*string)
-			if s != nil {
-				command = fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set node %s %s=%s'", new.Name, v.attribute, *s)
-			}
-		default:
-			return new, fmt.Errorf("unsupported type %T", v.new)
+		c, err := generateCreateCommands(v.new, "node", new.Name, v.attribute)
+		if err != nil {
+			return PbsNode{}, err
 		}
-
-		if command != "" {
-			commands = append(commands, command)
-		}
+		commands = append(commands, c...)
 	}
 
-	_, err := c.runCommands(commands) // TODO - Reject bad chars to avoid command injection
+	_, errOutput, err := c.runCommands(commands) // TODO - Reject bad chars to avoid command injection
 	if err != nil {
-		return PbsNode{}, err
+		completeErrOutput := ""
+		for _, e := range errOutput {
+			completeErrOutput += string(e)
+		}
+		return PbsNode{}, fmt.Errorf("%s, %s, %s", err, strings.Join(commands, ","), completeErrOutput)
 	}
 
 	return c.GetNode(new.Name)
@@ -307,56 +286,57 @@ func (c *PbsClient) UpdateNode(new PbsNode) (PbsNode, error) {
 		{"current_aoe", old.CurrentAoe, new.CurrentAoe},
 		{"current_eoe", old.CurrentEoe, new.CurrentEoe},
 		{"in_multi_node_host", old.InMultiNodeHost, new.InMultiNodeHost},
-		{"jobs", old.Jobs, new.Jobs},
-		{"last_state_change_time", old.LastStateChangeTime, new.LastStateChangeTime},
-		{"last_used_time", old.LastUsedTime, new.LastUsedTime},
-		{"license", old.License, new.License},
-		{"license_info", old.LicenseInfo, new.LicenseInfo},
-		{"lic_type", old.LicType, new.LicType},
-		{"maintenance_jobs", old.MaintenanceJobs, new.MaintenanceJobs},
-		{"mom", old.Mom, new.Mom},
 		{"no_multinode_jobs", old.NoMultinodeJobs, new.NoMultinodeJobs},
-		{"n_type", old.NType, new.NType},
 		{"partition", old.Partition, new.Partition},
-		{"pbs_version", old.PbsVersion, new.PbsVersion},
-		{"p_cpus", old.PCpus, new.PCpus},
 		{"p_names", old.PNames, new.PNames},
-		{"port", old.Port, new.Port},
 		{"power_off_eligible", old.PowerOffEligible, new.PowerOffEligible},
 		{"power_provisioning", old.PowerProvisioning, new.PowerProvisioning},
 		{"priority", old.Priority, new.Priority},
 		{"provision_enable", old.ProvisionEnable, new.ProvisionEnable},
 		{"queue", old.Queue, new.Queue},
-		{"resources_assigned", old.ResourcesAssigned, new.ResourcesAssigned},
 		{"resources_available", old.ResourcesAvailable, new.ResourcesAvailable},
-		{"resv", old.Resv, new.Resv},
 		{"resv_enable", old.ResvEnable, new.ResvEnable},
-		{"sharing", old.Sharing, new.Sharing},
-		{"state", old.State, new.State},
-		{"toplogy_info", old.ToplogyInfo, new.ToplogyInfo},
 	}
 	for _, v := range fields {
-		command := ""
 		switch v.old.(type) {
 		case *bool:
-			command = generateUpdateBoolAttributeCommand("node", new.Name, v.attribute, v.old.(*bool), v.new.(*bool))
+			commands = append(commands, generateUpdateBoolAttributeCommand("node", new.Name, v.attribute, v.old.(*bool), v.new.(*bool))...)
 		case *int32:
-			command = generateUpdateInt32AttributeCommand("node", new.Name, v.attribute, v.old.(*int32), v.new.(*int32))
+			commands = append(commands, generateUpdateInt32AttributeCommand("node", new.Name, v.attribute, v.old.(*int32), v.new.(*int32))...)
 		case *string:
-			command = generateUpdateStringAttributeCommand("node", new.Name, v.attribute, v.old.(*string), v.new.(*string))
+			commands = append(commands, generateUpdateStringAttributeCommand("node", new.Name, v.attribute, v.old.(*string), v.new.(*string))...)
+		case map[string]string:
+			oldValue := v.old.(map[string]string)
+			newValue := v.new.(map[string]string)
+			for k, oldAttrVal := range oldValue {
+				// Special case because host/vnode are set by mom on the node not by the user
+				if k == "host" || k == "vnode" {
+					continue
+				}
+				newAttrVal, ok := newValue[k]
+				if !ok {
+					commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'unset node %s %s.%s'", new.Name, v.attribute, k))
+				} else if oldAttrVal != newAttrVal {
+					commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set node %s %s.%s=%s'", new.Name, v.attribute, k, newAttrVal))
+				}
+			}
+			for k, newAttrVal := range newValue {
+				if _, ok := oldValue[k]; !ok {
+					commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set node %s %s.%s=%s'", new.Name, v.attribute, k, newAttrVal))
+				}
+			}
 		default:
 			return old, fmt.Errorf("unsupported type %T", v.old)
 		}
-
-		if command != "" {
-			commands = append(commands, command)
-		}
-
 	}
 
-	_, err = c.runCommands(commands) // TODO - Reject bad chars to avoid command injection
+	_, errOutput, err := c.runCommands(commands) // TODO - Reject bad chars to avoid command injection
 	if err != nil {
-		return old, err
+		completeErrOutput := ""
+		for _, e := range errOutput {
+			completeErrOutput += string(e)
+		}
+		return old, fmt.Errorf("%s, %s, %s", err, strings.Join(commands, ","), completeErrOutput)
 	}
 
 	old, err = c.GetNode(old.Name)
@@ -369,9 +349,9 @@ func (c *PbsClient) UpdateNode(new PbsNode) (PbsNode, error) {
 
 func (c *PbsClient) DeleteNode(name string) error {
 	cmd := fmt.Sprintf("/opt/pbs/bin/qmgr -c 'delete node %s'", name)
-	_, err := c.runCommand(cmd)
+	_, errOutput, err := c.runCommand(cmd)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s %s", err, errOutput)
 	}
 
 	return nil

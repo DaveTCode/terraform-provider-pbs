@@ -118,13 +118,13 @@ func (r *pbsHookResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	pbsHook, err := r.client.CreateHook(model.ToPbsResource())
+	pbsHook, err := r.client.CreateHook(model.ToPbsHook())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating resource", "Could not create hook, unexpected error: "+err.Error())
 		return
 	}
 
-	model = createPbsHookModel(pbsHook)
+	_ = createPbsHookModel(pbsHook)
 
 	diags = resp.State.Set(ctx, model)
 	resp.Diagnostics.Append(diags...)
@@ -164,7 +164,7 @@ func (r *pbsHookResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	_, err := r.client.UpdateHook(data.ToPbsResource())
+	_, err := r.client.UpdateHook(data.ToPbsHook())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Update Resource",
