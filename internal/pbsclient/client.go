@@ -207,7 +207,9 @@ func parseGenericQmgrOutput(output string) []qmgrResult {
 			prevAttribute = attribute
 		} else if continueAttributeRegex.MatchString(line) {
 			if prevAttribute != "" {
-				current.attributes[prevAttribute] = current.attributes[prevAttribute].(string) + continueAttributeRegex.FindStringSubmatch(line)[1]
+				if _, ok := current.attributes[prevAttribute].(string); ok {
+					current.attributes[prevAttribute] = current.attributes[prevAttribute].(string) + continueAttributeRegex.FindStringSubmatch(line)[1]
+				}
 			}
 		}
 	}
@@ -252,24 +254,53 @@ func generateCreateCommands(new any, qmgrObjectType string, qmgrObjectName strin
 func generateUpdateAttributeCommand(old any, new any, qmgrObjectType string, qmgrObjectName string, qmgrAttribute string) ([]string, error) {
 	switch old := old.(type) {
 	case bool:
-		newValue := new.(bool)
-		return generateUpdateBoolAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, &old, &newValue), nil
+		if newValue, ok := new.(bool); ok {
+			return generateUpdateBoolAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, &old, &newValue), nil
+		} else {
+			return nil, fmt.Errorf("unsupported type %T", new)
+		}
 	case *bool:
-		return generateUpdateBoolAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, new.(*bool)), nil
+		if newValue, ok := new.(*bool); ok {
+			return generateUpdateBoolAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, newValue), nil
+		} else {
+			return nil, fmt.Errorf("unsupported type %T", new)
+		}
 	case int32:
-		newValue := new.(int32)
-		return generateUpdateInt32AttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, &old, &newValue), nil
+		if newValue, ok := new.(int32); ok {
+			return generateUpdateInt32AttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, &old, &newValue), nil
+		} else {
+			return nil, fmt.Errorf("unsupported type %T", new)
+		}
 	case *int32:
-		return generateUpdateInt32AttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, new.(*int32)), nil
+		if newValue, ok := new.(*int32); ok {
+			return generateUpdateInt32AttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, newValue), nil
+		} else {
+			return nil, fmt.Errorf("unsupported type %T", new)
+		}
 	case *int64:
-		return generateUpdateInt64AttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, new.(*int64)), nil
+		if newValue, ok := new.(*int64); ok {
+			return generateUpdateInt64AttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, newValue), nil
+		} else {
+			return nil, fmt.Errorf("unsupported type %T", new)
+		}
 	case string:
-		newValue := new.(string)
-		return generateUpdateStringAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, &old, &newValue), nil
+		if newValue, ok := new.(string); ok {
+			return generateUpdateStringAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, &old, &newValue), nil
+		} else {
+			return nil, fmt.Errorf("unsupported type %T", new)
+		}
 	case *string:
-		return generateUpdateStringAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, new.(*string)), nil
+		if newValue, ok := new.(*string); ok {
+			return generateUpdateStringAttributeCommand(qmgrObjectType, qmgrObjectName, qmgrAttribute, old, newValue), nil
+		} else {
+			return nil, fmt.Errorf("unsupported type %T", new)
+		}
 	case map[string]string:
-		newValue := new.(map[string]string)
+		newValue, ok := new.(map[string]string)
+		if !ok {
+			return nil, fmt.Errorf("unsupported type %T", new)
+		}
+
 		commands := []string{}
 		for k, oldAttrVal := range old {
 			newAttrVal, ok := newValue[k]
