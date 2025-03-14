@@ -39,33 +39,15 @@ func createPbsHookModel(h pbsclient.PbsHook) pbsHookModel {
 		Name: types.StringValue(h.Name),
 	}
 
-	if h.Type != nil {
-		model.Type = types.StringValue(*h.Type)
-	}
-	if h.Alarm != nil {
-		model.Alarm = types.Int32Value(*h.Alarm)
-	}
-	if h.Debug != nil {
-		model.Debug = types.BoolValue(*h.Debug)
-	}
-	if h.Enabled != nil {
-		model.Enabled = types.BoolValue(*h.Enabled)
-	}
-	if h.Event != nil {
-		model.Event = types.StringValue(*h.Event)
-	}
-	if h.FailAction != nil {
-		model.FailAction = types.StringValue(*h.FailAction)
-	}
-	if h.Freq != nil {
-		model.Freq = types.Int32Value(*h.Freq)
-	}
-	if h.Order != nil {
-		model.Order = types.Int32Value(*h.Order)
-	}
-	if h.User != nil {
-		model.User = types.StringValue(*h.User)
-	}
+	model.Type = types.StringPointerValue(h.Type)
+	model.Alarm = types.Int32PointerValue(h.Alarm)
+	model.Debug = types.BoolPointerValue(h.Debug)
+	model.Enabled = types.BoolPointerValue(h.Enabled)
+	model.Event = types.StringPointerValue(h.Event)
+	model.FailAction = types.StringPointerValue(h.FailAction)
+	model.Freq = types.Int32PointerValue(h.Freq)
+	model.Order = types.Int32PointerValue(h.Order)
+	model.User = types.StringPointerValue(h.User)
 
 	return model
 }

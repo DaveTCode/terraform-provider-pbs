@@ -166,7 +166,7 @@ type qmgrResult struct {
 }
 
 func parseGenericQmgrOutput(output string) []qmgrResult {
-	lines := strings.Split(string(output), "\n")
+	lines := strings.Split(output, "\n")
 	results := make([]qmgrResult, 0)
 	current := qmgrResult{}
 	var prevAttribute string

@@ -64,51 +64,21 @@ func createPbsNodeModel(h pbsclient.PbsNode) pbsNodeModel {
 		Name: types.StringValue(h.Name),
 	}
 
-	if h.Comment != nil {
-		model.Comment = types.StringValue(*h.Comment)
-	}
-	if h.CurrentAoe != nil {
-		model.CurrentAoe = types.StringValue(*h.CurrentAoe)
-	}
-	if h.CurrentEoe != nil {
-		model.CurrentEoe = types.StringValue(*h.CurrentEoe)
-	}
-	if h.InMultiNodeHost != nil {
-		model.InMultiNodeHost = types.Int32Value(*h.InMultiNodeHost)
-	}
-	if h.Mom != nil {
-		model.Mom = types.StringValue(*h.Mom)
-	}
-	if h.NoMultinodeJobs != nil {
-		model.NoMultinodeJobs = types.BoolValue(*h.NoMultinodeJobs)
-	}
-	if h.Partition != nil {
-		model.Partition = types.StringValue(*h.Partition)
-	}
-	if h.PNames != nil {
-		model.PNames = types.StringValue(*h.PNames)
-	}
-	if h.Port != nil {
-		model.Port = types.Int32Value(*h.Port)
-	}
-	if h.PowerOffEligible != nil {
-		model.PowerOffEligible = types.BoolValue(*h.PowerOffEligible)
-	}
-	if h.PowerProvisioning != nil {
-		model.PowerProvisioning = types.BoolValue(*h.PowerProvisioning)
-	}
-	if h.Priority != nil {
-		model.Priority = types.Int32Value(*h.Priority)
-	}
-	if h.ProvisionEnable != nil {
-		model.ProvisionEnable = types.BoolValue(*h.ProvisionEnable)
-	}
-	if h.Queue != nil {
-		model.Queue = types.StringValue(*h.Queue)
-	}
-	if h.ResvEnable != nil {
-		model.ResvEnable = types.BoolValue(*h.ResvEnable)
-	}
+	model.Comment = types.StringPointerValue(h.Comment)
+	model.CurrentAoe = types.StringPointerValue(h.CurrentAoe)
+	model.CurrentEoe = types.StringPointerValue(h.CurrentEoe)
+	model.InMultiNodeHost = types.Int32PointerValue(h.InMultiNodeHost)
+	model.Mom = types.StringPointerValue(h.Mom)
+	model.NoMultinodeJobs = types.BoolPointerValue(h.NoMultinodeJobs)
+	model.Partition = types.StringPointerValue(h.Partition)
+	model.PNames = types.StringPointerValue(h.PNames)
+	model.Port = types.Int32PointerValue(h.Port)
+	model.PowerOffEligible = types.BoolPointerValue(h.PowerOffEligible)
+	model.PowerProvisioning = types.BoolPointerValue(h.PowerProvisioning)
+	model.Priority = types.Int32PointerValue(h.Priority)
+	model.ProvisionEnable = types.BoolPointerValue(h.ProvisionEnable)
+	model.Queue = types.StringPointerValue(h.Queue)
+	model.ResvEnable = types.BoolPointerValue(h.ResvEnable)
 
 	model.ResourcesAvailable = make(map[string]types.String)
 	for k, v := range h.ResourcesAvailable {

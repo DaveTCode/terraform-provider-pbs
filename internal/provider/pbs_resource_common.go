@@ -24,10 +24,7 @@ func createPbsResoureModel(r pbsclient.PbsResource) pbsResourceModel {
 	model := pbsResourceModel{
 		Name: types.StringValue(r.Name),
 		Type: types.StringValue(r.Type),
-	}
-
-	if r.Flag != nil {
-		model.Flag = types.StringValue(*r.Flag)
+		Flag: types.StringPointerValue(r.Flag),
 	}
 
 	return model

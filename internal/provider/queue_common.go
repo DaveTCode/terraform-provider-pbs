@@ -141,108 +141,46 @@ func createQueueModel(queue pbsclient.PbsQueue) (queueModel, diag.Diagnostics) {
 		QueueType: types.StringValue(queue.QueueType),
 	}
 
-	if queue.AclGroupEnable != nil {
-		model.AclGroupEnable = types.BoolValue(*queue.AclGroupEnable)
-	}
-	if queue.AclGroups != nil {
-		model.AclGroups = types.StringValue(*queue.AclGroups)
-	}
-	if queue.AclHostEnable != nil {
-		model.AclHostEnable = types.BoolValue(*queue.AclHostEnable)
-	}
-	if queue.AclHosts != nil {
-		model.AclHosts = types.StringValue(*queue.AclHosts)
-	}
-	if queue.AclUserEnable != nil {
-		model.AclUserEnable = types.BoolValue(*queue.AclUserEnable)
-	}
-	if queue.AclUsers != nil {
-		model.AclUsers = types.StringValue(*queue.AclUsers)
-	}
-	if queue.AltRouter != nil {
-		model.AltRouter = types.StringValue(*queue.AltRouter)
-	}
-	if queue.BackfillDepth != nil {
-		model.BackfillDepth = types.Int32Value(int32(*queue.BackfillDepth))
-	}
-	if queue.CheckpointMin != nil {
-		model.CheckpointMin = types.Int32Value(int32(*queue.CheckpointMin))
-	}
-	if queue.DefaultChunk != nil {
-		model.DefaultChunk = types.StringValue(*queue.DefaultChunk)
-	}
-	if queue.FromRouteOnly != nil {
-		model.FromRouteOnly = types.BoolValue(*queue.FromRouteOnly)
-	}
-	if queue.KillDelay != nil {
-		model.KillDelay = types.Int32Value(int32(*queue.KillDelay))
-	}
-	if queue.MaxArraySize != nil {
-		model.MaxArraySize = types.Int32Value(int32(*queue.MaxArraySize))
-	}
-	if queue.MaxGroupRes != nil {
-		model.MaxGroupRes = types.Int32Value(int32(*queue.MaxGroupRes))
-	}
-	if queue.MaxGroupResSoft != nil {
-		model.MaxGroupResSoft = types.Int32Value(int32(*queue.MaxGroupResSoft))
-	}
-	if queue.MaxGroupRun != nil {
-		model.MaxGroupRun = types.Int32Value(int32(*queue.MaxGroupRun))
-	}
-	if queue.MaxGroupRunSoft != nil {
-		model.MaxGroupRunSoft = types.Int32Value(int32(*queue.MaxGroupRunSoft))
-	}
-	if queue.MaxQueuable != nil {
-		model.MaxQueuable = types.Int32Value(int32(*queue.MaxQueuable))
-	}
-	if queue.MaxQueued != nil {
-		model.MaxQueued = types.StringValue(*queue.MaxQueued)
-	}
-	if queue.MaxQueuedRes != nil {
-		model.MaxQueuedRes = types.StringValue(*queue.MaxQueuedRes)
-	}
-	if queue.MaxRun != nil {
-		model.MaxRun = types.StringValue(*queue.MaxRun)
-	}
-	if queue.MaxRunRes != nil {
-		model.MaxRunRes = types.StringValue(*queue.MaxRunRes)
-	}
-	if queue.MaxRunResSoft != nil {
-		model.MaxRunResSoft = types.StringValue(*queue.MaxRunResSoft)
-	}
-	if queue.MaxRunSoft != nil {
-		model.MaxRunSoft = types.StringValue(*queue.MaxRunSoft)
-	}
-	if queue.MaxRunning != nil {
-		model.MaxRunning = types.Int32Value(int32(*queue.MaxRunning))
-	}
-	if queue.MaxUserRes != nil {
-		model.MaxUserRes = types.StringValue(*queue.MaxUserRes)
-	}
-	if queue.MaxUserResSoft != nil {
-		model.MaxUserResSoft = types.StringValue(*queue.MaxUserResSoft)
-	}
-	if queue.MaxUserRun != nil {
-		model.MaxUserRun = types.Int32Value(int32(*queue.MaxUserRun))
-	}
-	if queue.MaxUserRunSoft != nil {
-		model.MaxUserRunSoft = types.Int32Value(int32(*queue.MaxUserRunSoft))
-	}
-	if queue.NodeGroupKey != nil {
-		model.NodeGroupKey = types.StringValue(*queue.NodeGroupKey)
-	}
-	if queue.Partition != nil {
-		model.Partition = types.StringValue(*queue.Partition)
-	}
-	if queue.Priority != nil {
-		model.Priority = types.Int32Value(int32(*queue.Priority))
-	}
-	if queue.QueuedJobsThreshold != nil {
-		model.QueuedJobsThreshold = types.StringValue(*queue.QueuedJobsThreshold)
-	}
-	if queue.QueuedJobsThresholdRes != nil {
-		model.QueuedJobsThresholdRes = types.StringValue(*queue.QueuedJobsThresholdRes)
-	}
+	model.AclGroupEnable = types.BoolPointerValue(queue.AclGroupEnable)
+	model.AclGroups = types.StringPointerValue(queue.AclGroups)
+	model.AclHostEnable = types.BoolPointerValue(queue.AclHostEnable)
+	model.AclHosts = types.StringPointerValue(queue.AclHosts)
+	model.AclUserEnable = types.BoolPointerValue(queue.AclUserEnable)
+	model.AclUsers = types.StringPointerValue(queue.AclUsers)
+	model.AltRouter = types.StringPointerValue(queue.AltRouter)
+	model.BackfillDepth = types.Int32PointerValue(queue.BackfillDepth)
+	model.CheckpointMin = types.Int32PointerValue(queue.CheckpointMin)
+	model.DefaultChunk = types.StringPointerValue(queue.DefaultChunk)
+	model.FromRouteOnly = types.BoolPointerValue(queue.FromRouteOnly)
+	model.KillDelay = types.Int32PointerValue(queue.KillDelay)
+	model.MaxArraySize = types.Int32PointerValue(queue.MaxArraySize)
+	model.MaxGroupRes = types.Int32PointerValue(queue.MaxGroupRes)
+	model.MaxGroupResSoft = types.Int32PointerValue(queue.MaxGroupResSoft)
+	model.MaxGroupRun = types.Int32PointerValue(queue.MaxGroupRun)
+	model.MaxGroupRunSoft = types.Int32PointerValue(queue.MaxGroupRunSoft)
+	model.MaxQueuable = types.Int32PointerValue(queue.MaxQueuable)
+	model.MaxQueued = types.StringPointerValue(queue.MaxQueued)
+	model.MaxQueuedRes = types.StringPointerValue(queue.MaxQueuedRes)
+	model.MaxRun = types.StringPointerValue(queue.MaxRun)
+	model.MaxRunRes = types.StringPointerValue(queue.MaxRunRes)
+	model.MaxRunResSoft = types.StringPointerValue(queue.MaxRunResSoft)
+	model.MaxRunSoft = types.StringPointerValue(queue.MaxRunSoft)
+	model.MaxRunning = types.Int32PointerValue(queue.MaxRunning)
+	model.MaxUserRes = types.StringPointerValue(queue.MaxUserRes)
+	model.MaxUserResSoft = types.StringPointerValue(queue.MaxUserResSoft)
+	model.MaxUserRun = types.Int32PointerValue(queue.MaxUserRun)
+	model.MaxUserRunSoft = types.Int32PointerValue(queue.MaxUserRunSoft)
+	model.NodeGroupKey = types.StringPointerValue(queue.NodeGroupKey)
+	model.Partition = types.StringPointerValue(queue.Partition)
+	model.Priority = types.Int32PointerValue(queue.Priority)
+	model.QueuedJobsThreshold = types.StringPointerValue(queue.QueuedJobsThreshold)
+	model.QueuedJobsThresholdRes = types.StringPointerValue(queue.QueuedJobsThresholdRes)
+	model.RouteDestinations = types.StringPointerValue(queue.RouteDestinations)
+	model.RouteHeldJobs = types.BoolPointerValue(queue.RouteHeldJobs)
+	model.RouteLifetime = types.Int32PointerValue(queue.RouteLifetime)
+	model.RouteRetryTime = types.Int32PointerValue(queue.RouteRetryTime)
+	model.RouteWaitingJobs = types.BoolPointerValue(queue.RouteWaitingJobs)
+
 	if queue.ResourcesAssigned != nil {
 		elements := make(map[string]types.String, 0)
 		for k, v := range queue.ResourcesAssigned {
@@ -277,21 +215,6 @@ func createQueueModel(queue pbsclient.PbsQueue) (queueModel, diag.Diagnostics) {
 			elements[k] = types.StringValue(v)
 		}
 		model.ResourcesMin = elements
-	}
-	if queue.RouteDestinations != nil {
-		model.RouteDestinations = types.StringValue(*queue.RouteDestinations)
-	}
-	if queue.RouteHeldJobs != nil {
-		model.RouteHeldJobs = types.BoolValue(*queue.RouteHeldJobs)
-	}
-	if queue.RouteLifetime != nil {
-		model.RouteLifetime = types.Int32Value(int32(*queue.RouteLifetime))
-	}
-	if queue.RouteRetryTime != nil {
-		model.RouteRetryTime = types.Int32Value(int32(*queue.RouteRetryTime))
-	}
-	if queue.RouteWaitingJobs != nil {
-		model.RouteWaitingJobs = types.BoolValue(*queue.RouteWaitingJobs)
 	}
 
 	return model, diags
