@@ -7,6 +7,7 @@ import (
 )
 
 type pbsNodeModel struct {
+	ID                 types.String            `tfsdk:"id"`
 	Comment            types.String            `tfsdk:"comment"`
 	CurrentAoe         types.String            `tfsdk:"current_aoe"`
 	CurrentEoe         types.String            `tfsdk:"current_eoe"`
@@ -17,7 +18,7 @@ type pbsNodeModel struct {
 	Partition          types.String            `tfsdk:"partition"`
 	PNames             types.String            `tfsdk:"p_names"`
 	Port               types.Int32             `tfsdk:"port"`
-	PowerOffEligible   types.Bool              `tfsdk:"power_off_eligible"`
+	PowerOffEligible   types.Bool              `tfsdk:"poweroff_eligible"`
 	PowerProvisioning  types.Bool              `tfsdk:"power_provisioning"`
 	Priority           types.Int32             `tfsdk:"priority"`
 	ProvisionEnable    types.Bool              `tfsdk:"provision_enable"`
@@ -61,6 +62,7 @@ func (m pbsNodeModel) ToPbsNode() pbsclient.PbsNode {
 
 func createPbsNodeModel(h pbsclient.PbsNode) pbsNodeModel {
 	model := pbsNodeModel{
+		ID:   types.StringValue(h.Name), // Use name as ID
 		Name: types.StringValue(h.Name),
 	}
 
@@ -80,15 +82,28 @@ func createPbsNodeModel(h pbsclient.PbsNode) pbsNodeModel {
 	model.Queue = types.StringPointerValue(h.Queue)
 	model.ResvEnable = types.BoolPointerValue(h.ResvEnable)
 
-	model.ResourcesAvailable = make(map[string]types.String)
-	for k, v := range h.ResourcesAvailable {
-		// This is a bit hacky but the host and vnode attributes arent something you can
-		// set on the resources_available so we don't want terraform getting confused about
-		// what it's managing
+	// Only set ResourcesAvailable if there are actually resources to set
+	// (excluding host and vnode which are PBS internal)
+	hasResources := false
+	for k := range h.ResourcesAvailable {
 		if k != "host" && k != "vnode" {
-			model.ResourcesAvailable[k] = types.StringValue(v)
+			hasResources = true
+			break
 		}
 	}
+
+	if hasResources {
+		model.ResourcesAvailable = make(map[string]types.String)
+		for k, v := range h.ResourcesAvailable {
+			// This is a bit hacky but the host and vnode attributes arent something you can
+			// set on the resources_available so we don't want terraform getting confused about
+			// what it's managing
+			if k != "host" && k != "vnode" {
+				model.ResourcesAvailable[k] = types.StringValue(v)
+			}
+		}
+	}
+	// If hasResources is false, leave ResourcesAvailable as nil (null in Terraform)
 
 	return model
 }

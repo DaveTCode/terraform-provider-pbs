@@ -25,6 +25,10 @@ func (d *pbsResourceDataSource) Metadata(_ context.Context, req datasource.Metad
 func (d *pbsResourceDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The unique identifier for this resource. This is the same as the name.",
+			},
 			"name": schema.StringAttribute{
 				Required: true,
 			},

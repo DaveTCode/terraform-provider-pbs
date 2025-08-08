@@ -1,0 +1,96 @@
+services:
+  pbs:
+    build:
+      context: .
+      dockerfile: ./TestPbs.Dockerfile
+    container_name: pbs
+    hostname: pbs
+    environment:
+      - PBS_START_MOM=1
+    ports:
+      - "2222:22"
+    networks:
+    - default
+    tty: true
+    command: bash
+
+  # Additional compute nodes for testing node creation
+  compute1:
+    build:
+      context: .
+      dockerfile: ./TestPbs.Dockerfile
+    container_name: compute1
+    hostname: compute1
+    environment:
+      - PBS_START_MOM=1
+      - PBS_SERVER=pbs
+    networks:
+    - default
+    tty: true
+    command: bash
+    depends_on:
+      - pbs
+
+  compute2:
+    build:
+      context: .
+      dockerfile: ./TestPbs.Dockerfile
+    container_name: compute2
+    hostname: compute2
+    environment:
+      - PBS_START_MOM=1
+      - PBS_SERVER=pbs
+    networks:
+    - default
+    tty: true
+    command: bash
+    depends_on:
+      - pbs
+
+  compute3:
+    build:
+      context: .
+      dockerfile: ./TestPbs.Dockerfile
+    container_name: compute3
+    hostname: compute3
+    environment:
+      - PBS_START_MOM=1
+      - PBS_SERVER=pbs
+    networks:
+    - default
+    tty: true
+    command: bash
+    depends_on:
+      - pbs
+
+  node1:
+    build:
+      context: .
+      dockerfile: ./TestPbs.Dockerfile
+    container_name: node1
+    hostname: node1
+    environment:
+      - PBS_START_MOM=1
+      - PBS_SERVER=pbs
+    networks:
+    - default
+    tty: true
+    command: bash
+    depends_on:
+      - pbs
+
+  node2:
+    build:
+      context: .
+      dockerfile: ./TestPbs.Dockerfile
+    container_name: node2
+    hostname: node2
+    environment:
+      - PBS_START_MOM=1
+      - PBS_SERVER=pbs
+    networks:
+    - default
+    tty: true
+    command: bash
+    depends_on:
+      - pbs

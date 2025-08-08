@@ -8,6 +8,7 @@ import (
 )
 
 type serverModel struct {
+	ID                            types.String            `tfsdk:"id"`
 	AclHostEnable                 types.Bool              `tfsdk:"acl_host_enable"`
 	AclHostMomsEnable             types.Bool              `tfsdk:"acl_host_moms_enable"`
 	AclHosts                      types.String            `tfsdk:"acl_hosts"`
@@ -40,20 +41,20 @@ type serverModel struct {
 	Managers                      types.String            `tfsdk:"managers"`
 	MaxArraySize                  types.Int32             `tfsdk:"max_array_size"`
 	MaxConcurrentProvision        types.Int32             `tfsdk:"max_concurrent_provision"`
-	MaxGroupRes                   types.String            `tfsdk:"max_group_res"`
-	MaxGroupResSoft               types.String            `tfsdk:"max_group_res_soft"`
+	MaxGroupRes                   map[string]types.String `tfsdk:"max_group_res"`
+	MaxGroupResSoft               map[string]types.String `tfsdk:"max_group_res_soft"`
 	MaxGroupRun                   types.Int32             `tfsdk:"max_group_run"`
 	MaxGroupRunSoft               types.Int32             `tfsdk:"max_group_run_soft"`
 	MaxJobSequenceId              types.Int64             `tfsdk:"max_job_sequence_id"`
-	MaxQueued                     types.String            `tfsdk:"max_queued"`
-	MaxQueuedRes                  types.String            `tfsdk:"max_queued_res"`
-	MaxRun                        types.String            `tfsdk:"max_run"`
-	MaxRunRes                     types.String            `tfsdk:"max_run_res"`
-	MaxRunResSoft                 types.String            `tfsdk:"max_run_res_soft"`
-	MaxRunSoft                    types.String            `tfsdk:"max_run_soft"`
+	MaxQueued                     map[string]types.String `tfsdk:"max_queued"`
+	MaxQueuedRes                  map[string]types.String `tfsdk:"max_queued_res"`
+	MaxRun                        map[string]types.String `tfsdk:"max_run"`
+	MaxRunRes                     map[string]types.String `tfsdk:"max_run_res"`
+	MaxRunResSoft                 map[string]types.String `tfsdk:"max_run_res_soft"`
+	MaxRunSoft                    map[string]types.String `tfsdk:"max_run_soft"`
 	MaxRunning                    types.Int32             `tfsdk:"max_running"`
-	MaxUserRes                    types.String            `tfsdk:"max_user_res"`
-	MaxUserResSoft                types.String            `tfsdk:"max_user_res_soft"`
+	MaxUserRes                    map[string]types.String `tfsdk:"max_user_res"`
+	MaxUserResSoft                map[string]types.String `tfsdk:"max_user_res_soft"`
 	MaxUserRun                    types.Int32             `tfsdk:"max_user_run"`
 	MaxUserRunSoft                types.Int32             `tfsdk:"max_user_run_soft"`
 	Name                          types.String            `tfsdk:"name"`
@@ -125,20 +126,10 @@ func (m serverModel) ToPbsServer(ctx context.Context) pbsclient.PbsServer {
 		Managers:                      m.Managers.ValueStringPointer(),
 		MaxArraySize:                  m.MaxArraySize.ValueInt32Pointer(),
 		MaxConcurrentProvision:        m.MaxConcurrentProvision.ValueInt32Pointer(),
-		MaxGroupRes:                   m.MaxGroupRes.ValueStringPointer(),
-		MaxGroupResSoft:               m.MaxGroupResSoft.ValueStringPointer(),
 		MaxGroupRun:                   m.MaxGroupRun.ValueInt32Pointer(),
 		MaxGroupRunSoft:               m.MaxGroupRunSoft.ValueInt32Pointer(),
 		MaxJobSequenceId:              m.MaxJobSequenceId.ValueInt64Pointer(),
-		MaxQueued:                     m.MaxQueued.ValueStringPointer(),
-		MaxQueuedRes:                  m.MaxQueuedRes.ValueStringPointer(),
-		MaxRun:                        m.MaxRun.ValueStringPointer(),
-		MaxRunRes:                     m.MaxRunRes.ValueStringPointer(),
-		MaxRunResSoft:                 m.MaxRunResSoft.ValueStringPointer(),
-		MaxRunSoft:                    m.MaxRunSoft.ValueStringPointer(),
 		MaxRunning:                    m.MaxRunning.ValueInt32Pointer(),
-		MaxUserRes:                    m.MaxUserRes.ValueStringPointer(),
-		MaxUserResSoft:                m.MaxUserResSoft.ValueStringPointer(),
 		MaxUserRun:                    m.MaxUserRun.ValueInt32Pointer(),
 		MaxUserRunSoft:                m.MaxUserRunSoft.ValueInt32Pointer(),
 		NodeFailRequeue:               m.NodeFailRequeue.ValueInt32Pointer(),
@@ -189,11 +180,76 @@ func (m serverModel) ToPbsServer(ctx context.Context) pbsclient.PbsServer {
 		server.ResourcesMax[k] = v.ValueString()
 	}
 
+	// Convert limit attribute maps from Terraform types to Go maps
+	if len(m.MaxGroupRes) > 0 {
+		server.MaxGroupRes = make(map[string]string)
+		for k, v := range m.MaxGroupRes {
+			server.MaxGroupRes[k] = v.ValueString()
+		}
+	}
+	if len(m.MaxGroupResSoft) > 0 {
+		server.MaxGroupResSoft = make(map[string]string)
+		for k, v := range m.MaxGroupResSoft {
+			server.MaxGroupResSoft[k] = v.ValueString()
+		}
+	}
+	if len(m.MaxQueued) > 0 {
+		server.MaxQueued = make(map[string]string)
+		for k, v := range m.MaxQueued {
+			server.MaxQueued[k] = v.ValueString()
+		}
+	}
+	if len(m.MaxQueuedRes) > 0 {
+		server.MaxQueuedRes = make(map[string]string)
+		for k, v := range m.MaxQueuedRes {
+			server.MaxQueuedRes[k] = v.ValueString()
+		}
+	}
+	if len(m.MaxRun) > 0 {
+		server.MaxRun = make(map[string]string)
+		for k, v := range m.MaxRun {
+			server.MaxRun[k] = v.ValueString()
+		}
+	}
+	if len(m.MaxRunRes) > 0 {
+		server.MaxRunRes = make(map[string]string)
+		for k, v := range m.MaxRunRes {
+			server.MaxRunRes[k] = v.ValueString()
+		}
+	}
+	if len(m.MaxRunResSoft) > 0 {
+		server.MaxRunResSoft = make(map[string]string)
+		for k, v := range m.MaxRunResSoft {
+			server.MaxRunResSoft[k] = v.ValueString()
+		}
+	}
+	if len(m.MaxRunSoft) > 0 {
+		server.MaxRunSoft = make(map[string]string)
+		for k, v := range m.MaxRunSoft {
+			server.MaxRunSoft[k] = v.ValueString()
+		}
+	}
+	if len(m.MaxUserRes) > 0 {
+		server.MaxUserRes = make(map[string]string)
+		for k, v := range m.MaxUserRes {
+			server.MaxUserRes[k] = v.ValueString()
+		}
+	}
+	if len(m.MaxUserResSoft) > 0 {
+		server.MaxUserResSoft = make(map[string]string)
+		for k, v := range m.MaxUserResSoft {
+			server.MaxUserResSoft[k] = v.ValueString()
+		}
+	}
+
 	return server
 }
 
 func createServerModel(server pbsclient.PbsServer) serverModel {
-	model := serverModel{Name: types.StringValue(server.Name)}
+	model := serverModel{
+		ID:   types.StringValue(server.Name), // Use name as ID
+		Name: types.StringValue(server.Name),
+	}
 
 	model.AclHostEnable = types.BoolPointerValue(server.AclHostEnable)
 	model.AclHostMomsEnable = types.BoolPointerValue(server.AclHostMomsEnable)
@@ -226,20 +282,81 @@ func createServerModel(server pbsclient.PbsServer) serverModel {
 	model.Managers = types.StringPointerValue(server.Managers)
 	model.MaxArraySize = types.Int32PointerValue(server.MaxArraySize)
 	model.MaxConcurrentProvision = types.Int32PointerValue(server.MaxConcurrentProvision)
-	model.MaxGroupRes = types.StringPointerValue(server.MaxGroupRes)
-	model.MaxGroupResSoft = types.StringPointerValue(server.MaxGroupResSoft)
+	// Convert map attributes for limit settings
+	if server.MaxGroupRes != nil {
+		elements := make(map[string]types.String)
+		for k, v := range server.MaxGroupRes {
+			elements[k] = types.StringValue(v)
+		}
+		model.MaxGroupRes = elements
+	}
+	if server.MaxGroupResSoft != nil {
+		elements := make(map[string]types.String)
+		for k, v := range server.MaxGroupResSoft {
+			elements[k] = types.StringValue(v)
+		}
+		model.MaxGroupResSoft = elements
+	}
 	model.MaxGroupRun = types.Int32PointerValue(server.MaxGroupRun)
 	model.MaxGroupRunSoft = types.Int32PointerValue(server.MaxGroupRunSoft)
 	model.MaxJobSequenceId = types.Int64PointerValue(server.MaxJobSequenceId)
-	model.MaxQueued = types.StringPointerValue(server.MaxQueued)
-	model.MaxQueuedRes = types.StringPointerValue(server.MaxQueuedRes)
-	model.MaxRun = types.StringPointerValue(server.MaxRun)
-	model.MaxRunRes = types.StringPointerValue(server.MaxRunRes)
-	model.MaxRunResSoft = types.StringPointerValue(server.MaxRunResSoft)
-	model.MaxRunSoft = types.StringPointerValue(server.MaxRunSoft)
+	if server.MaxQueued != nil {
+		elements := make(map[string]types.String)
+		for k, v := range server.MaxQueued {
+			elements[k] = types.StringValue(v)
+		}
+		model.MaxQueued = elements
+	}
+	if server.MaxQueuedRes != nil {
+		elements := make(map[string]types.String)
+		for k, v := range server.MaxQueuedRes {
+			elements[k] = types.StringValue(v)
+		}
+		model.MaxQueuedRes = elements
+	}
+	if server.MaxRun != nil {
+		elements := make(map[string]types.String)
+		for k, v := range server.MaxRun {
+			elements[k] = types.StringValue(v)
+		}
+		model.MaxRun = elements
+	}
+	if server.MaxRunRes != nil {
+		elements := make(map[string]types.String)
+		for k, v := range server.MaxRunRes {
+			elements[k] = types.StringValue(v)
+		}
+		model.MaxRunRes = elements
+	}
+	if server.MaxRunResSoft != nil {
+		elements := make(map[string]types.String)
+		for k, v := range server.MaxRunResSoft {
+			elements[k] = types.StringValue(v)
+		}
+		model.MaxRunResSoft = elements
+	}
+	if server.MaxRunSoft != nil {
+		elements := make(map[string]types.String)
+		for k, v := range server.MaxRunSoft {
+			elements[k] = types.StringValue(v)
+		}
+		model.MaxRunSoft = elements
+	}
 	model.MaxRunning = types.Int32PointerValue(server.MaxRunning)
-	model.MaxUserRes = types.StringPointerValue(server.MaxUserRes)
-	model.MaxUserResSoft = types.StringPointerValue(server.MaxUserResSoft)
+	if server.MaxUserRes != nil {
+		elements := make(map[string]types.String)
+		for k, v := range server.MaxUserRes {
+			elements[k] = types.StringValue(v)
+		}
+		model.MaxUserRes = elements
+	}
+	if server.MaxUserResSoft != nil {
+		elements := make(map[string]types.String)
+		for k, v := range server.MaxUserResSoft {
+			elements[k] = types.StringValue(v)
+		}
+		model.MaxUserResSoft = elements
+	}
 	model.MaxUserRun = types.Int32PointerValue(server.MaxUserRun)
 	model.MaxUserRunSoft = types.Int32PointerValue(server.MaxUserRunSoft)
 	model.NodeFailRequeue = types.Int32PointerValue(server.NodeFailRequeue)

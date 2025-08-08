@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"terraform-provider-pbs/internal/pbsclient"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
@@ -37,6 +38,10 @@ func (r *queueResource) Metadata(_ context.Context, req resource.MetadataRequest
 func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{ // TODO - How to avoid duplication of this schema with data source?
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The unique identifier for this queue. This is the same as the name.",
+			},
 			"acl_group_enable": schema.BoolAttribute{
 				Description: "Controls whether group access to the queue obeys the access control list defined in the  acl_groups queue attribute.",
 				Optional:    true,
@@ -99,12 +104,14 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "The maximum number of subjobs that are allowed in an array job.",
 				Optional:    true,
 			},
-			"max_group_res": schema.Int32Attribute{
-				Description: "Old limit attribute.  Incompatible with new limit attributes.  The maximum amount of the specified resource that any single group may consume in a complex.",
+			"max_group_res": schema.MapAttribute{
+				Description: "Limit attribute.  The maximum amount of the specified resource that any single group may consume.",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"max_group_res_soft": schema.Int32Attribute{
-				Description: "Old limit attribute.  Incompatible with new limit  attributes.  The soft limit on the amount of the specified resource that any single group may consume in a complex. If a group is consuming more than this amount of the specified resource, their jobs are eligible to be preempted by jobs from groups who are not over their soft limit.",
+			"max_group_res_soft": schema.MapAttribute{
+				Description: "Limit attribute.  The soft limit on the amount of the specified resource that any single group may consume.  If a group is consuming more than this amount of the specified resource, their jobs are eligible to be preempted by jobs from groups who are not over their soft limit.",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
 			"max_group_run": schema.Int32Attribute{
@@ -119,40 +126,48 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: " Old limit attribute.  Incompatible with new limit attributes.  The maximum number of jobs allowed to reside in this queue at any given time.",
 				Optional:    true,
 			},
-			"max_queued": schema.StringAttribute{
+			"max_queued": schema.MapAttribute{
 				Description: "Limit attribute.  The maximum number of jobs allowed to be queued  in  or running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot  be used  with old limit attributes.",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"max_queued_res": schema.StringAttribute{
+			"max_queued_res": schema.MapAttribute{
 				Description: "Limit attribute.  The maximum amount of the specified resource allowed to be allocated to jobs queued in or running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"max_run": schema.StringAttribute{
+			"max_run": schema.MapAttribute{
 				Description: "Limit attribute. The maximum number of jobs allowed to be running from this queue.  Can be specified for projects, users,  groups, or all.  Cannot be used with old limit attributes.",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"max_run_res": schema.StringAttribute{
+			"max_run_res": schema.MapAttribute{
 				Description: "Limit attribute. The maximum amount of the specified resource allowed to be allocated to jobs running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"max_run_res_soft": schema.StringAttribute{
+			"max_run_res_soft": schema.MapAttribute{
 				Description: "Limit attribute.  Soft limit on the amount of the specified resource allowed to be allocated to jobs running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"max_run_soft": schema.StringAttribute{
+			"max_run_soft": schema.MapAttribute{
 				Description: "Limit attribute.  Soft limit on the number of jobs allowed to be running from this  queue.   Can be specified  for   projects, users, groups, or all.  Cannot be used with old limit attributes.",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
 			"max_running": schema.Int32Attribute{
 				Description: "Old limit attribute. Incompatible with new limit  attributes.For an execution queue, this is the largest number of jobs allowed to be running at any given time. For a routing queue, this is the largest number of jobs allowed to be transiting from this queue at any given time.",
 				Optional:    true,
 			},
-			"max_user_res": schema.StringAttribute{
+			"max_user_res": schema.MapAttribute{
 				Description: "Old limit attribute.  Incompatible with new limit attributes.  The maximum amount of the specified resource that any single user may consume. ",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"max_user_res_soft": schema.StringAttribute{
+			"max_user_res_soft": schema.MapAttribute{
 				Description: "Old limit attribute.  Incompatible with new limit  attributes.  The soft limit on the amount of the specified resource that any single user may consume.  If a user is consuming more than this amount of the specified resource, their jobs are eligible to be preempted by jobs from users who are not over their soft limit. ",
+				ElementType: types.StringType,
 				Optional:    true,
 			},
 			"max_user_run": schema.Int32Attribute{
@@ -299,17 +314,28 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 }
 
 func (r *queueResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var queue queueModel
+	var state queueModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &queue)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	q, err := r.client.GetQueue(queue.Name.ValueString())
+	// For import, use ID if name is not set
+	queueName := state.Name.ValueString()
+	if queueName == "" && !state.ID.IsNull() {
+		queueName = state.ID.ValueString()
+	}
+
+	q, err := r.client.GetQueue(queueName)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read queues, got error: %s", err))
+		// Check if queue doesn't exist and remove from state
+		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "Unknown queue") {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read queue, got error: %s", err))
 		return
 	}
 
@@ -319,8 +345,15 @@ func (r *queueResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	queue = createQueueModel(q)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &queue)...)
+	// Update state with current values, preserving plan-only values
+	updatedState := createQueueModel(q)
+	// Preserve the name from the original state to avoid unnecessary changes,
+	// but only if it's not empty (during import, state.Name will be empty)
+	if !state.Name.IsNull() && state.Name.ValueString() != "" {
+		updatedState.Name = state.Name
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -330,7 +363,7 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	queue, diags := data.ToPbsQueue(ctx)
 	resp.Diagnostics.Append(diags...)
-	_, err := r.client.UpdateQueue(queue)
+	updatedQueue, err := r.client.UpdateQueue(queue)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Update Resource",
@@ -342,8 +375,11 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
+	// Create the model from the updated queue to ensure all fields including ID are properly set
+	updatedModel := createQueueModel(updatedQueue)
+
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedModel)...)
 }
 
 func (r *queueResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -363,5 +399,6 @@ func (r *queueResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 }
 
 func (r *queueResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	// Use the standard passthrough for ID, which will set both id and trigger a Read
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

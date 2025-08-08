@@ -7,6 +7,7 @@ import (
 )
 
 type pbsHookModel struct {
+	ID         types.String `tfsdk:"id"`
 	Name       types.String `tfsdk:"name"`
 	Type       types.String `tfsdk:"type"`
 	Alarm      types.Int32  `tfsdk:"alarm"`
@@ -20,22 +21,45 @@ type pbsHookModel struct {
 }
 
 func (m pbsHookModel) ToPbsHook() pbsclient.PbsHook {
-	return pbsclient.PbsHook{
-		Name:       m.Name.ValueString(),
-		Type:       m.Type.ValueStringPointer(),
-		Alarm:      m.Alarm.ValueInt32Pointer(),
-		Debug:      m.Debug.ValueBoolPointer(),
-		Enabled:    m.Enabled.ValueBoolPointer(),
-		Event:      m.Event.ValueStringPointer(),
-		FailAction: m.FailAction.ValueStringPointer(),
-		Freq:       m.Freq.ValueInt32Pointer(),
-		Order:      m.Order.ValueInt32Pointer(),
-		User:       m.User.ValueStringPointer(),
+	hook := pbsclient.PbsHook{
+		Name: m.Name.ValueString(),
 	}
+
+	// Only set pointer fields if the value is not null
+	if !m.Type.IsNull() {
+		hook.Type = m.Type.ValueStringPointer()
+	}
+	if !m.Alarm.IsNull() {
+		hook.Alarm = m.Alarm.ValueInt32Pointer()
+	}
+	if !m.Debug.IsNull() {
+		hook.Debug = m.Debug.ValueBoolPointer()
+	}
+	if !m.Enabled.IsNull() {
+		hook.Enabled = m.Enabled.ValueBoolPointer()
+	}
+	if !m.Event.IsNull() {
+		hook.Event = m.Event.ValueStringPointer()
+	}
+	if !m.FailAction.IsNull() {
+		hook.FailAction = m.FailAction.ValueStringPointer()
+	}
+	if !m.Freq.IsNull() {
+		hook.Freq = m.Freq.ValueInt32Pointer()
+	}
+	if !m.Order.IsNull() {
+		hook.Order = m.Order.ValueInt32Pointer()
+	}
+	if !m.User.IsNull() {
+		hook.User = m.User.ValueStringPointer()
+	}
+
+	return hook
 }
 
 func createPbsHookModel(h pbsclient.PbsHook) pbsHookModel {
 	model := pbsHookModel{
+		ID:   types.StringValue(h.Name), // Use name as ID
 		Name: types.StringValue(h.Name),
 	}
 

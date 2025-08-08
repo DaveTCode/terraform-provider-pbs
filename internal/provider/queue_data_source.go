@@ -26,6 +26,10 @@ func (d *queueDataSource) Metadata(_ context.Context, req datasource.MetadataReq
 func (d *queueDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The unique identifier for this queue. This is the same as the name.",
+			},
 			"acl_group_enable": schema.BoolAttribute{
 				Computed: true,
 			},
@@ -68,11 +72,13 @@ func (d *queueDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 			"max_array_size": schema.Int32Attribute{
 				Computed: true,
 			},
-			"max_group_res": schema.Int32Attribute{
-				Computed: true,
+			"max_group_res": schema.MapAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
 			},
-			"max_group_res_soft": schema.Int32Attribute{
-				Computed: true,
+			"max_group_res_soft": schema.MapAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
 			},
 			"max_group_run": schema.Int32Attribute{
 				Computed: true,
@@ -83,32 +89,40 @@ func (d *queueDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 			"max_queuable": schema.Int32Attribute{
 				Computed: true,
 			},
-			"max_queued": schema.StringAttribute{
-				Computed: true,
+			"max_queued": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"max_queued_res": schema.StringAttribute{
-				Computed: true,
+			"max_queued_res": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"max_run": schema.StringAttribute{
-				Computed: true,
+			"max_run": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"max_run_res": schema.StringAttribute{
-				Computed: true,
+			"max_run_res": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"max_run_res_soft": schema.StringAttribute{
-				Computed: true,
+			"max_run_res_soft": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"max_run_soft": schema.StringAttribute{
-				Computed: true,
+			"max_run_soft": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
 			"max_running": schema.Int32Attribute{
 				Computed: true,
 			},
-			"max_user_res": schema.StringAttribute{
-				Computed: true,
+			"max_user_res": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"max_user_res_soft": schema.StringAttribute{
-				Computed: true,
+			"max_user_res_soft": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
 			"max_user_run": schema.Int32Attribute{
 				Computed: true,

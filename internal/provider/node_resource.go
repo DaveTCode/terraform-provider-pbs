@@ -39,6 +39,10 @@ func (r *pbsNodeResource) Metadata(_ context.Context, req resource.MetadataReque
 func (r *pbsNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{ // TODO - How to avoid duplication of this schema with data source?
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The unique identifier for this node. This is the same as the name.",
+			},
 			"comment": schema.StringAttribute{
 				Optional:    true,
 				Description: "Information about this vnode.  This attribute may be set by the manager to any string to inform users of any information relating to the node. If this attribute is not explicitly set, the PBS server will use the attribute to pass information about the node status, specifically why the node is down. If the attribute is explicitly set by the manager, it will not be modified by the server.",
@@ -85,7 +89,7 @@ func (r *pbsNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 					int32planmodifier.RequiresReplace(),
 				},
 			},
-			"power_off_eligible": schema.BoolAttribute{
+			"poweroff_eligible": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Enables powering this vnode up and down by PBS.",
 			},
@@ -177,7 +181,13 @@ func (r *pbsNodeResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	pbsNode, err := r.client.GetNode(data.Name.ValueString())
+	// For import, use ID if name is not set
+	nodeName := data.Name.ValueString()
+	if nodeName == "" && !data.ID.IsNull() {
+		nodeName = data.ID.ValueString()
+	}
+
+	pbsNode, err := r.client.GetNode(nodeName)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read resources, got error: %s", err))
 		return
@@ -199,7 +209,7 @@ func (r *pbsNodeResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	_, err := r.client.UpdateNode(data.ToPbsNode())
+	updatedNode, err := r.client.UpdateNode(data.ToPbsNode())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Update Resource",
@@ -211,8 +221,11 @@ func (r *pbsNodeResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
+	// Create the model from the updated node to ensure all fields including ID are properly set
+	updatedModel := createPbsNodeModel(updatedNode)
+
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedModel)...)
 }
 
 func (r *pbsNodeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -232,5 +245,6 @@ func (r *pbsNodeResource) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *pbsNodeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	// Use the standard passthrough for ID, which will set both id and trigger a Read
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

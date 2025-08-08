@@ -126,7 +126,7 @@ func parseNodeOutput(output []byte) ([]PbsNode, error) {
 						}
 						i32Value := int32(intValue)
 						current.Port = &i32Value
-					case "power_off_eligible":
+					case "poweroff_eligible":
 						boolValue, err := strconv.ParseBool(s)
 						if err != nil {
 
@@ -241,7 +241,7 @@ func (c *PbsClient) CreateNode(newNode PbsNode) (PbsNode, error) {
 		{"no_multinode_jobs", newNode.NoMultinodeJobs},
 		{"partition", newNode.Partition},
 		{"p_names", newNode.PNames},
-		{"power_off_eligible", newNode.PowerOffEligible},
+		{"poweroff_eligible", newNode.PowerOffEligible},
 		{"power_provisioning", newNode.PowerProvisioning},
 		{"priority", newNode.Priority},
 		{"provision_enable", newNode.ProvisionEnable},
@@ -289,7 +289,7 @@ func (c *PbsClient) UpdateNode(newNode PbsNode) (PbsNode, error) {
 		{"no_multinode_jobs", oldNode.NoMultinodeJobs, newNode.NoMultinodeJobs},
 		{"partition", oldNode.Partition, newNode.Partition},
 		{"p_names", oldNode.PNames, newNode.PNames},
-		{"power_off_eligible", oldNode.PowerOffEligible, newNode.PowerOffEligible},
+		{"poweroff_eligible", oldNode.PowerOffEligible, newNode.PowerOffEligible},
 		{"power_provisioning", oldNode.PowerProvisioning, newNode.PowerProvisioning},
 		{"priority", oldNode.Priority, newNode.Priority},
 		{"provision_enable", oldNode.ProvisionEnable, newNode.ProvisionEnable},

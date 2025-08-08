@@ -24,20 +24,20 @@ type PbsQueue struct {
 	FromRouteOnly          *bool
 	KillDelay              *int32
 	MaxArraySize           *int32
-	MaxGroupRes            *int32
-	MaxGroupResSoft        *int32
+	MaxGroupRes            map[string]string
+	MaxGroupResSoft        map[string]string
 	MaxGroupRun            *int32
 	MaxGroupRunSoft        *int32
 	MaxQueuable            *int32
-	MaxQueued              *string
-	MaxQueuedRes           *string
-	MaxRun                 *string
-	MaxRunRes              *string
-	MaxRunResSoft          *string
-	MaxRunSoft             *string
+	MaxQueued              map[string]string
+	MaxQueuedRes           map[string]string
+	MaxRun                 map[string]string
+	MaxRunRes              map[string]string
+	MaxRunResSoft          map[string]string
+	MaxRunSoft             map[string]string
 	MaxRunning             *int32
-	MaxUserRes             *string
-	MaxUserResSoft         *string
+	MaxUserRes             map[string]string
+	MaxUserResSoft         map[string]string
 	MaxUserRun             *int32
 	MaxUserRunSoft         *int32
 	Name                   string
@@ -58,8 +58,6 @@ type PbsQueue struct {
 	RouteRetryTime         *int32
 	RouteWaitingJobs       *bool
 	Started                bool
-	StateCount             string
-	TotalJobs              int32
 }
 
 func parseQueueOutput(output []byte) ([]PbsQueue, error) {
@@ -143,20 +141,6 @@ func parseQueueOutput(output []byte) ([]PbsQueue, error) {
 							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
 						}
 						current.MaxArraySize = &i32Value
-					case "max_group_res":
-						intValue, err := strconv.Atoi(s)
-						i32Value := int32(intValue)
-						if err != nil {
-							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
-						}
-						current.MaxGroupRes = &i32Value
-					case "max_group_res_soft":
-						intValue, err := strconv.Atoi(s)
-						i32Value := int32(intValue)
-						if err != nil {
-							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
-						}
-						current.MaxGroupResSoft = &i32Value
 					case "max_group_run":
 						intValue, err := strconv.Atoi(s)
 						i32Value := int32(intValue)
@@ -178,18 +162,6 @@ func parseQueueOutput(output []byte) ([]PbsQueue, error) {
 							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
 						}
 						current.MaxQueuable = &i32Value
-					case "max_queued":
-						current.MaxQueued = &s
-					case "max_queued_res":
-						current.MaxQueuedRes = &s
-					case "max_run":
-						current.MaxRun = &s
-					case "max_run_res":
-						current.MaxRunRes = &s
-					case "max_run_res_soft":
-						current.MaxRunResSoft = &s
-					case "max_run_soft":
-						current.MaxRunSoft = &s
 					case "max_running":
 						intValue, err := strconv.Atoi(s)
 						i32Value := int32(intValue)
@@ -197,10 +169,6 @@ func parseQueueOutput(output []byte) ([]PbsQueue, error) {
 							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
 						}
 						current.MaxRunning = &i32Value
-					case "max_user_res":
-						current.MaxUserRes = &s
-					case "max_user_res_soft":
-						current.MaxUserResSoft = &s
 					case "max_user_run":
 						intValue, err := strconv.Atoi(s)
 						i32Value := int32(intValue)
@@ -266,19 +234,31 @@ func parseQueueOutput(output []byte) ([]PbsQueue, error) {
 							return nil, fmt.Errorf("failed to convert %s value to bool %s", k, err.Error())
 						}
 						current.Started = boolValue
-					case "state_count":
-						current.StateCount = s
-					case "total_jobs":
-						intValue, err := strconv.Atoi(s)
-						if err != nil {
-							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
-						}
-						current.TotalJobs = int32(intValue)
 					default:
 						// TODO - What to do with attributes we don't recognise?
 					}
 				} else if a, ok := value.(map[string]string); ok {
 					switch strings.ToLower(k) {
+					case "max_group_res":
+						current.MaxGroupRes = a
+					case "max_group_res_soft":
+						current.MaxGroupResSoft = a
+					case "max_queued":
+						current.MaxQueued = a
+					case "max_queued_res":
+						current.MaxQueuedRes = a
+					case "max_run":
+						current.MaxRun = a
+					case "max_run_res":
+						current.MaxRunRes = a
+					case "max_run_res_soft":
+						current.MaxRunResSoft = a
+					case "max_run_soft":
+						current.MaxRunSoft = a
+					case "max_user_res":
+						current.MaxUserRes = a
+					case "max_user_res_soft":
+						current.MaxUserResSoft = a
 					case "resources_assigned":
 						current.ResourcesAssigned = a
 					case "resources_available":
@@ -473,7 +453,7 @@ func (client *PbsClient) CreateQueue(newQueue PbsQueue) (PbsQueue, error) {
 		{"route_waiting_jobs", newQueue.RouteWaitingJobs},
 	}
 	for _, v := range fields {
-		c, err := generateCreateCommands(v.newAttr, "node", newQueue.Name, v.attribute)
+		c, err := generateCreateCommands(v.newAttr, "queue", newQueue.Name, v.attribute)
 		if err != nil {
 			return PbsQueue{}, err
 		}

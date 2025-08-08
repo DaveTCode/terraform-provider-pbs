@@ -242,7 +242,7 @@ func generateCreateCommands(newObj any, qmgrObjectType string, qmgrObjectName st
 		}
 	case map[string]string:
 		for k, subval := range newObj {
-			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, subval))
+			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, subval))
 		}
 	default:
 		return commands, fmt.Errorf("unsupported type %T", newObj)
@@ -308,12 +308,12 @@ func generateUpdateAttributeCommand(oldAttr any, newAttr any, qmgrObjectType str
 				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'unset %s %s %s.%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k))
 
 			} else if oldAttrVal != newAttrVal {
-				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, newAttrVal))
+				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, newAttrVal))
 			}
 		}
 		for k, newAttrVal := range newValue {
 			if _, ok := old[k]; !ok {
-				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, newAttrVal))
+				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, newAttrVal))
 			}
 		}
 

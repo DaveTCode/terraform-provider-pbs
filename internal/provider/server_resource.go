@@ -35,6 +35,10 @@ func (r *serverResource) Metadata(_ context.Context, req resource.MetadataReques
 func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{ // TODO - How to avoid duplication of this schema with data source?
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The unique identifier for this server. This is the same as the name.",
+			},
 			"acl_host_enable": schema.BoolAttribute{
 				Optional:    true,
 				Description: " Specifies whether the server obeys the host access control list in the acl_hosts server attribute.",
@@ -170,13 +174,15 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 					int32validator.AtLeast(1),
 				},
 			},
-			"max_group_res": schema.StringAttribute{
+			"max_group_res": schema.MapAttribute{
 				Optional:    true,
-				Description: "Old limit attribute.  Incompatible with new limit  attributes.  The maximum amount of the specified resource that any single group may consume in this PBS complex. ",
+				ElementType: types.StringType,
+				Description: "Limit attribute.  The maximum amount of the specified resource that any single group may consume in this PBS complex.",
 			},
-			"max_group_res_soft": schema.StringAttribute{
+			"max_group_res_soft": schema.MapAttribute{
 				Optional:    true,
-				Description: " Old limit attribute.  Incompatible with new limit  attributes.  The soft limit for the specified resource that any single group may consume in this complex.  If a group is consuming more than this amount of the specified resource, their jobs are eligible to be preempted by jobs from groups who are not over their soft limit. ",
+				ElementType: types.StringType,
+				Description: "Limit attribute.  The soft limit for the specified resource that any single group may consume in this complex.  If a group is consuming more than this amount of the specified resource, their jobs are eligible to be preempted by jobs from groups who are not over their soft limit.",
 			},
 			"max_group_run": schema.Int32Attribute{
 				Optional:    true,
@@ -193,41 +199,49 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 					int64validator.Between(9999999, 999999999999),
 				},
 			},
-			"max_queued": schema.StringAttribute{
+			"max_queued": schema.MapAttribute{
 				Optional:    true,
-				Description: " Limit attribute.  The maximum number of jobs allowed to be queued  or running in the complex.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes. The effect of this limit depends on how the elim_on_subjobs attribute is set; when elim_on_subjobs is True (the default), max_queued counts each subjob as a job; when elim_on_subjobs is False, max_queued counts each array job as a single job.",
+				ElementType: types.StringType,
+				Description: "Limit attribute.  The maximum number of jobs allowed to be queued or running in the complex.  Can be specified for projects, users, groups, or all.  Cannot be used with old limit attributes. The effect of this limit depends on how the elim_on_subjobs attribute is set; when elim_on_subjobs is True (the default), max_queued counts each subjob as a job; when elim_on_subjobs is False, max_queued counts each array job as a single job.",
 			},
-			"max_queued_res": schema.StringAttribute{
+			"max_queued_res": schema.MapAttribute{
 				Optional:    true,
-				Description: "Limit attribute.  The maximum amount of the specified resource allowed to be allocated to jobs queued or running in the complex.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.",
+				ElementType: types.StringType,
+				Description: "Limit attribute.  The maximum amount of the specified resource allowed to be allocated to jobs queued or running in the complex.  Can be specified for projects, users, groups, or all.  Cannot be used with old limit attributes.",
 			},
-			"max_run": schema.StringAttribute{
+			"max_run": schema.MapAttribute{
 				Optional:    true,
-				Description: " Limit  attribute.   The maximum number of jobs allowed to be running in the complex.  Can be specified for projects, users,  groups, or all.  Cannot be used with old limit attributes.",
+				ElementType: types.StringType,
+				Description: "Limit attribute.  The maximum number of jobs allowed to be running in the complex.  Can be specified for projects, users, groups, or all.  Cannot be used with old limit attributes.",
 			},
-			"max_run_res": schema.StringAttribute{
+			"max_run_res": schema.MapAttribute{
 				Optional:    true,
-				Description: " Limit attribute.  The maximum amount of the specified resource allowed to be allocated to jobs running in the complex.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.",
+				ElementType: types.StringType,
+				Description: "Limit attribute.  The maximum amount of the specified resource allowed to be allocated to jobs running in the complex.  Can be specified for projects, users, groups, or all.  Cannot be used with old limit attributes.",
 			},
-			"max_run_res_soft": schema.StringAttribute{
+			"max_run_res_soft": schema.MapAttribute{
 				Optional:    true,
-				Description: "Limit attribute.  Soft limit on the amount of the specified resource allowed to be allocated to jobs running in the complex.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.",
+				ElementType: types.StringType,
+				Description: "Limit attribute.  Soft limit on the amount of the specified resource allowed to be allocated to jobs running in the complex.  Can be specified for projects, users, groups, or all.  Cannot be used with old limit attributes.",
 			},
-			"max_run_soft": schema.StringAttribute{
+			"max_run_soft": schema.MapAttribute{
 				Optional:    true,
-				Description: "Limit  attribute.  Soft limit on the number of jobs allowed to be running in the complex.   Can be specified  for   projects, users, groups, or all.  Cannot be used with old limit attributes.",
+				ElementType: types.StringType,
+				Description: "Limit attribute.  Soft limit on the number of jobs allowed to be running in the complex.  Can be specified for projects, users, groups, or all.  Cannot be used with old limit attributes.",
 			},
 			"max_running": schema.Int32Attribute{
 				Optional:    true,
 				Description: "Old limit attribute.  Incompatible with new limit  attributes.  The maximum number of jobs in this complex allowed to be running at any given time.",
 			},
-			"max_user_res": schema.StringAttribute{
+			"max_user_res": schema.MapAttribute{
 				Optional:    true,
-				Description: "Old limit attribute.  Incompatible with new limit  attributes.  The maximum amount of the specified resource that any single user may consume within this complex.",
+				ElementType: types.StringType,
+				Description: "Limit attribute.  The maximum amount of the specified resource that any single user may consume within this complex.",
 			},
-			"max_user_res_soft": schema.StringAttribute{
+			"max_user_res_soft": schema.MapAttribute{
 				Optional:    true,
-				Description: " Old limit attribute.  Incompatible with new limit  attributes.  The soft limit on the amount of the specified resource that any single user may consume within this complex.  If a user is consuming more than this amount of the specified resource, their jobs are eligible to be preempted by jobs from users who are not over their soft limit. ",
+				ElementType: types.StringType,
+				Description: "Limit attribute.  The soft limit on the amount of the specified resource that any single user may consume within this complex.  If a user is consuming more than this amount of the specified resource, their jobs are eligible to be preempted by jobs from users who are not over their soft limit.",
 			},
 			"max_user_run": schema.Int32Attribute{
 				Optional:    true,
@@ -437,7 +451,13 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	q, err := r.client.GetPbsServer(server.Name.ValueString())
+	// For import, use ID if name is not set
+	serverName := server.Name.ValueString()
+	if serverName == "" && !server.ID.IsNull() {
+		serverName = server.ID.ValueString()
+	}
+
+	q, err := r.client.GetPbsServer(serverName)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read servers, got error: %s", err))
 		return
@@ -493,5 +513,6 @@ func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest,
 }
 
 func (r *serverResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	// Use the standard passthrough for ID, which will set both id and trigger a Read
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

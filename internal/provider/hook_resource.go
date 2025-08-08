@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"terraform-provider-pbs/internal/pbsclient"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
@@ -34,6 +35,10 @@ func (r *pbsHookResource) Metadata(_ context.Context, req resource.MetadataReque
 func (r *pbsHookResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{ // TODO - How to avoid duplication of this schema with data source?
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The unique identifier for this hook. This is the same as the name.",
+			},
 			"alarm": schema.Int32Attribute{
 				Description: "Specifies the number of seconds to allow a hook to run before the hook times out.",
 				Optional:    true,
@@ -124,7 +129,7 @@ func (r *pbsHookResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	_ = createPbsHookModel(pbsHook)
+	model = createPbsHookModel(pbsHook)
 
 	diags = resp.State.Set(ctx, model)
 	resp.Diagnostics.Append(diags...)
@@ -134,17 +139,28 @@ func (r *pbsHookResource) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *pbsHookResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data pbsHookModel
+	var state pbsHookModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbsHook, err := r.client.GetHook(data.Name.ValueString())
+	// For import, use ID if name is not set
+	hookName := state.Name.ValueString()
+	if hookName == "" && !state.ID.IsNull() {
+		hookName = state.ID.ValueString()
+	}
+
+	pbsHook, err := r.client.GetHook(hookName)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read resources, got error: %s", err))
+		// Check if hook doesn't exist and remove from state
+		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "Unknown hook") {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read hook, got error: %s", err))
 		return
 	}
 
@@ -154,9 +170,15 @@ func (r *pbsHookResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	rModel := createPbsHookModel(pbsHook)
+	// Update state with current values, preserving plan-only values
+	updatedState := createPbsHookModel(pbsHook)
+	// Preserve the name from the original state to avoid unnecessary changes,
+	// but only if it's not empty (during import, state.Name will be empty)
+	if !state.Name.IsNull() && state.Name.ValueString() != "" {
+		updatedState.Name = state.Name
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &rModel)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *pbsHookResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -164,7 +186,7 @@ func (r *pbsHookResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	_, err := r.client.UpdateHook(data.ToPbsHook())
+	updatedHook, err := r.client.UpdateHook(data.ToPbsHook())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Update Resource",
@@ -176,8 +198,11 @@ func (r *pbsHookResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
+	// Create the model from the updated hook to ensure all fields including ID are properly set
+	updatedModel := createPbsHookModel(updatedHook)
+
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedModel)...)
 }
 
 func (r *pbsHookResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -197,5 +222,6 @@ func (r *pbsHookResource) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *pbsHookResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	// Use the standard passthrough for ID, which will set both id and trigger a Read
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -39,20 +39,20 @@ type PbsServer struct {
 	Managers                      *string
 	MaxArraySize                  *int32
 	MaxConcurrentProvision        *int32
-	MaxGroupRes                   *string
-	MaxGroupResSoft               *string
+	MaxGroupRes                   map[string]string
+	MaxGroupResSoft               map[string]string
 	MaxGroupRun                   *int32
 	MaxGroupRunSoft               *int32
 	MaxJobSequenceId              *int64
-	MaxQueued                     *string
-	MaxQueuedRes                  *string
-	MaxRun                        *string
-	MaxRunRes                     *string
-	MaxRunResSoft                 *string
-	MaxRunSoft                    *string
+	MaxQueued                     map[string]string
+	MaxQueuedRes                  map[string]string
+	MaxRun                        map[string]string
+	MaxRunRes                     map[string]string
+	MaxRunResSoft                 map[string]string
+	MaxRunSoft                    map[string]string
 	MaxRunning                    *int32
-	MaxUserRes                    *string
-	MaxUserResSoft                *string
+	MaxUserRes                    map[string]string
+	MaxUserResSoft                map[string]string
 	MaxUserRun                    *int32
 	MaxUserRunSoft                *int32
 	Name                          string
@@ -226,9 +226,9 @@ func parseServerOutput(output []byte) ([]PbsServer, error) {
 						int32Value := int32(intValue)
 						current.MaxConcurrentProvision = &int32Value
 					case "max_group_res":
-						current.MaxGroupRes = &s
+						// Skip individual parsing - will be handled by map parsing below
 					case "max_group_res_soft":
-						current.MaxGroupResSoft = &s
+						// Skip individual parsing - will be handled by map parsing below
 					case "max_group_run":
 						intValue, err := strconv.ParseInt(s, 10, 32)
 						if err != nil {
@@ -250,17 +250,17 @@ func parseServerOutput(output []byte) ([]PbsServer, error) {
 						}
 						current.MaxJobSequenceId = &intValue
 					case "max_queued":
-						current.MaxQueued = &s
+						// Skip individual parsing - will be handled by map parsing below
 					case "max_queued_res":
-						current.MaxQueuedRes = &s
+						// Skip individual parsing - will be handled by map parsing below
 					case "max_run":
-						current.MaxRun = &s
+						// Skip individual parsing - will be handled by map parsing below
 					case "max_run_res":
-						current.MaxRunRes = &s
+						// Skip individual parsing - will be handled by map parsing below
 					case "max_run_res_soft":
-						current.MaxRunResSoft = &s
+						// Skip individual parsing - will be handled by map parsing below
 					case "max_run_soft":
-						current.MaxRunSoft = &s
+						// Skip individual parsing - will be handled by map parsing below
 					case "max_running":
 						intValue, err := strconv.ParseInt(s, 10, 32)
 						if err != nil {
@@ -269,9 +269,9 @@ func parseServerOutput(output []byte) ([]PbsServer, error) {
 						int32Value := int32(intValue)
 						current.MaxRunning = &int32Value
 					case "max_user_res":
-						current.MaxUserRes = &s
+						// Skip individual parsing - will be handled by map parsing below
 					case "max_user_res_soft":
-						current.MaxUserResSoft = &s
+						// Skip individual parsing - will be handled by map parsing below
 					case "max_user_run":
 						intValue, err := strconv.ParseInt(s, 10, 32)
 						if err != nil {
@@ -440,6 +440,32 @@ func parseServerOutput(output []byte) ([]PbsServer, error) {
 						current.ResourcesDefault = a
 					case "resources_max":
 						current.ResourcesMax = a
+					}
+				}
+
+				// Handle map attributes (like max_queued.ncpus)
+				if a, ok := v.(map[string]string); ok {
+					switch strings.ToLower(k) {
+					case "max_group_res":
+						current.MaxGroupRes = a
+					case "max_group_res_soft":
+						current.MaxGroupResSoft = a
+					case "max_queued":
+						current.MaxQueued = a
+					case "max_queued_res":
+						current.MaxQueuedRes = a
+					case "max_run":
+						current.MaxRun = a
+					case "max_run_res":
+						current.MaxRunRes = a
+					case "max_run_res_soft":
+						current.MaxRunResSoft = a
+					case "max_run_soft":
+						current.MaxRunSoft = a
+					case "max_user_res":
+						current.MaxUserRes = a
+					case "max_user_res_soft":
+						current.MaxUserResSoft = a
 					}
 				}
 			}

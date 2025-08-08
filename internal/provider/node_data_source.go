@@ -28,6 +28,10 @@ func (d *pbsNodeDataSource) Metadata(_ context.Context, req datasource.MetadataR
 func (d *pbsNodeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The unique identifier for this node. This is the same as the name.",
+			},
 			"comment": schema.StringAttribute{
 				Computed:    true,
 				Description: "Information about this vnode.  This attribute may be set by the manager to any string to inform users of any information relating to the node. If this attribute is not explicitly set, the PBS server will use the attribute to pass information about the node status, specifically why the node is down. If the attribute is explicitly set by the manager, it will not be modified by the server.",
@@ -68,7 +72,7 @@ func (d *pbsNodeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Computed:    true,
 				Description: "Port number on which MoM daemon listens. Can be explicitly set only via qmgr, and only at vnode creation.",
 			},
-			"power_off_eligible": schema.BoolAttribute{
+			"poweroff_eligible": schema.BoolAttribute{
 				Computed:    true,
 				Description: "Enables powering this vnode up and down by PBS.",
 			},
