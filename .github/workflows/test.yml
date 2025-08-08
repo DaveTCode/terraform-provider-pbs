@@ -5,6 +5,8 @@ on:
     paths-ignore:
       - 'README.md'
   push:
+    branches:
+      - main
     paths-ignore:
       - 'README.md'
 
@@ -97,7 +99,7 @@ jobs:
       - name: Collect PBS logs on failure
         if: failure()
         run: |
-          cd docker_compose
+          cd test/docker
           echo "=== Docker Compose Logs ==="
           docker compose logs pbs
           echo "=== PBS Status ==="
