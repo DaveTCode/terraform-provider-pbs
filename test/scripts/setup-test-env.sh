@@ -45,6 +45,48 @@ start_pbs_container() {
     fi
 }
 
+# Function to create test data in PBS
+create_test_data() {
+    echo "Creating test data in PBS..."
+    cd "${COMPOSE_DIR}"
+    
+    # Create test queue
+    echo "Creating test queue..."
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "create queue test queue_type=execution" 2>/dev/null || echo "Queue 'test' may already exist"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test started=true"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test enabled=true"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test resources_default.nodes=1"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test resources_default.walltime=3600"
+    
+    # Set up workq as default queue
+    echo "Setting default queue..."
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set server default_queue=workq"
+    
+    # Create test node
+    echo "Creating test node..."
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "create node pbs" 2>/dev/null || echo "Node 'pbs' may already exist"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set node pbs comment='Pre-existing node for import testing'"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set node pbs resources_available.ncpus=8"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set node pbs resources_available.mem=16gb"
+    
+    # Create test hook
+    echo "Creating test hook..."
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "create hook test" 2>/dev/null || echo "Hook 'test' may already exist"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test enabled=true"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test event=execjob_begin"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test order=1"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test type=site"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test user=pbsadmin"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test fail_action=none"
+    
+    # Create test resource
+    echo "Creating test resource..."
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "create resource test type=size" 2>/dev/null || echo "Resource 'test' may already exist"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set resource test flag=h"
+    
+    echo "Test data creation complete!"
+}
+
 # Function to verify PBS is working
 verify_pbs() {
     echo "Verifying PBS installation..."
@@ -136,6 +178,9 @@ main() {
     
     check_docker
     start_pbs_container
+    
+    # Create test data first
+    create_test_data
     
     # Try verification a few times
     for i in {1..3}; do

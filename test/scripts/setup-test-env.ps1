@@ -67,6 +67,72 @@ function Start-PbsContainer {
     }
 }
 
+function New-TestData {
+    Write-Host "Creating test data in PBS..." -ForegroundColor Yellow
+    Push-Location $ComposeDir
+    
+    try {
+        # Create test queue
+        Write-Host "Creating test queue..." -ForegroundColor Yellow
+        try {
+            docker compose exec -T pbs /opt/pbs/bin/qmgr -c "create queue test queue_type=execution" 2>$null
+        }
+        catch {
+            Write-Host "Queue 'test' may already exist" -ForegroundColor Gray
+        }
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test started=true"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test enabled=true"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test resources_default.nodes=1"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test resources_default.walltime=3600"
+        
+        # Set up workq as default queue
+        Write-Host "Setting default queue..." -ForegroundColor Yellow
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set server default_queue=workq"
+        
+        # Create test node
+        Write-Host "Creating test node..." -ForegroundColor Yellow
+        try {
+            docker compose exec -T pbs /opt/pbs/bin/qmgr -c "create node pbs" 2>$null
+        }
+        catch {
+            Write-Host "Node 'pbs' may already exist" -ForegroundColor Gray
+        }
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set node pbs comment='Pre-existing node for import testing'"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set node pbs resources_available.ncpus=8"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set node pbs resources_available.mem=16gb"
+        
+        # Create test hook
+        Write-Host "Creating test hook..." -ForegroundColor Yellow
+        try {
+            docker compose exec -T pbs /opt/pbs/bin/qmgr -c "create hook test" 2>$null
+        }
+        catch {
+            Write-Host "Hook 'test' may already exist" -ForegroundColor Gray
+        }
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test enabled=true"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test event=execjob_begin"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test order=1"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test type=site"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test user=pbsadmin"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set hook test fail_action=none"
+        
+        # Create test resource
+        Write-Host "Creating test resource..." -ForegroundColor Yellow
+        try {
+            docker compose exec -T pbs /opt/pbs/bin/qmgr -c "create resource test type=size" 2>$null
+        }
+        catch {
+            Write-Host "Resource 'test' may already exist" -ForegroundColor Gray
+        }
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set resource test flag=h"
+        
+        Write-Host "Test data creation complete!" -ForegroundColor Green
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 function Test-PbsInstallation {
     Write-Host "Verifying PBS installation..." -ForegroundColor Yellow
     Push-Location $ComposeDir
@@ -189,11 +255,12 @@ function Start-TestSetup {
     Test-DockerRunning
     Start-PbsContainer
     
+    # Create test data first
+    New-TestData
+    
     # Try verification a few times
-    $verified = $false
     for ($i = 1; $i -le 3; $i++) {
         if (Test-PbsInstallation) {
-            $verified = $true
             break
         }
         else {
