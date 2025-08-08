@@ -43,7 +43,7 @@ func (r *pbsHookResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Description: "Specifies the number of seconds to allow a hook to run before the hook times out.",
 				Optional:    true,
 				Validators: []validator.Int32{
-					int32validator.AtLeast(0),
+					int32validator.AtLeast(1),
 				},
 			},
 			"debug": schema.BoolAttribute{
