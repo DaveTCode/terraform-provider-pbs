@@ -22,4 +22,5 @@ description: |-
 ### Read-Only
 
 - `flag` (String)
+- `id` (String) The unique identifier for this resource. This is the same as the name.
 - `type` (String)

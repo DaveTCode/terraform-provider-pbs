@@ -31,9 +31,13 @@ description: |-
 - `p_names` (String) The list of resources being used for placement sets.  Not used for scheduling; advisory only.
 - `partition` (String) Name of partition to which this vnode is assigned.  A vnode can be assigned to at most one partition.
 - `port` (Number) Port number on which MoM daemon listens. Can be explicitly set only via qmgr, and only at vnode creation.
-- `power_off_eligible` (Boolean) Enables powering this vnode up and down by PBS.
 - `power_provisioning` (Boolean) Specifies whether this node is eligible to have its power managed by PBS, including whether it can use power profiles.
+- `poweroff_eligible` (Boolean) Enables powering this vnode up and down by PBS.
 - `priority` (Number) The priority of this vnode compared with other vnodes.
 - `provision_enable` (Boolean) Controls whether this vnode can be provisioned.  Cannot be set on server's host.
 - `queue` (String, Deprecated) Deprecated.  The queue with which this vnode is associated.  Each vnode can be associated with at most 1 queue.  Queues can be associated with multiple vnodes.  Any jobs in a queue that has associated vnodes can run only on those vnodes.  If a vnode has an associated queue, only jobs in that queue can run on that vnode.
 - `resources_available` (Map of String) The list of resources and the amounts available on this vnode. If not explicitly set, the amount shown is that reported by the pbs_mom running on this vnode. If a resource value is explicitly set, that value is retained across restarts.
+
+### Read-Only
+
+- `id` (String) The unique identifier for this node. This is the same as the name.

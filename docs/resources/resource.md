@@ -23,3 +23,7 @@ description: |-
 ### Optional
 
 - `flag` (String) One of the flags specifying where the resource is defined (f, fh, nh, q, m) and the ones defining it's visibility (i, r)
+
+### Read-Only
+
+- `id` (String) The unique identifier for this resource. This is the same as the name.

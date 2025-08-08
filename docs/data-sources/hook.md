@@ -27,6 +27,7 @@ description: |-
 - `event` (String)
 - `fail_action` (String)
 - `freq` (Number)
+- `id` (String) The unique identifier for this hook. This is the same as the name.
 - `order` (Number)
 - `type` (String)
 - `user` (String)

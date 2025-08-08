@@ -36,20 +36,20 @@ description: |-
 - `from_route_only` (Boolean) Specifies whether this queue accepts jobs only from routing queues, or from both execution and routing queues.
 - `kill_delay` (Number) The time delay (seconds) between sending SIGTERM and SIGKILL when a `qdel` command is issued against a running job. Default value is 10 seconds.
 - `max_array_size` (Number) The maximum number of subjobs that are allowed in an array job.
-- `max_group_res` (Number) Old limit attribute.  Incompatible with new limit attributes.  The maximum amount of the specified resource that any single group may consume in a complex.
-- `max_group_res_soft` (Number) Old limit attribute.  Incompatible with new limit  attributes.  The soft limit on the amount of the specified resource that any single group may consume in a complex. If a group is consuming more than this amount of the specified resource, their jobs are eligible to be preempted by jobs from groups who are not over their soft limit.
+- `max_group_res` (Map of String) Limit attribute.  The maximum amount of the specified resource that any single group may consume.
+- `max_group_res_soft` (Map of String) Limit attribute.  The soft limit on the amount of the specified resource that any single group may consume.  If a group is consuming more than this amount of the specified resource, their jobs are eligible to be preempted by jobs from groups who are not over their soft limit.
 - `max_group_run` (Number) Old limit attribute.  Incompatible with new limit  attributes.  The maximum number of jobs owned by users in a single group that are allowed to be running from this queue at one time.
 - `max_group_run_soft` (Number) Old limit attribute.  Incompatible with new limit  attributes.  The maximum number of jobs owned by users in a single group that are allowed to be running from this queue at one time. If a group has more than this number of jobs running, their jobs are eligible to be preempted by jobs from groups who are not over their soft limit.
 - `max_queuable` (Number) Old limit attribute.  Incompatible with new limit attributes.  The maximum number of jobs allowed to reside in this queue at any given time.
-- `max_queued` (String) Limit attribute.  The maximum number of jobs allowed to be queued  in  or running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot  be used  with old limit attributes.
-- `max_queued_res` (String) Limit attribute.  The maximum amount of the specified resource allowed to be allocated to jobs queued in or running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.
-- `max_run` (String) Limit attribute. The maximum number of jobs allowed to be running from this queue.  Can be specified for projects, users,  groups, or all.  Cannot be used with old limit attributes.
-- `max_run_res` (String) Limit attribute. The maximum amount of the specified resource allowed to be allocated to jobs running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.
-- `max_run_res_soft` (String) Limit attribute.  Soft limit on the amount of the specified resource allowed to be allocated to jobs running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.
-- `max_run_soft` (String) Limit attribute.  Soft limit on the number of jobs allowed to be running from this  queue.   Can be specified  for   projects, users, groups, or all.  Cannot be used with old limit attributes.
+- `max_queued` (Map of String) Limit attribute.  The maximum number of jobs allowed to be queued  in  or running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot  be used  with old limit attributes.
+- `max_queued_res` (Map of String) Limit attribute.  The maximum amount of the specified resource allowed to be allocated to jobs queued in or running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.
+- `max_run` (Map of String) Limit attribute. The maximum number of jobs allowed to be running from this queue.  Can be specified for projects, users,  groups, or all.  Cannot be used with old limit attributes.
+- `max_run_res` (Map of String) Limit attribute. The maximum amount of the specified resource allowed to be allocated to jobs running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.
+- `max_run_res_soft` (Map of String) Limit attribute.  Soft limit on the amount of the specified resource allowed to be allocated to jobs running from this queue.  Can be specified for  projects, users, groups, or all.  Cannot be used with old limit attributes.
+- `max_run_soft` (Map of String) Limit attribute.  Soft limit on the number of jobs allowed to be running from this  queue.   Can be specified  for   projects, users, groups, or all.  Cannot be used with old limit attributes.
 - `max_running` (Number) Old limit attribute. Incompatible with new limit  attributes.For an execution queue, this is the largest number of jobs allowed to be running at any given time. For a routing queue, this is the largest number of jobs allowed to be transiting from this queue at any given time.
-- `max_user_res` (String) Old limit attribute.  Incompatible with new limit attributes.  The maximum amount of the specified resource that any single user may consume.
-- `max_user_res_soft` (String) Old limit attribute.  Incompatible with new limit  attributes.  The soft limit on the amount of the specified resource that any single user may consume.  If a user is consuming more than this amount of the specified resource, their jobs are eligible to be preempted by jobs from users who are not over their soft limit.
+- `max_user_res` (Map of String) Old limit attribute.  Incompatible with new limit attributes.  The maximum amount of the specified resource that any single user may consume.
+- `max_user_res_soft` (Map of String) Old limit attribute.  Incompatible with new limit  attributes.  The soft limit on the amount of the specified resource that any single user may consume.  If a user is consuming more than this amount of the specified resource, their jobs are eligible to be preempted by jobs from users who are not over their soft limit.
 - `max_user_run` (Number) Old limit attribute.  Incompatible with new limit attributes.  The maximum number of jobs owned by a single user that are allowed to be running from this queue at one time.
 - `max_user_run_soft` (Number) Old limit attribute.  Incompatible with new limit attributes.  The soft limit on the number of jobs owned by any single user that are allowed to be running from this queue at one time. If a user has more than this number of jobs running, their jobs are eligible to be preempted by jobs from users who are not over their soft limit.
 - `node_group_key` (String) Specifies the resources to use for placement sets (node grouping). Overrides server's node_group_key attribute.  Specified resources must be of type string_array.
@@ -68,3 +68,7 @@ description: |-
 - `route_retry_time` (Number) Time delay between routing retries. Typically used when the network between servers is down.
 - `route_waiting_jobs` (Boolean) Specifies whether jobs whose `Execution_Time` attribute value is in the future can be routed from this queue.
 - `started` (Boolean) If this is an execution queue, specifies whether jobs in this queue can be scheduled for execution, or if this is a routing queue, whether jobs can be routed.
+
+### Read-Only
+
+- `id` (String) The unique identifier for this queue. This is the same as the name.

@@ -30,3 +30,7 @@ description: |-
 - `order` (Number) Indicates relative order of hook execution, for hooks of the same type sharing a trigger.  Hooks with lower order values execute before those with higher values. Does not apply to periodic or exechost_periodic hooks.
 - `type` (String) The type of the hook. Cannot be set for a built-in hook.
 - `user` (String) Specifies who executes the hook.
+
+### Read-Only
+
+- `id` (String) The unique identifier for this hook. This is the same as the name.
