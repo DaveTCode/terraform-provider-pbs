@@ -42,12 +42,12 @@ function Start-PbsContainer {
         
         if (-not $imageExists) {
             Write-Host "Building PBS Docker image..." -ForegroundColor Yellow
-            docker-compose build
+            docker compose build
         }
         
         # Start the container
         Write-Host "Starting PBS container..." -ForegroundColor Yellow
-        docker-compose up -d
+        docker compose up -d
         
         # Wait for PBS to be ready
         Write-Host "Waiting for PBS to be ready..." -ForegroundColor Yellow
@@ -55,7 +55,7 @@ function Start-PbsContainer {
         
         # Check if PBS is accessible
         try {
-            docker-compose exec -T pbs /opt/pbs/bin/qstat -s | Out-Null
+            docker compose exec -T pbs /opt/pbs/bin/qstat -s | Out-Null
         }
         catch {
             Write-Host "Warning: PBS may not be fully ready yet, waiting longer..." -ForegroundColor Yellow
@@ -74,7 +74,7 @@ function Test-PbsInstallation {
     try {
         # Test SSH connection
         try {
-            docker-compose exec -T pbs ssh -o StrictHostKeyChecking=no root@localhost -p 22 "echo 'SSH connection successful'" 2>$null | Out-Null
+            docker compose exec -T pbs ssh -o StrictHostKeyChecking=no root@localhost -p 22 "echo 'SSH connection successful'" 2>$null | Out-Null
         }
         catch {
             Write-Host "Error: SSH connection to PBS container failed" -ForegroundColor Red
@@ -83,7 +83,7 @@ function Test-PbsInstallation {
         
         # Test PBS commands
         try {
-            docker-compose exec -T pbs /opt/pbs/bin/qstat -s 2>$null | Out-Null
+            docker compose exec -T pbs /opt/pbs/bin/qstat -s 2>$null | Out-Null
         }
         catch {
             Write-Host "Error: PBS qstat command failed" -ForegroundColor Red
@@ -92,7 +92,7 @@ function Test-PbsInstallation {
         
         # Test qmgr
         try {
-            docker-compose exec -T pbs /opt/pbs/bin/qmgr -c "list server" 2>$null | Out-Null
+            docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list server" 2>$null | Out-Null
         }
         catch {
             Write-Host "Error: PBS qmgr command failed" -ForegroundColor Red
@@ -104,7 +104,7 @@ function Test-PbsInstallation {
         
         # Check if test queue exists
         try {
-            docker-compose exec -T pbs /opt/pbs/bin/qmgr -c "list queue test" 2>$null | Out-Null
+            docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list queue test" 2>$null | Out-Null
         }
         catch {
             Write-Host "Error: Test queue 'test' not found" -ForegroundColor Red
@@ -113,7 +113,7 @@ function Test-PbsInstallation {
         
         # Check if test node exists
         try {
-            docker-compose exec -T pbs /opt/pbs/bin/qmgr -c "list node pbs" 2>$null | Out-Null
+            docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list node pbs" 2>$null | Out-Null
         }
         catch {
             Write-Host "Error: Test node 'pbs' not found" -ForegroundColor Red
@@ -122,7 +122,7 @@ function Test-PbsInstallation {
         
         # Check if test hook exists
         try {
-            docker-compose exec -T pbs /opt/pbs/bin/qmgr -c "list hook test" 2>$null | Out-Null
+            docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list hook test" 2>$null | Out-Null
         }
         catch {
             Write-Host "Error: Test hook 'test' not found" -ForegroundColor Red
@@ -131,7 +131,7 @@ function Test-PbsInstallation {
         
         # Check if test resource exists
         try {
-            docker-compose exec -T pbs /opt/pbs/bin/qmgr -c "list resource test" 2>$null | Out-Null
+            docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list resource test" 2>$null | Out-Null
         }
         catch {
             Write-Host "Error: Test resource 'test' not found" -ForegroundColor Red
@@ -168,12 +168,12 @@ function Set-TestEnvironment {
 function Show-ContainerStatus {
     Write-Host "=== Container Status ===" -ForegroundColor Cyan
     Push-Location $ComposeDir
-    docker-compose ps
+    docker compose ps
     
     Write-Host ""
     Write-Host "=== PBS Service Status ===" -ForegroundColor Cyan
     try {
-        docker-compose exec -T pbs /opt/pbs/bin/qstat -s 2>$null
+        docker compose exec -T pbs /opt/pbs/bin/qstat -s 2>$null
         Write-Host "PBS services are running" -ForegroundColor Green
     }
     catch {
@@ -204,7 +204,7 @@ function Start-TestSetup {
             else {
                 Write-Host "Warning: PBS verification failed after 3 attempts" -ForegroundColor Yellow
                 Write-Host "Container may still be starting up. Check manually with:" -ForegroundColor Yellow
-                Write-Host "  cd docker_compose && docker-compose logs pbs" -ForegroundColor Yellow
+                Write-Host "  cd docker_compose && docker compose logs pbs" -ForegroundColor Yellow
             }
         }
     }
@@ -222,7 +222,7 @@ function Start-TestSetup {
 function Stop-TestEnvironment {
     Write-Host "=== Cleaning up ===" -ForegroundColor Red
     Push-Location $ComposeDir
-    docker-compose down
+    docker compose down
     Write-Host "PBS container stopped" -ForegroundColor Green
     Pop-Location
 }

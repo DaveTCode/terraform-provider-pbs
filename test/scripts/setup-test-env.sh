@@ -27,19 +27,19 @@ start_pbs_container() {
     # Build the container if it doesn't exist
     if ! docker image inspect pbs >/dev/null 2>&1; then
         echo "Building PBS Docker image..."
-        docker-compose build
+        docker compose build
     fi
     
     # Start the container
     echo "Starting PBS container..."
-    docker-compose up -d
+    docker compose up -d
     
     # Wait for PBS to be ready
     echo "Waiting for PBS to be ready..."
     sleep 30
     
     # Check if PBS is accessible
-    if ! docker-compose exec -T pbs /opt/pbs/bin/qstat -s >/dev/null 2>&1; then
+    if ! docker compose exec -T pbs /opt/pbs/bin/qstat -s >/dev/null 2>&1; then
         echo "Warning: PBS may not be fully ready yet, waiting longer..."
         sleep 30
     fi
@@ -50,19 +50,19 @@ verify_pbs() {
     echo "Verifying PBS installation..."
     
     # Test SSH connection
-    if ! docker-compose exec -T pbs ssh -o StrictHostKeyChecking=no root@localhost -p 22 "echo 'SSH connection successful'" 2>/dev/null; then
+    if ! docker compose exec -T pbs ssh -o StrictHostKeyChecking=no root@localhost -p 22 "echo 'SSH connection successful'" 2>/dev/null; then
         echo "Error: SSH connection to PBS container failed"
         return 1
     fi
     
     # Test PBS commands
-    if ! docker-compose exec -T pbs /opt/pbs/bin/qstat -s >/dev/null 2>&1; then
+    if ! docker compose exec -T pbs /opt/pbs/bin/qstat -s >/dev/null 2>&1; then
         echo "Error: PBS qstat command failed"
         return 1
     fi
     
     # Test qmgr
-    if ! docker-compose exec -T pbs /opt/pbs/bin/qmgr -c "list server" >/dev/null 2>&1; then
+    if ! docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list server" >/dev/null 2>&1; then
         echo "Error: PBS qmgr command failed"
         return 1
     fi
@@ -71,25 +71,25 @@ verify_pbs() {
     echo "Verifying test resources..."
     
     # Check if test queue exists
-    if ! docker-compose exec -T pbs /opt/pbs/bin/qmgr -c "list queue test" >/dev/null 2>&1; then
+    if ! docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list queue test" >/dev/null 2>&1; then
         echo "Error: Test queue 'test' not found"
         return 1
     fi
     
     # Check if test node exists
-    if ! docker-compose exec -T pbs /opt/pbs/bin/qmgr -c "list node pbs" >/dev/null 2>&1; then
+    if ! docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list node pbs" >/dev/null 2>&1; then
         echo "Error: Test node 'pbs' not found"
         return 1
     fi
     
     # Check if test hook exists
-    if ! docker-compose exec -T pbs /opt/pbs/bin/qmgr -c "list hook test" >/dev/null 2>&1; then
+    if ! docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list hook test" >/dev/null 2>&1; then
         echo "Error: Test hook 'test' not found"
         return 1
     fi
     
     # Check if test resource exists
-    if ! docker-compose exec -T pbs /opt/pbs/bin/qmgr -c "list resource test" >/dev/null 2>&1; then
+    if ! docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list resource test" >/dev/null 2>&1; then
         echo "Error: Test resource 'test' not found"
         return 1
     fi
@@ -119,11 +119,11 @@ EOF
 show_container_status() {
     echo "=== Container Status ==="
     cd "${COMPOSE_DIR}"
-    docker-compose ps
+    docker compose ps
     
     echo ""
     echo "=== PBS Service Status ==="
-    if docker-compose exec -T pbs /opt/pbs/bin/qstat -s 2>/dev/null; then
+    if docker compose exec -T pbs /opt/pbs/bin/qstat -s 2>/dev/null; then
         echo "PBS services are running"
     else
         echo "PBS services may not be ready yet"
@@ -148,7 +148,7 @@ main() {
             else
                 echo "Warning: PBS verification failed after 3 attempts"
                 echo "Container may still be starting up. Check manually with:"
-                echo "  cd docker_compose && docker-compose logs pbs"
+                echo "  cd docker_compose && docker compose logs pbs"
             fi
         fi
     done
@@ -167,7 +167,7 @@ main() {
 cleanup() {
     echo "=== Cleaning up ==="
     cd "${COMPOSE_DIR}"
-    docker-compose down
+    docker compose down
     echo "PBS container stopped"
 }
 

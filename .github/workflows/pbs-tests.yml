@@ -52,13 +52,13 @@ jobs:
       run: |
         cd docker_compose
         echo "=== Docker Compose Logs ==="
-        docker-compose logs pbs
+        docker compose logs pbs
         echo "=== PBS Status ==="
-        docker-compose exec -T pbs /opt/pbs/bin/qstat -f || true
-        docker-compose exec -T pbs /opt/pbs/bin/pbsnodes -a || true
-        docker-compose exec -T pbs /opt/pbs/bin/qmgr -c "list server" || true
+        docker compose exec -T pbs /opt/pbs/bin/qstat -f || true
+        docker compose exec -T pbs /opt/pbs/bin/pbsnodes -a || true
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list server" || true
         echo "=== Container Status ==="
-        docker-compose ps
+        docker compose ps
         
     - name: Cleanup test environment
       if: always()

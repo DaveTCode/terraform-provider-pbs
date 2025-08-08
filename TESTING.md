@@ -63,11 +63,11 @@ If you prefer manual setup:
 1. **Start PBS container:**
    ```bash
    cd docker_compose
-   docker-compose up -d
+   docker compose up -d
    
    # Wait for PBS to be ready
    sleep 60
-   docker-compose exec pbs /opt/pbs/bin/qstat -s
+   docker compose exec pbs /opt/pbs/bin/qstat -s
    ```
 
 2. **Set environment variables:**
@@ -87,7 +87,7 @@ If you prefer manual setup:
 4. **Cleanup:**
    ```bash
    cd docker_compose
-   docker-compose down
+   docker compose down
    ```
 
 ## Test Categories
@@ -211,9 +211,9 @@ TF_LOG=DEBUG go test -v -run TestAccQueue -timeout 30m ./internal/provider/
 ```bash
 # Check PBS status in container
 cd docker_compose
-docker-compose exec pbs /opt/pbs/bin/qstat -f
-docker-compose exec pbs /opt/pbs/bin/pbsnodes -a
-docker-compose exec pbs /opt/pbs/bin/qmgr -c "list server"
+docker compose exec pbs /opt/pbs/bin/qstat -f
+docker compose exec pbs /opt/pbs/bin/pbsnodes -a
+docker compose exec pbs /opt/pbs/bin/qmgr -c "list server"
 ```
 
 ## Test Best Practices
@@ -239,16 +239,16 @@ docker-compose exec pbs /opt/pbs/bin/qmgr -c "list server"
 ### Debug Commands
 ```bash
 # Container logs
-docker-compose logs pbs
+docker compose logs pbs
 
 # PBS service status
-docker-compose exec pbs systemctl status pbs
+docker compose exec pbs systemctl status pbs
 
 # Network connectivity
-docker-compose exec pbs netstat -tlnp
+docker compose exec pbs netstat -tlnp
 
 # PBS configuration
-docker-compose exec pbs cat /etc/pbs.conf
+docker compose exec pbs cat /etc/pbs.conf
 ```
 
 ## Contributing
