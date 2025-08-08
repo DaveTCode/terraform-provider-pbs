@@ -27,21 +27,21 @@ func testAccPreCheck(t *testing.T) {
 
 	// Check if we're running in Docker environment or if PBS is accessible
 	if os.Getenv("PBS_TEST_SERVER") == "" {
-		os.Setenv("PBS_TEST_SERVER", "localhost")
+		t.Setenv("PBS_TEST_SERVER", "localhost")
 	}
 	if os.Getenv("PBS_TEST_PORT") == "" {
-		os.Setenv("PBS_TEST_PORT", "2222")
+		t.Setenv("PBS_TEST_PORT", "2222")
 	}
 	if os.Getenv("PBS_TEST_USERNAME") == "" {
-		os.Setenv("PBS_TEST_USERNAME", "root")
+		t.Setenv("PBS_TEST_USERNAME", "root")
 	}
 	if os.Getenv("PBS_TEST_PASSWORD") == "" {
-		os.Setenv("PBS_TEST_PASSWORD", "pbs")
+		t.Setenv("PBS_TEST_PASSWORD", "pbs")
 	}
 }
 
-// Helper function to generate unique names for test resources
-// PBS has strict naming limits (typically 15 chars max), so we keep names short
+// Helper function to generate unique names for test resources.
+// PBS has strict naming limits (typically 15 chars max), so we keep names short.
 func testAccResourceName(prefix string) string {
 	// Use only the last 4 digits of timestamp to keep names short
 	timestamp := time.Now().Unix() % 10000
@@ -53,7 +53,7 @@ func testAccResourceName(prefix string) string {
 	return fmt.Sprintf("%s_%d", prefix, timestamp)
 }
 
-// providerConfig returns a basic provider configuration for testing
+// providerConfig returns a basic provider configuration for testing.
 func providerConfig() string {
 	return fmt.Sprintf(`
 provider "pbs" {

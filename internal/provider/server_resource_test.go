@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// TestAccServerResource_basicConfiguration tests basic server configuration and updates
+// TestAccServerResource_basicConfiguration tests basic server configuration and updates.
 func TestAccServerResource_basicConfiguration(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -28,7 +28,7 @@ func TestAccServerResource_basicConfiguration(t *testing.T) {
 	})
 }
 
-// TestAccServerResource_aclConfiguration tests all ACL-related fields
+// TestAccServerResource_aclConfiguration tests all ACL-related fields.
 func TestAccServerResource_aclConfiguration(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -48,7 +48,7 @@ func TestAccServerResource_aclConfiguration(t *testing.T) {
 	})
 }
 
-// TestAccServerResource_limitAttributes tests all limit attribute maps
+// TestAccServerResource_limitAttributes tests all limit attribute maps.
 func TestAccServerResource_limitAttributes(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -68,7 +68,7 @@ func TestAccServerResource_limitAttributes(t *testing.T) {
 	})
 }
 
-// TestAccServerResource_resourceMaps tests resource map attributes
+// TestAccServerResource_resourceMaps tests resource map attributes.
 func TestAccServerResource_resourceMaps(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -88,7 +88,7 @@ func TestAccServerResource_resourceMaps(t *testing.T) {
 	})
 }
 
-// TestAccServerResource_numericConfiguration tests all numeric fields
+// TestAccServerResource_numericConfiguration tests all numeric fields.
 func TestAccServerResource_numericConfiguration(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -108,7 +108,7 @@ func TestAccServerResource_numericConfiguration(t *testing.T) {
 	})
 }
 
-// TestAccServerResource_comprehensiveConfiguration tests all fields together
+// TestAccServerResource_comprehensiveConfiguration tests all fields together.
 func TestAccServerResource_comprehensiveConfiguration(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -128,7 +128,7 @@ func TestAccServerResource_comprehensiveConfiguration(t *testing.T) {
 	})
 }
 
-// TestAccServerResource_import tests importing the PBS server
+// TestAccServerResource_import tests importing the PBS server.
 func TestAccServerResource_import(t *testing.T) {
 	serverName := "pbs" // PBS server name that exists in the test environment
 
@@ -163,7 +163,7 @@ func TestAccServerResource_import(t *testing.T) {
 	})
 }
 
-// TestAccServerResource_update tests updating PBS server properties
+// TestAccServerResource_update tests updating PBS server properties.
 func TestAccServerResource_updateWithDrift(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -184,7 +184,7 @@ func TestAccServerResource_updateWithDrift(t *testing.T) {
 	})
 }
 
-// TestAccServerResource_configurationDrift tests that we can detect and correct configuration drift
+// TestAccServerResource_configurationDrift tests that we can detect and correct configuration drift.
 func TestAccServerResource_configurationDrift(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

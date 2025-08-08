@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// TestAccIntegration_CompleteWorkflow tests a complete PBS workflow
-// including creating queues, nodes, resources, hooks, and server configuration
+// TestAccIntegration_CompleteWorkflow tests a complete PBS workflow.
+// including creating queues, nodes, resources, hooks, and server configuration.
 func TestAccIntegration_CompleteWorkflow(t *testing.T) {
 	queueName := testAccResourceName("integration_queue")
 	nodeName := testAccResourceName("integration_node")
@@ -51,7 +51,7 @@ func TestAccIntegration_CompleteWorkflow(t *testing.T) {
 	})
 }
 
-// TestAccIntegration_QueueDependencies tests queue dependencies and ordering
+// TestAccIntegration_QueueDependencies tests queue dependencies and ordering.
 func TestAccIntegration_QueueDependencies(t *testing.T) {
 	routingQueue := testAccResourceName("routing_queue")
 	execQueue1 := testAccResourceName("exec_queue_1")
@@ -76,7 +76,7 @@ func TestAccIntegration_QueueDependencies(t *testing.T) {
 	})
 }
 
-// TestAccIntegration_NodeWithCustomResources tests nodes with custom PBS resources
+// TestAccIntegration_NodeWithCustomResources tests nodes with custom PBS resources.
 func TestAccIntegration_NodeWithCustomResources(t *testing.T) {
 	nodeName := testAccResourceName("custom_node")
 	resource1Name := testAccResourceName("custom_resource_1")
@@ -100,7 +100,7 @@ func TestAccIntegration_NodeWithCustomResources(t *testing.T) {
 	})
 }
 
-// TestAccIntegration_HookOrdering tests multiple hooks with different ordering
+// TestAccIntegration_HookOrdering tests multiple hooks with different ordering.
 func TestAccIntegration_HookOrdering(t *testing.T) {
 	hook1Name := testAccResourceName("hook_order_1")
 	hook2Name := testAccResourceName("hook_order_2")

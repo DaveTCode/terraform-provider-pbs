@@ -49,7 +49,7 @@ func TestAccQueueResource_basic(t *testing.T) {
 	})
 }
 
-// TestAccQueueResource_import tests importing an existing queue
+// TestAccQueueResource_import tests importing an existing queue.
 func TestAccQueueResource_import(t *testing.T) {
 	queueName := "test" // Use pre-created queue from setup script
 
@@ -142,7 +142,7 @@ func TestAccQueueResource_maxValues(t *testing.T) {
 	})
 }
 
-func testAccCheckQueueExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckQueueExists(resourceName string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

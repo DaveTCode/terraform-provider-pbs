@@ -114,7 +114,7 @@ func TestAccHookResource_disabledState(t *testing.T) {
 	})
 }
 
-// TestAccHookResource_import tests importing an existing hook
+// TestAccHookResource_import tests importing an existing hook.
 func TestAccHookResource_import(t *testing.T) {
 	hookName := "test" // Use pre-created hook from setup script
 
@@ -168,7 +168,7 @@ func TestAccHookResource_import(t *testing.T) {
 	})
 }
 
-func testAccCheckHookExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckHookExists(resourceName string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

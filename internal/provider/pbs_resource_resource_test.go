@@ -140,7 +140,7 @@ func TestAccPbsResourceResource_stringArrayType(t *testing.T) {
 	})
 }
 
-// TestAccPbsResourceResource_import tests importing an existing PBS resource
+// TestAccPbsResourceResource_import tests importing an existing PBS resource.
 func TestAccPbsResourceResource_import(t *testing.T) {
 	resourceName := "test" // Use pre-created resource from setup script
 
@@ -185,7 +185,7 @@ func TestAccPbsResourceResource_import(t *testing.T) {
 	})
 }
 
-func testAccCheckPbsResourceExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckPbsResourceExists(resourceName string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

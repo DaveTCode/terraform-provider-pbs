@@ -8,12 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// Available node names that correspond to Docker containers
+// Available node names that correspond to Docker containers.
 var availableTestNodes = []string{
 	"compute1", "compute2", "compute3", "node1", "node2",
 }
 
-// getTestNodeName returns a specific node name for each test to avoid conflicts
+// getTestNodeName returns a specific node name for each test to avoid conflicts.
 func getTestNodeName(testName string) string {
 	testNodeMap := map[string]string{
 		"basic":                "compute1",
@@ -30,7 +30,7 @@ func getTestNodeName(testName string) string {
 	return availableTestNodes[0]
 }
 
-// TestAccNodeResource_basic tests basic node creation and updates
+// TestAccNodeResource_basic tests basic node creation and updates.
 func TestAccNodeResource_basic(t *testing.T) {
 	nodeName := getTestNodeName("basic")
 
@@ -64,7 +64,7 @@ func TestAccNodeResource_basic(t *testing.T) {
 	})
 }
 
-// TestAccNodeResource_import tests importing an existing node
+// TestAccNodeResource_import tests importing an existing node.
 func TestAccNodeResource_import(t *testing.T) {
 	nodeName := "pbs" // Use pre-created node from setup script (server's own hostname)
 
@@ -104,7 +104,7 @@ func TestAccNodeResource_import(t *testing.T) {
 	})
 }
 
-// TestAccNodeResource_withResources tests node with custom resource specifications
+// TestAccNodeResource_withResources tests node with custom resource specifications.
 func TestAccNodeResource_withResources(t *testing.T) {
 	nodeName := getTestNodeName("withResources")
 
@@ -135,7 +135,7 @@ func TestAccNodeResource_withResources(t *testing.T) {
 	})
 }
 
-// TestAccNodeResource_powerAndProvisioning tests power and provisioning fields
+// TestAccNodeResource_powerAndProvisioning tests power and provisioning fields.
 func TestAccNodeResource_powerAndProvisioning(t *testing.T) {
 	nodeName := getTestNodeName("powerAndProvisioning")
 
@@ -168,7 +168,7 @@ func TestAccNodeResource_powerAndProvisioning(t *testing.T) {
 	})
 }
 
-// TestAccNodeResource_comprehensive tests all supported configurable fields
+// TestAccNodeResource_comprehensive tests all supported configurable fields.
 func TestAccNodeResource_comprehensive(t *testing.T) {
 	nodeName := getTestNodeName("comprehensive")
 
@@ -213,7 +213,7 @@ func TestAccNodeResource_comprehensive(t *testing.T) {
 	})
 }
 
-// TestAccNodeResource_minimalSupported tests only the most basic supported attributes
+// TestAccNodeResource_minimalSupported tests only the most basic supported attributes.
 func TestAccNodeResource_minimalSupported(t *testing.T) {
 	nodeName := getTestNodeName("minimal")
 
@@ -235,7 +235,7 @@ func TestAccNodeResource_minimalSupported(t *testing.T) {
 	})
 }
 
-func testAccCheckNodeExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckNodeExists(resourceName string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
