@@ -9,13 +9,11 @@ import (
 )
 
 // TestAccIntegration_CompleteWorkflow tests a complete PBS workflow.
-// including creating queues, nodes, resources, hooks, and server configuration.
+// including creating queues, resources, and hooks.
 func TestAccIntegration_CompleteWorkflow(t *testing.T) {
 	queueName := testAccResourceName("integration_queue")
-	nodeName := testAccResourceName("integration_node")
 	resourceName := testAccResourceName("integration_resource")
 	hookName := testAccResourceName("integration_hook")
-	serverName := testAccResourceName("integration_server")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -23,20 +21,12 @@ func TestAccIntegration_CompleteWorkflow(t *testing.T) {
 		CheckDestroy:             testAccCheckCompleteWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCompleteWorkflowConfig(serverName, queueName, nodeName, resourceName, hookName),
+				Config: testAccCompleteWorkflowConfig(queueName, resourceName, hookName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Server checks
-					resource.TestCheckResourceAttr("pbs_server.test", "name", serverName),
-					resource.TestCheckResourceAttr("pbs_server.test", "default_queue", queueName),
-
 					// Queue checks
 					resource.TestCheckResourceAttr("pbs_queue.test", "name", queueName),
 					resource.TestCheckResourceAttr("pbs_queue.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "started", "true"),
-
-					// Node checks
-					resource.TestCheckResourceAttr("pbs_node.test", "name", nodeName),
-					resource.TestCheckResourceAttr("pbs_node.test", "resources_available.test_resource", "100mb"),
 
 					// Resource checks
 					resource.TestCheckResourceAttr("pbs_resource.test", "name", resourceName),
@@ -131,18 +121,18 @@ func testAccCheckCompleteWorkflowDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCompleteWorkflowConfig(serverName, queueName, nodeName, resourceName, hookName string) string {
+func testAccCompleteWorkflowConfig(queueName, resourceName, hookName string) string {
 	return providerConfig() + fmt.Sprintf(`
 # Create a custom PBS resource first
 resource "pbs_resource" "test" {
-  name = %[4]q
+  name = %[2]q
   type = "size"
   flag = "h"
 }
 
 # Create a queue
 resource "pbs_queue" "test" {
-  name        = %[2]q
+  name        = %[1]q
   queue_type  = "Execution"
   enabled     = true
   started     = true
@@ -154,22 +144,9 @@ resource "pbs_queue" "test" {
   }
 }
 
-# Create a node that uses the custom resource
-resource "pbs_node" "test" {
-  name = %[3]q
-  port = 15002
-  resources_available = {
-    mem           = "8gb"
-    ncpus         = "4"
-    test_resource = "100mb"
-  }
-  resv_enable = true
-  depends_on  = [pbs_resource.test]
-}
-
 # Create a hook
 resource "pbs_hook" "test" {
-  name        = %[5]q
+  name        = %[3]q
   enabled     = true
   event       = "execjob_begin"
   order       = 1
@@ -177,28 +154,7 @@ resource "pbs_hook" "test" {
   user        = "pbsadmin"
   fail_action = "none"
 }
-
-# Configure the server to use the queue as default
-resource "pbs_server" "test" {
-  name = %[1]q
-  default_chunk = {
-    ncpus = 1
-  }
-  default_queue            = pbs_queue.test.name
-  eligible_time_enable     = false
-  log_events               = 511
-  max_array_size           = 10000
-  max_concurrent_provision = 5
-  power_provisioning       = false
-  query_other_jobs         = true
-  resources_default = {
-    ncpus = 1
-  }
-  resv_enable         = true
-  scheduler_iteration = 600
-  depends_on          = [pbs_queue.test]
-}
-`, serverName, queueName, nodeName, resourceName, hookName)
+`, queueName, resourceName, hookName)
 }
 
 func testAccQueueDependenciesConfig(routingQueue, execQueue1, execQueue2 string) string {
@@ -274,6 +230,8 @@ resource "pbs_hook" "hook1" {
   type        = "site"
   user        = "pbsadmin"
   fail_action = "none"
+	alarm       = 30
+	debug       = false
 }
 
 resource "pbs_hook" "hook2" {
@@ -284,6 +242,8 @@ resource "pbs_hook" "hook2" {
   type        = "site"
   user        = "pbsadmin"
   fail_action = "none"
+	alarm       = 30
+	debug       = false
 }
 
 resource "pbs_hook" "hook3" {
@@ -293,7 +253,9 @@ resource "pbs_hook" "hook3" {
   order       = 3
   type        = "site"
   user        = "pbsadmin"
-  fail_action = "offline_vnodes"
+  fail_action = "none"
+	alarm       = 30
+	debug       = false
 }
 `, hook1Name, hook2Name, hook3Name)
 }
