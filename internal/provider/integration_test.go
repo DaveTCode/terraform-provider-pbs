@@ -68,7 +68,7 @@ func TestAccIntegration_QueueDependencies(t *testing.T) {
 
 // TestAccIntegration_NodeWithCustomResources tests nodes with custom PBS resources.
 func TestAccIntegration_NodeWithCustomResources(t *testing.T) {
-	nodeName := testAccResourceName("custom_node")
+	nodeName := "node1" // Must be fixed to a container in the docker compose set up
 	resource1Name := testAccResourceName("custom_resource_1")
 	resource2Name := testAccResourceName("custom_resource_2")
 
