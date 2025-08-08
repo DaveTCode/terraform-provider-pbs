@@ -62,7 +62,7 @@ func TestAccHookResource_withDebugAndAlarm(t *testing.T) {
 					testAccCheckHookExists("pbs_hook.test"),
 					resource.TestCheckResourceAttr("pbs_hook.test", "debug", "true"),
 					resource.TestCheckResourceAttr("pbs_hook.test", "alarm", "60"),
-					resource.TestCheckResourceAttr("pbs_hook.test", "fail_action", "offline_vnodes"),
+					resource.TestCheckResourceAttr("pbs_hook.test", "fail_action", "none"),
 				),
 			},
 		},
@@ -224,7 +224,7 @@ resource "pbs_hook" "test" {
   type        = "site"
   user        = "pbsadmin"
   alarm       = 60
-  fail_action = "offline_vnodes"
+  fail_action = "none"
 }
 `, name)
 }
