@@ -21,9 +21,7 @@ func runSshCommand(sshClient *ssh.Client, cmd string) ([]byte, []byte, error) {
 		return nil, nil, fmt.Errorf("failed to create SSH session %s: %s", err.Error(), cmd)
 	}
 	defer func() {
-		if closeErr := session.Close(); closeErr != nil {
-			// Log close error but don't override the main error
-		}
+		_ = session.Close() // Ignore close error in defer
 	}()
 
 	stdout, err := session.StdoutPipe()
@@ -60,9 +58,7 @@ func (client *PbsClient) runCommands(commands []string) ([][]byte, [][]byte, err
 		return nil, nil, fmt.Errorf("unable to connect to server with SSH config provided %s", err.Error())
 	}
 	defer func() {
-		if closeErr := sshClient.Close(); closeErr != nil {
-			// Log close error but don't override the main error
-		}
+		_ = sshClient.Close() // Ignore close error in defer
 	}()
 
 	var output [][]byte
