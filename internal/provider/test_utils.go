@@ -1,10 +1,10 @@
 package provider
 
 import (
+	"crypto/rand"
 	"fmt"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -42,15 +42,23 @@ func testAccPreCheck(t *testing.T) {
 
 // Helper function to generate unique names for test resources.
 // PBS has strict naming limits (typically 15 chars max), so we keep names short.
+// Uses a cryptographically random suffix for better uniqueness than timestamps.
 func testAccResourceName(prefix string) string {
-	// Use only the last 4 digits of timestamp to keep names short
-	timestamp := time.Now().Unix() % 10000
-	// Truncate prefix if too long and add short timestamp
-	maxPrefixLen := 10 // Leave room for underscore and 4-digit timestamp
+	// Generate 6 random hex characters (3 bytes = 24 bits of entropy)
+	// This gives us 16^6 = 16,777,216 possible combinations
+	randomBytes := make([]byte, 3)
+	if _, err := rand.Read(randomBytes); err != nil {
+		// Fallback to a simple counter if crypto/rand fails (very unlikely)
+		return fmt.Sprintf("%s_fb", prefix)
+	}
+	randomSuffix := fmt.Sprintf("%06x", randomBytes)[:6]
+	
+	// Truncate prefix if too long and add random suffix
+	maxPrefixLen := 8 // Leave room for underscore and 6-char random suffix
 	if len(prefix) > maxPrefixLen {
 		prefix = prefix[:maxPrefixLen]
 	}
-	return fmt.Sprintf("%s_%d", prefix, timestamp)
+	return fmt.Sprintf("%s_%s", prefix, randomSuffix)
 }
 
 // providerConfig returns a basic provider configuration for testing.
