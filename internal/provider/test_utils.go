@@ -52,7 +52,7 @@ func testAccResourceName(prefix string) string {
 		return fmt.Sprintf("%s_fb", prefix)
 	}
 	randomSuffix := fmt.Sprintf("%06x", randomBytes)[:6]
-	
+
 	// Truncate prefix if too long and add random suffix
 	maxPrefixLen := 8 // Leave room for underscore and 6-char random suffix
 	if len(prefix) > maxPrefixLen {
