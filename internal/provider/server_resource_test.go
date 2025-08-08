@@ -192,7 +192,7 @@ func TestAccServerResource_configurationDrift(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test that we can apply configuration changes to the server
 			{
-				Config: testAccServerResourceConfigBasicUpdated(),
+				Config:        testAccServerResourceConfigBasicUpdated(),
 				ResourceName:  "pbs_server.test",
 				ImportState:   true,
 				ImportStateId: "pbs",
