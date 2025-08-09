@@ -10,8 +10,8 @@ import (
 // nodeFieldDefinition represents a node field with its attribute name, execution order, and value extractor
 type nodeFieldDefinition struct {
 	attribute string
-	order     int                                  // Lower numbers execute first
-	getValue  func(node PbsNode) any              // Function to extract the value from a PbsNode
+	order     int                    // Lower numbers execute first
+	getValue  func(node PbsNode) any // Function to extract the value from a PbsNode
 }
 
 // getNodeFieldDefinitions returns the ordered list of node field definitions
@@ -295,7 +295,7 @@ func (c *PbsClient) UpdateNode(newNode PbsNode) (PbsNode, error) {
 	}
 
 	var commands = []string{}
-	
+
 	// Get field definitions and sort by order
 	fieldDefs := getNodeFieldDefinitions()
 	sort.Slice(fieldDefs, func(i, j int) bool {
@@ -307,7 +307,7 @@ func (c *PbsClient) UpdateNode(newNode PbsNode) (PbsNode, error) {
 	delete(oldNode.ResourcesAvailable, "vnode")
 	delete(newNode.ResourcesAvailable, "host")
 	delete(newNode.ResourcesAvailable, "vnode")
-	
+
 	// Process fields in order
 	for _, fieldDef := range fieldDefs {
 		oldValue := fieldDef.getValue(oldNode)

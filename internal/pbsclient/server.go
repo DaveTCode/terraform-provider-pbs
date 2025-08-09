@@ -94,7 +94,7 @@ type PbsServer struct {
 // serverFieldDefinition represents a server field with its attribute name and execution order
 type serverFieldDefinition struct {
 	attribute string
-	order     int                      // Lower numbers execute first
+	order     int                        // Lower numbers execute first
 	getValue  func(server PbsServer) any // Function to extract the value from a PbsServer
 }
 

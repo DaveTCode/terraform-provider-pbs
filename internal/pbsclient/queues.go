@@ -13,8 +13,8 @@ const GET_QUEUES_QMGR_CMD = "/opt/pbs/bin/qmgr -c 'list queue @default'"
 // queueFieldDefinition represents a queue field with its attribute name, execution order, and value extractor
 type queueFieldDefinition struct {
 	attribute string
-	order     int                                    // Lower numbers execute first
-	getValue  func(queue PbsQueue) any              // Function to extract the value from a PbsQueue
+	order     int                      // Lower numbers execute first
+	getValue  func(queue PbsQueue) any // Function to extract the value from a PbsQueue
 }
 
 // getQueueFieldDefinitions returns the ordered list of queue field definitions
@@ -55,7 +55,7 @@ func getQueueFieldDefinitions() []queueFieldDefinition {
 		{"priority", 10, func(q PbsQueue) any { return q.Priority }},
 		{"queued_jobs_threshold", 10, func(q PbsQueue) any { return q.QueuedJobsThreshold }},
 		{"queued_jobs_threshold_res", 10, func(q PbsQueue) any { return q.QueuedJobsThresholdRes }},
-		{"queue_type", 10, func(q PbsQueue) any { 
+		{"queue_type", 10, func(q PbsQueue) any {
 			if q.QueueType != "" {
 				return &q.QueueType
 			}
@@ -387,7 +387,7 @@ func (client *PbsClient) UpdateQueue(newQueue PbsQueue) (PbsQueue, error) {
 	}
 
 	var commands = []string{}
-	
+
 	// Get field definitions and sort by order
 	fieldDefs := getQueueFieldDefinitions()
 	sort.Slice(fieldDefs, func(i, j int) bool {

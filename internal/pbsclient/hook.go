@@ -10,8 +10,8 @@ import (
 // hookFieldDefinition represents a hook field with its attribute name, execution order, and value extractor
 type hookFieldDefinition struct {
 	attribute string
-	order     int                                  // Lower numbers execute first
-	getValue  func(hook PbsHook) any              // Function to extract the value from a PbsHook
+	order     int                    // Lower numbers execute first
+	getValue  func(hook PbsHook) any // Function to extract the value from a PbsHook
 }
 
 // getHookFieldDefinitions returns the ordered list of hook field definitions
@@ -176,7 +176,7 @@ func (c *PbsClient) UpdateHook(newHook PbsHook) (PbsHook, error) {
 	}
 
 	var commands = []string{}
-	
+
 	// Get field definitions and sort by order
 	fieldDefs := getHookFieldDefinitions()
 	sort.Slice(fieldDefs, func(i, j int) bool {
