@@ -91,15 +91,15 @@ type PbsServer struct {
 	WebapiOidcProviderUrl         *string
 }
 
-// serverFieldDefinition represents a server field with its attribute name and execution order
+// serverFieldDefinition represents a server field with its attribute name and execution order.
 type serverFieldDefinition struct {
 	attribute string
 	order     int                        // Lower numbers execute first
 	getValue  func(server PbsServer) any // Function to extract the value from a PbsServer
 }
 
-// getServerFieldDefinitions returns the ordered list of server field definitions
-// This ensures consistent ordering across create and update operations
+// getServerFieldDefinitions returns the ordered list of server field definitions.
+// This ensures consistent ordering across create and update operations.
 func getServerFieldDefinitions() []serverFieldDefinition {
 	return []serverFieldDefinition{
 		{"acl_host_enable", 10, func(q PbsServer) any { return q.AclHostEnable }},

@@ -7,15 +7,15 @@ import (
 	"strings"
 )
 
-// nodeFieldDefinition represents a node field with its attribute name, execution order, and value extractor
+// nodeFieldDefinition represents a node field with its attribute name, execution order, and value extractor.
 type nodeFieldDefinition struct {
 	attribute string
 	order     int                    // Lower numbers execute first
 	getValue  func(node PbsNode) any // Function to extract the value from a PbsNode
 }
 
-// getNodeFieldDefinitions returns the ordered list of node field definitions
-// This ensures consistent ordering across create and update operations
+// getNodeFieldDefinitions returns the ordered list of node field definitions.
+// This ensures consistent ordering across create and update operations.
 func getNodeFieldDefinitions() []nodeFieldDefinition {
 	return []nodeFieldDefinition{
 		{"comment", 10, func(n PbsNode) any { return n.Comment }},

@@ -7,15 +7,15 @@ import (
 	"strings"
 )
 
-// hookFieldDefinition represents a hook field with its attribute name, execution order, and value extractor
+// hookFieldDefinition represents a hook field with its attribute name, execution order, and value extractor.
 type hookFieldDefinition struct {
 	attribute string
 	order     int                    // Lower numbers execute first
 	getValue  func(hook PbsHook) any // Function to extract the value from a PbsHook
 }
 
-// getHookFieldDefinitions returns the ordered list of hook field definitions
-// This ensures consistent ordering across create and update operations
+// getHookFieldDefinitions returns the ordered list of hook field definitions.
+// This ensures consistent ordering across create and update operations.
 func getHookFieldDefinitions() []hookFieldDefinition {
 	return []hookFieldDefinition{
 		{"alarm", 10, func(h PbsHook) any { return h.Alarm }},

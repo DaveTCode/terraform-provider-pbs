@@ -10,15 +10,15 @@ import (
 const GET_QUEUE_QMGR_CMD = "/opt/pbs/bin/qmgr -c 'list queue %s'"
 const GET_QUEUES_QMGR_CMD = "/opt/pbs/bin/qmgr -c 'list queue @default'"
 
-// queueFieldDefinition represents a queue field with its attribute name, execution order, and value extractor
+// queueFieldDefinition represents a queue field with its attribute name, execution order, and value extractor.
 type queueFieldDefinition struct {
 	attribute string
 	order     int                      // Lower numbers execute first
 	getValue  func(queue PbsQueue) any // Function to extract the value from a PbsQueue
 }
 
-// getQueueFieldDefinitions returns the ordered list of queue field definitions
-// This ensures consistent ordering across create and update operations
+// getQueueFieldDefinitions returns the ordered list of queue field definitions.
+// This ensures consistent ordering across create and update operations.
 func getQueueFieldDefinitions() []queueFieldDefinition {
 	return []queueFieldDefinition{
 		{"acl_group_enable", 10, func(q PbsQueue) any { return q.AclGroupEnable }},
