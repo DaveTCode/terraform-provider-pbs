@@ -153,6 +153,8 @@ resource "pbs_hook" "test" {
   type        = "site"
   user        = "pbsadmin"
   fail_action = "none"
+	debug       = false
+	alarm       = 30
 }
 `, queueName, resourceName, hookName)
 }
@@ -178,12 +180,12 @@ resource "pbs_queue" "exec2" {
 
 # Create routing queue that routes to execution queues
 resource "pbs_queue" "routing" {
-  name        = %[1]q
-  queue_type  = "Route"
-  enabled     = true
-  started     = true
-  # route_destinations = "${pbs_queue.exec1.name},${pbs_queue.exec2.name}"
-  depends_on  = [pbs_queue.exec1, pbs_queue.exec2]
+  name               = %[1]q
+  queue_type         = "Route"
+  enabled            = true
+  started            = true
+  route_destinations = "${pbs_queue.exec1.name},${pbs_queue.exec2.name}"
+  depends_on         = [pbs_queue.exec1, pbs_queue.exec2]
 }
 `, routingQueue, execQueue1, execQueue2)
 }

@@ -2,12 +2,81 @@ package pbsclient
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
 
 const GET_QUEUE_QMGR_CMD = "/opt/pbs/bin/qmgr -c 'list queue %s'"
 const GET_QUEUES_QMGR_CMD = "/opt/pbs/bin/qmgr -c 'list queue @default'"
+
+// queueFieldDefinition represents a queue field with its attribute name, execution order, and value extractor
+type queueFieldDefinition struct {
+	attribute string
+	order     int                                    // Lower numbers execute first
+	getValue  func(queue PbsQueue) any              // Function to extract the value from a PbsQueue
+}
+
+// getQueueFieldDefinitions returns the ordered list of queue field definitions
+// This ensures consistent ordering across create and update operations
+func getQueueFieldDefinitions() []queueFieldDefinition {
+	return []queueFieldDefinition{
+		{"acl_group_enable", 10, func(q PbsQueue) any { return q.AclGroupEnable }},
+		{"acl_groups", 10, func(q PbsQueue) any { return q.AclGroups }},
+		{"acl_host_enable", 10, func(q PbsQueue) any { return q.AclHostEnable }},
+		{"acl_hosts", 10, func(q PbsQueue) any { return q.AclHosts }},
+		{"acl_user_enable", 10, func(q PbsQueue) any { return q.AclUserEnable }},
+		{"acl_users", 10, func(q PbsQueue) any { return q.AclUsers }},
+		{"alt_router", 10, func(q PbsQueue) any { return q.AltRouter }},
+		{"backfill_depth", 10, func(q PbsQueue) any { return q.BackfillDepth }},
+		{"checkpoint_min", 10, func(q PbsQueue) any { return q.CheckpointMin }},
+		{"default_chunk", 10, func(q PbsQueue) any { return q.DefaultChunk }},
+		{"from_route_only", 10, func(q PbsQueue) any { return q.FromRouteOnly }},
+		{"kill_delay", 10, func(q PbsQueue) any { return q.KillDelay }},
+		{"max_array_size", 10, func(q PbsQueue) any { return q.MaxArraySize }},
+		{"max_group_res", 10, func(q PbsQueue) any { return q.MaxGroupRes }},
+		{"max_group_res_soft", 10, func(q PbsQueue) any { return q.MaxGroupResSoft }},
+		{"max_group_run", 10, func(q PbsQueue) any { return q.MaxGroupRun }},
+		{"max_group_run_soft", 10, func(q PbsQueue) any { return q.MaxGroupRunSoft }},
+		{"max_queuable", 10, func(q PbsQueue) any { return q.MaxQueuable }},
+		{"max_queued", 10, func(q PbsQueue) any { return q.MaxQueued }},
+		{"max_queued_res", 10, func(q PbsQueue) any { return q.MaxQueuedRes }},
+		{"max_run", 10, func(q PbsQueue) any { return q.MaxRun }},
+		{"max_run_res", 10, func(q PbsQueue) any { return q.MaxRunRes }},
+		{"max_run_res_soft", 10, func(q PbsQueue) any { return q.MaxRunResSoft }},
+		{"max_run_soft", 10, func(q PbsQueue) any { return q.MaxRunSoft }},
+		{"max_running", 10, func(q PbsQueue) any { return q.MaxRunning }},
+		{"max_user_res", 10, func(q PbsQueue) any { return q.MaxUserRes }},
+		{"max_user_res_soft", 10, func(q PbsQueue) any { return q.MaxUserResSoft }},
+		{"max_user_run", 10, func(q PbsQueue) any { return q.MaxUserRun }},
+		{"max_user_run_soft", 10, func(q PbsQueue) any { return q.MaxUserRunSoft }},
+		{"node_group_key", 10, func(q PbsQueue) any { return q.NodeGroupKey }},
+		{"partition", 10, func(q PbsQueue) any { return q.Partition }},
+		{"priority", 10, func(q PbsQueue) any { return q.Priority }},
+		{"queued_jobs_threshold", 10, func(q PbsQueue) any { return q.QueuedJobsThreshold }},
+		{"queued_jobs_threshold_res", 10, func(q PbsQueue) any { return q.QueuedJobsThresholdRes }},
+		{"queue_type", 10, func(q PbsQueue) any { 
+			if q.QueueType != "" {
+				return &q.QueueType
+			}
+			return (*string)(nil)
+		}},
+		{"resources_assigned", 10, func(q PbsQueue) any { return q.ResourcesAssigned }},
+		{"resources_available", 10, func(q PbsQueue) any { return q.ResourcesAvailable }},
+		{"resources_default", 10, func(q PbsQueue) any { return q.ResourcesDefault }},
+		{"resources_max", 10, func(q PbsQueue) any { return q.ResourcesMax }},
+		{"resources_min", 10, func(q PbsQueue) any { return q.ResourcesMin }},
+		{"route_destinations", 10, func(q PbsQueue) any { return q.RouteDestinations }},
+		{"route_held_jobs", 10, func(q PbsQueue) any { return q.RouteHeldJobs }},
+		{"route_lifetime", 10, func(q PbsQueue) any { return q.RouteLifetime }},
+		{"route_retry_time", 10, func(q PbsQueue) any { return q.RouteRetryTime }},
+		{"route_waiting_jobs", 10, func(q PbsQueue) any { return q.RouteWaitingJobs }},
+		// Enable the queue second to last (order 90)
+		{"enabled", 90, func(q PbsQueue) any { return &q.Enabled }},
+		// Start the queue last (order 100) - this must happen after all other configuration
+		{"started", 100, func(q PbsQueue) any { return &q.Started }},
+	}
+}
 
 type PbsQueue struct {
 	AclGroupEnable         *bool
@@ -318,61 +387,18 @@ func (client *PbsClient) UpdateQueue(newQueue PbsQueue) (PbsQueue, error) {
 	}
 
 	var commands = []string{}
-	fields := []struct {
-		attribute string
-		oldAttr   any
-		newAttr   any
-	}{
-		{"acl_group_enable", oldQueue.AclGroupEnable, newQueue.AclGroupEnable},
-		{"acl_groups", oldQueue.AclGroups, newQueue.AclGroups},
-		{"acl_host_enable", oldQueue.AclHostEnable, newQueue.AclHostEnable},
-		{"acl_hosts", oldQueue.AclHosts, newQueue.AclHosts},
-		{"acl_user_enable", oldQueue.AclUserEnable, newQueue.AclUserEnable},
-		{"acl_users", oldQueue.AclUsers, newQueue.AclUsers},
-		{"alt_router", oldQueue.AltRouter, newQueue.AltRouter},
-		{"backfill_depth", oldQueue.BackfillDepth, newQueue.BackfillDepth},
-		{"checkpoint_min", oldQueue.CheckpointMin, newQueue.CheckpointMin},
-		{"default_chunk", oldQueue.DefaultChunk, newQueue.DefaultChunk},
-		{"enabled", oldQueue.Enabled, newQueue.Enabled},
-		{"from_route_only", oldQueue.FromRouteOnly, newQueue.FromRouteOnly},
-		{"kill_delay", oldQueue.KillDelay, newQueue.KillDelay},
-		{"max_array_size", oldQueue.MaxArraySize, newQueue.MaxArraySize},
-		{"max_group_res", oldQueue.MaxGroupRes, newQueue.MaxGroupRes},
-		{"max_group_res_soft", oldQueue.MaxGroupResSoft, newQueue.MaxGroupResSoft},
-		{"max_group_run", oldQueue.MaxGroupRun, newQueue.MaxGroupRun},
-		{"max_group_run_soft", oldQueue.MaxGroupRunSoft, newQueue.MaxGroupRunSoft},
-		{"max_queuable", oldQueue.MaxQueuable, newQueue.MaxQueuable},
-		{"max_queued", oldQueue.MaxQueued, newQueue.MaxQueued},
-		{"max_queued_res", oldQueue.MaxQueuedRes, newQueue.MaxQueuedRes},
-		{"max_run", oldQueue.MaxRun, newQueue.MaxRun},
-		{"max_run_res", oldQueue.MaxRunRes, newQueue.MaxRunRes},
-		{"max_run_res_soft", oldQueue.MaxRunResSoft, newQueue.MaxRunResSoft},
-		{"max_run_soft", oldQueue.MaxRunSoft, newQueue.MaxRunSoft},
-		{"max_running", oldQueue.MaxRunning, newQueue.MaxRunning},
-		{"max_user_res", oldQueue.MaxUserRes, newQueue.MaxUserRes},
-		{"max_user_res_soft", oldQueue.MaxUserResSoft, newQueue.MaxUserResSoft},
-		{"max_user_run", oldQueue.MaxUserRun, newQueue.MaxUserRun},
-		{"max_user_run_soft", oldQueue.MaxUserRunSoft, newQueue.MaxUserRunSoft},
-		{"node_group_key", oldQueue.NodeGroupKey, newQueue.NodeGroupKey},
-		{"partition", oldQueue.Partition, newQueue.Partition},
-		{"priority", oldQueue.Priority, newQueue.Priority},
-		{"queued_jobs_threshold", oldQueue.QueuedJobsThreshold, newQueue.QueuedJobsThreshold},
-		{"queued_jobs_threshold_res", oldQueue.QueuedJobsThresholdRes, newQueue.QueuedJobsThresholdRes},
-		{"queue_type", oldQueue.QueueType, newQueue.QueueType},
-		{"resources_assigned", oldQueue.ResourcesAssigned, newQueue.ResourcesAssigned},
-		{"resources_available", oldQueue.ResourcesAvailable, newQueue.ResourcesAvailable},
-		{"resources_default", oldQueue.ResourcesDefault, newQueue.ResourcesDefault},
-		{"resources_max", oldQueue.ResourcesMax, newQueue.ResourcesMax},
-		{"resources_min", oldQueue.ResourcesMin, newQueue.ResourcesMin},
-		{"route_destinations", oldQueue.RouteDestinations, newQueue.RouteDestinations},
-		{"route_held_jobs", oldQueue.RouteHeldJobs, newQueue.RouteHeldJobs},
-		{"route_lifetime", oldQueue.RouteLifetime, newQueue.RouteLifetime},
-		{"route_retry_time", oldQueue.RouteRetryTime, newQueue.RouteRetryTime},
-		{"route_waiting_jobs", oldQueue.RouteWaitingJobs, newQueue.RouteWaitingJobs},
-		{"started", oldQueue.Started, newQueue.Started},
-	}
-	for _, v := range fields {
-		newCommands, err := generateUpdateAttributeCommand(v.oldAttr, v.newAttr, "queue", newQueue.Name, v.attribute)
+	
+	// Get field definitions and sort by order
+	fieldDefs := getQueueFieldDefinitions()
+	sort.Slice(fieldDefs, func(i, j int) bool {
+		return fieldDefs[i].order < fieldDefs[j].order
+	})
+
+	// Process fields in order
+	for _, fieldDef := range fieldDefs {
+		oldValue := fieldDef.getValue(oldQueue)
+		newValue := fieldDef.getValue(newQueue)
+		newCommands, err := generateUpdateAttributeCommand(oldValue, newValue, "queue", newQueue.Name, fieldDef.attribute)
 		if err != nil {
 			return oldQueue, err
 		}
@@ -399,61 +425,18 @@ func (client *PbsClient) UpdateQueue(newQueue PbsQueue) (PbsQueue, error) {
 func (client *PbsClient) CreateQueue(newQueue PbsQueue) (PbsQueue, error) {
 	var commands = []string{
 		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create queue %s queue_type=%s'", newQueue.Name, newQueue.QueueType),
-		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s enabled=%s'", newQueue.Name, strconv.FormatBool(newQueue.Enabled)),
-		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set queue %s started=%s'", newQueue.Name, strconv.FormatBool(newQueue.Started)),
 	}
 
-	fields := []struct {
-		attribute string
-		newAttr   any
-	}{
-		{"acl_group_enable", newQueue.AclGroupEnable},
-		{"acl_groups", newQueue.AclGroups},
-		{"acl_host_enable", newQueue.AclHostEnable},
-		{"acl_hosts", newQueue.AclHosts},
-		{"acl_user_enable", newQueue.AclUserEnable},
-		{"acl_users", newQueue.AclUsers},
-		{"alt_router", newQueue.AltRouter},
-		{"backfill_depth", newQueue.BackfillDepth},
-		{"checkpoint_min", newQueue.CheckpointMin},
-		{"default_chunk", newQueue.DefaultChunk},
-		{"from_route_only", newQueue.FromRouteOnly},
-		{"kill_delay", newQueue.KillDelay},
-		{"max_array_size", newQueue.MaxArraySize},
-		{"max_group_res", newQueue.MaxGroupRes},
-		{"max_group_res_soft", newQueue.MaxGroupResSoft},
-		{"max_group_run", newQueue.MaxGroupRun},
-		{"max_group_run_soft", newQueue.MaxGroupRunSoft},
-		{"max_queuable", newQueue.MaxQueuable},
-		{"max_queued", newQueue.MaxQueued},
-		{"max_queued_res", newQueue.MaxQueuedRes},
-		{"max_run", newQueue.MaxRun},
-		{"max_run_res", newQueue.MaxRunRes},
-		{"max_run_res_soft", newQueue.MaxRunResSoft},
-		{"max_run_soft", newQueue.MaxRunSoft},
-		{"max_running", newQueue.MaxRunning},
-		{"max_user_res", newQueue.MaxUserRes},
-		{"max_user_res_soft", newQueue.MaxUserResSoft},
-		{"max_user_run", newQueue.MaxUserRun},
-		{"max_user_run_soft", newQueue.MaxUserRunSoft},
-		{"node_group_key", newQueue.NodeGroupKey},
-		{"partition", newQueue.Partition},
-		{"priority", newQueue.Priority},
-		{"queued_jobs_threshold", newQueue.QueuedJobsThreshold},
-		{"queued_jobs_threshold_res", newQueue.QueuedJobsThresholdRes},
-		{"resources_assigned", newQueue.ResourcesAssigned},
-		{"resources_available", newQueue.ResourcesAvailable},
-		{"resources_default", newQueue.ResourcesDefault},
-		{"resources_max", newQueue.ResourcesMax},
-		{"resources_min", newQueue.ResourcesMin},
-		{"route_destinations", newQueue.RouteDestinations},
-		{"route_held_jobs", newQueue.RouteHeldJobs},
-		{"route_lifetime", newQueue.RouteLifetime},
-		{"route_retry_time", newQueue.RouteRetryTime},
-		{"route_waiting_jobs", newQueue.RouteWaitingJobs},
-	}
-	for _, v := range fields {
-		c, err := generateCreateCommands(v.newAttr, "queue", newQueue.Name, v.attribute)
+	// Get field definitions and sort by order
+	fieldDefs := getQueueFieldDefinitions()
+	sort.Slice(fieldDefs, func(i, j int) bool {
+		return fieldDefs[i].order < fieldDefs[j].order
+	})
+
+	// Process fields in order
+	for _, fieldDef := range fieldDefs {
+		value := fieldDef.getValue(newQueue)
+		c, err := generateCreateCommands(value, "queue", newQueue.Name, fieldDef.attribute)
 		if err != nil {
 			return PbsQueue{}, err
 		}
