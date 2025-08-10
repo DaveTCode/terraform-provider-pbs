@@ -45,6 +45,10 @@ func (d *serverDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Computed:    true,
 				Description: " List of hosts from which services can be requested of this server. Requests from the server host are always honored whether or not that host is in the list.  This list contains the fully qualified domain names of the hosts. List is evaluated left-to-right; first match in list is used.",
 			},
+			"acl_hosts_normalized": schema.StringAttribute{
+				Computed:    true,
+				Description: "The normalized (sorted) version of acl_hosts as stored by PBS.",
+			},
 			"acl_resv_group_enable": schema.BoolAttribute{
 				Computed:    true,
 				Description: " Specifies whether the server obeys the group reservation access control list in the acl_resv_groups server attribute.",
@@ -52,6 +56,10 @@ func (d *serverDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"acl_resv_groups": schema.StringAttribute{
 				Computed:    true,
 				Description: " List of groups allowed or denied permission to create reservations in this PBS complex.  The groups in the list are groups on the server host, not submission hosts.    List is evaluated left-to-right; first match in list is used.",
+			},
+			"acl_resv_groups_normalized": schema.StringAttribute{
+				Computed:    true,
+				Description: "The normalized (sorted) version of acl_resv_groups as stored by PBS.",
 			},
 			"acl_resv_host_enable": schema.BoolAttribute{
 				Computed:    true,
@@ -61,6 +69,10 @@ func (d *serverDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Computed:    true,
 				Description: " List of hosts from which reservations can be created in this PBS complex. This list is made up  of the fully-qualified domain names of the hosts.  List is evaluated left-to-right; first match in list is used.",
 			},
+			"acl_resv_hosts_normalized": schema.StringAttribute{
+				Computed:    true,
+				Description: "The normalized (sorted) version of acl_resv_hosts as stored by PBS.",
+			},
 			"acl_resv_user_enable": schema.BoolAttribute{
 				Computed:    true,
 				Description: " Specifies whether the server limits which  users are allowed to create reservations, according to the access control list in the acl_resv_users server attribute.",
@@ -69,9 +81,17 @@ func (d *serverDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Computed:    true,
 				Description: " List of users allowed or denied permission to create reservations  in this PBS complex.   List is evaluated left-to-right; first match in list is used.",
 			},
+			"acl_resv_users_normalized": schema.StringAttribute{
+				Computed:    true,
+				Description: "The normalized (sorted) version of acl_resv_users as stored by PBS.",
+			},
 			"acl_roots": schema.StringAttribute{
 				Computed:    true,
 				Description: " List of users with root privilege who can submit and run jobs in this PBS complex.  For any job whose owner is root or Administrator, the job owner must be listed in this access control list, or the job is rejected.  List is evaluated left-to-right; first match in list is used. ",
+			},
+			"acl_roots_normalized": schema.StringAttribute{
+				Computed:    true,
+				Description: "The normalized (sorted) version of acl_roots as stored by PBS.",
 			},
 			"acl_user_enable": schema.BoolAttribute{
 				Computed:    true,
@@ -80,6 +100,10 @@ func (d *serverDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"acl_users": schema.StringAttribute{
 				Computed:    true,
 				Description: " List of users allowed or denied permission to run commands at this server.   List is evaluated left-to-right; first match in list is used.",
+			},
+			"acl_users_normalized": schema.StringAttribute{
+				Computed:    true,
+				Description: "The normalized (sorted) version of acl_users as stored by PBS.",
 			},
 			"backfill_depth": schema.Int32Attribute{
 				Computed:    true,

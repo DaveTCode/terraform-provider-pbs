@@ -1,6 +1,9 @@
 package provider
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -66,4 +69,62 @@ func ConvertTypesStringMapFiltered(source map[string]types.String, excludeKeys [
 		}
 	}
 	return result
+}
+
+// normalizeCommaSeparatedString splits a comma-separated string, sorts the items, and rejoins them.
+func normalizeCommaSeparatedString(value string) string {
+	if value == "" {
+		return ""
+	}
+
+	items := strings.Split(value, ",")
+	for i := range items {
+		items[i] = strings.TrimSpace(items[i])
+	}
+	sort.Strings(items)
+	return strings.Join(items, ",")
+}
+
+// AclFieldPair represents a pair of user field and normalized field for ACL preservation.
+type AclFieldPair struct {
+	UserField       types.String
+	NormalizedField types.String
+}
+
+// preserveUserAclFormats preserves user-provided ACL field formats from plan.
+func preserveUserAclFormats(planFields, resultFields []AclFieldPair) {
+	if len(planFields) != len(resultFields) {
+		return // Safety check
+	}
+
+	for i := range planFields {
+		if !planFields[i].UserField.IsNull() {
+			resultFields[i].UserField = planFields[i].UserField
+		}
+	}
+}
+
+// preserveUserAclFormatsFromState preserves user-provided ACL field formats from state when semantically equivalent.
+func preserveUserAclFormatsFromState(stateFields, updatedFields []AclFieldPair) {
+	if len(stateFields) != len(updatedFields) {
+		return // Safety check
+	}
+
+	for i := range stateFields {
+		if !stateFields[i].UserField.IsNull() && !updatedFields[i].NormalizedField.IsNull() {
+			userFormat := stateFields[i].UserField.ValueString()
+			pbsFormat := updatedFields[i].NormalizedField.ValueString()
+
+			if normalizeCommaSeparatedString(userFormat) == normalizeCommaSeparatedString(pbsFormat) {
+				updatedFields[i].UserField = stateFields[i].UserField
+			}
+		}
+	}
+}
+
+// addNormalizedAclField sets the normalized version of an ACL field if the source is not nil.
+func addNormalizedAclField(source *string, target *types.String) {
+	if source != nil {
+		*target = types.StringValue(normalizeCommaSeparatedString(*source))
+	}
 }

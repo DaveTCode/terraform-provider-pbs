@@ -36,17 +36,29 @@ func (d *queueDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 			"acl_groups": schema.StringAttribute{
 				Computed: true,
 			},
+			"acl_groups_normalized": schema.StringAttribute{
+				Computed:    true,
+				Description: "The normalized (sorted) version of acl_groups as stored by PBS.",
+			},
 			"acl_host_enable": schema.BoolAttribute{
 				Computed: true,
 			},
 			"acl_hosts": schema.StringAttribute{
 				Computed: true,
 			},
+			"acl_hosts_normalized": schema.StringAttribute{
+				Computed:    true,
+				Description: "The normalized (sorted) version of acl_hosts as stored by PBS.",
+			},
 			"acl_user_enable": schema.BoolAttribute{
 				Computed: true,
 			},
 			"acl_users": schema.StringAttribute{
 				Computed: true,
+			},
+			"acl_users_normalized": schema.StringAttribute{
+				Computed:    true,
+				Description: "The normalized (sorted) version of acl_users as stored by PBS.",
 			},
 			"alt_router": schema.StringAttribute{
 				Computed: true,

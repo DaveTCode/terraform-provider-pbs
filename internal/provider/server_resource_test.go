@@ -217,3 +217,122 @@ resource "pbs_server" "pbs" {
 }
 `
 }
+
+// TestAccServerResource_comprehensive_ACL tests comprehensive ACL handling including user format preservation.
+func TestAccServerResource_comprehensive_ACL(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			// Import the existing server.
+			{
+				Config:             testAccServerResourceConfigACLImport(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			// Update with ACL settings in user-preferred order.
+			{
+				Config: testAccServerResourceConfigACLUpdated(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "name", "pbs"),
+					// Verify user format is preserved.
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_users", "staff,admin"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_hosts", "host2.example.com,host1.example.com"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_resv_users", "user2,user1"),
+					// Verify normalized format shows PBS ordering.
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_users_normalized", "admin,staff"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_hosts_normalized", "host1.example.com,host2.example.com"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_resv_users_normalized", "user1,user2"),
+				),
+			},
+			// Update ACL with different order to verify format preservation.
+			{
+				Config: testAccServerResourceConfigACLReordered(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "name", "pbs"),
+					// Verify new user format is preserved.
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_users", "admin,staff,manager"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_hosts", "host1.example.com,host3.example.com"),
+					// Verify normalized format shows PBS ordering.
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_users_normalized", "admin,manager,staff"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_hosts_normalized", "host1.example.com,host3.example.com"),
+				),
+			},
+		},
+	})
+}
+
+func testAccServerResourceConfigACLImport() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name = "pbs"
+}
+`
+}
+
+func testAccServerResourceConfigACLUpdated() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name             = "pbs"
+  comment          = "ACL test server"
+  acl_user_enable  = true
+  acl_users        = "staff,admin"
+  acl_host_enable  = true
+  acl_hosts        = "host2.example.com,host1.example.com"
+  acl_resv_user_enable = true
+  acl_resv_users   = "user2,user1"
+
+  scheduler_iteration      = 900
+  max_array_size           = 15000
+  node_fail_requeue        = 120
+  eligible_time_enable     = false
+  log_events               = 511
+  mailer                   = "/usr/sbin/sendmail"
+  mail_from                = "adm"
+  query_other_jobs         = true
+  resources_default = {
+    ncpus = "1"
+  }
+  resv_enable              = true
+  pbs_license_min          = 0
+  pbs_license_max          = 2147483647
+  pbs_license_linger_time  = 31536000
+  max_concurrent_provision = 5
+  power_provisioning       = false
+}
+`
+}
+
+func testAccServerResourceConfigACLReordered() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name             = "pbs"
+  comment          = "ACL test server reordered"
+  acl_user_enable  = true
+  acl_users        = "admin,staff,manager"
+  acl_host_enable  = true
+  acl_hosts        = "host1.example.com,host3.example.com"
+  acl_resv_user_enable = false
+	
+	scheduler_iteration      = 900
+  max_array_size           = 15000
+  node_fail_requeue        = 120
+  eligible_time_enable     = false
+  log_events               = 511
+  mailer                   = "/usr/sbin/sendmail"
+  mail_from                = "adm"
+  query_other_jobs         = true
+  resources_default = {
+    ncpus = "1"
+  }
+  resv_enable              = true
+  pbs_license_min          = 0
+  pbs_license_max          = 2147483647
+  pbs_license_linger_time  = 31536000
+  max_concurrent_provision = 5
+  power_provisioning       = false
+}
+`
+}

@@ -12,10 +12,13 @@ type queueModel struct {
 	ID                     types.String            `tfsdk:"id"`
 	AclGroupEnable         types.Bool              `tfsdk:"acl_group_enable"`
 	AclGroups              types.String            `tfsdk:"acl_groups"`
+	AclGroupsNormalized    types.String            `tfsdk:"acl_groups_normalized"`
 	AclHostEnable          types.Bool              `tfsdk:"acl_host_enable"`
 	AclHosts               types.String            `tfsdk:"acl_hosts"`
+	AclHostsNormalized     types.String            `tfsdk:"acl_hosts_normalized"`
 	AclUserEnable          types.Bool              `tfsdk:"acl_user_enable"`
 	AclUsers               types.String            `tfsdk:"acl_users"`
+	AclUsersNormalized     types.String            `tfsdk:"acl_users_normalized"`
 	AltRouter              types.String            `tfsdk:"alt_router"`
 	BackfillDepth          types.Int32             `tfsdk:"backfill_depth"`
 	CheckpointMin          types.Int32             `tfsdk:"checkpoint_min"`
@@ -131,10 +134,20 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	}
 
 	model.AclGroupEnable = types.BoolPointerValue(queue.AclGroupEnable)
+	// Store the normalized version as received from PBS.
+	addNormalizedAclField(queue.AclGroups, &model.AclGroupsNormalized)
+	// For AclGroups, we'll preserve the user's format when available (handled in Create/Update).
+	// For Read operations, we'll use the PBS value.
 	model.AclGroups = types.StringPointerValue(queue.AclGroups)
 	model.AclHostEnable = types.BoolPointerValue(queue.AclHostEnable)
+	// Store the normalized version as received from PBS.
+	addNormalizedAclField(queue.AclHosts, &model.AclHostsNormalized)
+	// For AclHosts, we'll preserve the user's format when available (handled in Create/Update).
 	model.AclHosts = types.StringPointerValue(queue.AclHosts)
 	model.AclUserEnable = types.BoolPointerValue(queue.AclUserEnable)
+	// Store the normalized version as received from PBS.
+	addNormalizedAclField(queue.AclUsers, &model.AclUsersNormalized)
+	// For AclUsers, we'll preserve the user's format when available (handled in Create/Update).
 	model.AclUsers = types.StringPointerValue(queue.AclUsers)
 	model.AltRouter = types.StringPointerValue(queue.AltRouter)
 	model.BackfillDepth = types.Int32PointerValue(queue.BackfillDepth)
@@ -268,4 +281,48 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	}
 
 	return model
+}
+
+// preserveUserAclFormat preserves user-provided ACL field formats from plan in the result model.
+func preserveUserAclFormat(planModel, resultModel *queueModel) {
+	planFields := []AclFieldPair{
+		{UserField: planModel.AclGroups, NormalizedField: planModel.AclGroupsNormalized},
+		{UserField: planModel.AclHosts, NormalizedField: planModel.AclHostsNormalized},
+		{UserField: planModel.AclUsers, NormalizedField: planModel.AclUsersNormalized},
+	}
+
+	resultFields := []AclFieldPair{
+		{UserField: resultModel.AclGroups, NormalizedField: resultModel.AclGroupsNormalized},
+		{UserField: resultModel.AclHosts, NormalizedField: resultModel.AclHostsNormalized},
+		{UserField: resultModel.AclUsers, NormalizedField: resultModel.AclUsersNormalized},
+	}
+
+	preserveUserAclFormats(planFields, resultFields)
+
+	// Update the result model with preserved values
+	resultModel.AclGroups = resultFields[0].UserField
+	resultModel.AclHosts = resultFields[1].UserField
+	resultModel.AclUsers = resultFields[2].UserField
+}
+
+// preserveUserAclFormatFromState preserves user-provided ACL field formats from state when semantically equivalent.
+func preserveUserAclFormatFromState(state, updatedState *queueModel) {
+	stateFields := []AclFieldPair{
+		{UserField: state.AclGroups, NormalizedField: state.AclGroupsNormalized},
+		{UserField: state.AclHosts, NormalizedField: state.AclHostsNormalized},
+		{UserField: state.AclUsers, NormalizedField: state.AclUsersNormalized},
+	}
+
+	updatedFields := []AclFieldPair{
+		{UserField: updatedState.AclGroups, NormalizedField: updatedState.AclGroupsNormalized},
+		{UserField: updatedState.AclHosts, NormalizedField: updatedState.AclHostsNormalized},
+		{UserField: updatedState.AclUsers, NormalizedField: updatedState.AclUsersNormalized},
+	}
+
+	preserveUserAclFormatsFromState(stateFields, updatedFields)
+
+	// Update the updated state with preserved values
+	updatedState.AclGroups = updatedFields[0].UserField
+	updatedState.AclHosts = updatedFields[1].UserField
+	updatedState.AclUsers = updatedFields[2].UserField
 }

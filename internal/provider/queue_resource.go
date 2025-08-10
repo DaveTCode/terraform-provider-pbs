@@ -50,6 +50,10 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "List of groups which are allowed or denied access to this queue. The groups in the list are groups on the server host, not submitting hosts.  List is evaluated left-to-right; first match in list is used.",
 				Optional:    true,
 			},
+			"acl_groups_normalized": schema.StringAttribute{
+				Description: "The normalized (alphabetically sorted) version of acl_groups as stored by PBS. This field is computed and reflects the actual value used by PBS.",
+				Computed:    true,
+			},
 			"acl_host_enable": schema.BoolAttribute{
 				Description: "Controls whether host access to the queue obeys the access control list defined in the acl_hosts queue attribute.",
 				Optional:    true,
@@ -58,6 +62,10 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "List of hosts from which jobs may be submitted to this queue.  List is evaluated left-to-right; first match in list is used.",
 				Optional:    true,
 			},
+			"acl_hosts_normalized": schema.StringAttribute{
+				Description: "The normalized (alphabetically sorted) version of acl_hosts as stored by PBS. This field is computed and reflects the actual value used by PBS.",
+				Computed:    true,
+			},
 			"acl_user_enable": schema.BoolAttribute{
 				Description: "Controls whether user access to the queue obeys the access control list defined in the acl_users queue attribute",
 				Optional:    true,
@@ -65,6 +73,10 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"acl_users": schema.StringAttribute{
 				Description: "List of users allowed or denied access to this queue. List is evaluated left-to-right; first match in list is used.",
 				Optional:    true,
+			},
+			"acl_users_normalized": schema.StringAttribute{
+				Description: "The normalized (alphabetically sorted) version of acl_users as stored by PBS. This field is computed and reflects the actual value used by PBS.",
+				Computed:    true,
 			},
 			"alt_router": schema.StringAttribute{
 				DeprecationMessage: "No longer used.",
@@ -288,15 +300,14 @@ func (r *queueResource) Configure(_ context.Context, req resource.ConfigureReque
 }
 
 func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var queueModel queueModel
-	var queue pbsclient.PbsQueue
-	diags := req.Plan.Get(ctx, &queueModel)
+	var planModel queueModel
+	diags := req.Plan.Get(ctx, &planModel)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbsQueueObj, diags := queueModel.ToPbsQueue(ctx)
+	pbsQueueObj, diags := planModel.ToPbsQueue(ctx)
 	resp.Diagnostics.Append(diags...)
 	queue, err := r.client.CreateQueue(pbsQueueObj)
 	if err != nil {
@@ -304,9 +315,13 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	queueModel = createQueueModel(queue)
+	// Create the model from the queue returned by PBS.
+	resultModel := createQueueModel(queue)
 
-	diags = resp.State.Set(ctx, queueModel)
+	// Preserve the user's original format for ACL fields from the plan.
+	preserveUserAclFormat(&planModel, &resultModel)
+
+	diags = resp.State.Set(ctx, resultModel)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -353,15 +368,18 @@ func (r *queueResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		updatedState.Name = state.Name
 	}
 
+	// Preserve the user's ACL format if it's semantically equivalent to what PBS returned
+	preserveUserAclFormatFromState(&state, &updatedState)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data queueModel
+	var planModel queueModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &planModel)...)
 
-	queue, diags := data.ToPbsQueue(ctx)
+	queue, diags := planModel.ToPbsQueue(ctx)
 	resp.Diagnostics.Append(diags...)
 	updatedQueue, err := r.client.UpdateQueue(queue)
 	if err != nil {
@@ -377,6 +395,9 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	// Create the model from the updated queue to ensure all fields including ID are properly set
 	updatedModel := createQueueModel(updatedQueue)
+
+	// Preserve the user's original format for ACL fields from the plan
+	preserveUserAclFormat(&planModel, &updatedModel)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedModel)...)

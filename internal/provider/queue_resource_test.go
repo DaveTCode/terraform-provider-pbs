@@ -241,9 +241,11 @@ func TestAccQueueResource_comprehensive_ACL(t *testing.T) {
 					testAccCheckQueueExists("pbs_queue.test"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "name", queueName),
 					resource.TestCheckResourceAttr("pbs_queue.test", "acl_user_enable", "true"),
-					resource.TestCheckResourceAttr("pbs_queue.test", "acl_users", "pbsuser,testuser"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "acl_users", "testuser,pbsuser"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "acl_users_normalized", "pbsuser,testuser"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "acl_host_enable", "true"),
-					resource.TestCheckResourceAttr("pbs_queue.test", "acl_hosts", "localhost"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "acl_hosts", "server2,localhost,server1"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "acl_hosts_normalized", "localhost,server1,server2"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "acl_group_enable", "false"),
 				),
 			},
@@ -256,6 +258,7 @@ func TestAccQueueResource_comprehensive_ACL(t *testing.T) {
 					resource.TestCheckResourceAttr("pbs_queue.test", "acl_host_enable", "false"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "acl_group_enable", "true"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "acl_groups", "staff,admin"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "acl_groups_normalized", "admin,staff"),
 				),
 			},
 		},
@@ -397,9 +400,9 @@ resource "pbs_queue" "test" {
   enabled          = true
   started          = true
   acl_user_enable  = true
-  acl_users        = "pbsuser,testuser"
+  acl_users        = "testuser,pbsuser"
   acl_host_enable  = true
-  acl_hosts        = "localhost"
+  acl_hosts        = "server2,localhost,server1"
   acl_group_enable = false
   priority         = 100
 }
@@ -415,7 +418,6 @@ resource "pbs_queue" "test" {
   started          = true
   acl_user_enable  = false
   acl_host_enable  = false
-  acl_hosts        = ""
   acl_group_enable = true
   acl_groups       = "staff,admin"
   priority         = 100
@@ -639,6 +641,7 @@ func TestAccQueueResource_routingQueueSimple(t *testing.T) {
 					resource.TestCheckResourceAttr("pbs_queue.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "started", "true"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "route_destinations", "workq,batch"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "route_destinations_normalized", "workq,batch"),
 				),
 			},
 		},

@@ -12,15 +12,21 @@ type serverModel struct {
 	AclHostEnable                 types.Bool              `tfsdk:"acl_host_enable"`
 	AclHostMomsEnable             types.Bool              `tfsdk:"acl_host_moms_enable"`
 	AclHosts                      types.String            `tfsdk:"acl_hosts"`
+	AclHostsNormalized            types.String            `tfsdk:"acl_hosts_normalized"`
 	AclResvGroupEnable            types.Bool              `tfsdk:"acl_resv_group_enable"`
 	AclResvGroups                 types.String            `tfsdk:"acl_resv_groups"`
+	AclResvGroupsNormalized       types.String            `tfsdk:"acl_resv_groups_normalized"`
 	AclResvHostEnable             types.Bool              `tfsdk:"acl_resv_host_enable"`
 	AclResvHosts                  types.String            `tfsdk:"acl_resv_hosts"`
+	AclResvHostsNormalized        types.String            `tfsdk:"acl_resv_hosts_normalized"`
 	AclResvUserEnable             types.Bool              `tfsdk:"acl_resv_user_enable"`
 	AclResvUsers                  types.String            `tfsdk:"acl_resv_users"`
+	AclResvUsersNormalized        types.String            `tfsdk:"acl_resv_users_normalized"`
 	AclRoots                      types.String            `tfsdk:"acl_roots"`
+	AclRootsNormalized            types.String            `tfsdk:"acl_roots_normalized"`
 	AclUserEnable                 types.Bool              `tfsdk:"acl_user_enable"`
 	AclUsers                      types.String            `tfsdk:"acl_users"`
+	AclUsersNormalized            types.String            `tfsdk:"acl_users_normalized"`
 	BackfillDepth                 types.Int32             `tfsdk:"backfill_depth"`
 	Comment                       types.String            `tfsdk:"comment"`
 	DefaultChunk                  map[string]types.String `tfsdk:"default_chunk"`
@@ -195,15 +201,21 @@ func createServerModel(server pbsclient.PbsServer) serverModel {
 	model.AclHostEnable = types.BoolPointerValue(server.AclHostEnable)
 	model.AclHostMomsEnable = types.BoolPointerValue(server.AclHostMomsEnable)
 	model.AclHosts = types.StringPointerValue(server.AclHosts)
+	addNormalizedAclField(server.AclHosts, &model.AclHostsNormalized)
 	model.AclResvGroupEnable = types.BoolPointerValue(server.AclResvGroupEnable)
 	model.AclResvGroups = types.StringPointerValue(server.AclResvGroups)
+	addNormalizedAclField(server.AclResvGroups, &model.AclResvGroupsNormalized)
 	model.AclResvHostEnable = types.BoolPointerValue(server.AclResvHostEnable)
 	model.AclResvHosts = types.StringPointerValue(server.AclResvHosts)
+	addNormalizedAclField(server.AclResvHosts, &model.AclResvHostsNormalized)
 	model.AclResvUserEnable = types.BoolPointerValue(server.AclResvUserEnable)
 	model.AclResvUsers = types.StringPointerValue(server.AclResvUsers)
+	addNormalizedAclField(server.AclResvUsers, &model.AclResvUsersNormalized)
 	model.AclRoots = types.StringPointerValue(server.AclRoots)
+	addNormalizedAclField(server.AclRoots, &model.AclRootsNormalized)
 	model.AclUserEnable = types.BoolPointerValue(server.AclUserEnable)
 	model.AclUsers = types.StringPointerValue(server.AclUsers)
+	addNormalizedAclField(server.AclUsers, &model.AclUsersNormalized)
 	model.BackfillDepth = types.Int32PointerValue(server.BackfillDepth)
 	model.Comment = types.StringPointerValue(server.Comment)
 	model.DefaultQdelArguments = types.StringPointerValue(server.DefaultQdelArguments)
@@ -360,4 +372,66 @@ func createServerModel(server pbsclient.PbsServer) serverModel {
 	}
 
 	return model
+}
+
+// preserveUserServerAclFormat preserves user-provided ACL field formats from plan in the result model.
+func preserveUserServerAclFormat(planModel, resultModel *serverModel) {
+	planFields := []AclFieldPair{
+		{UserField: planModel.AclHosts, NormalizedField: planModel.AclHostsNormalized},
+		{UserField: planModel.AclResvGroups, NormalizedField: planModel.AclResvGroupsNormalized},
+		{UserField: planModel.AclResvHosts, NormalizedField: planModel.AclResvHostsNormalized},
+		{UserField: planModel.AclResvUsers, NormalizedField: planModel.AclResvUsersNormalized},
+		{UserField: planModel.AclRoots, NormalizedField: planModel.AclRootsNormalized},
+		{UserField: planModel.AclUsers, NormalizedField: planModel.AclUsersNormalized},
+	}
+
+	resultFields := []AclFieldPair{
+		{UserField: resultModel.AclHosts, NormalizedField: resultModel.AclHostsNormalized},
+		{UserField: resultModel.AclResvGroups, NormalizedField: resultModel.AclResvGroupsNormalized},
+		{UserField: resultModel.AclResvHosts, NormalizedField: resultModel.AclResvHostsNormalized},
+		{UserField: resultModel.AclResvUsers, NormalizedField: resultModel.AclResvUsersNormalized},
+		{UserField: resultModel.AclRoots, NormalizedField: resultModel.AclRootsNormalized},
+		{UserField: resultModel.AclUsers, NormalizedField: resultModel.AclUsersNormalized},
+	}
+
+	preserveUserAclFormats(planFields, resultFields)
+
+	// Update the result model with preserved values.
+	resultModel.AclHosts = resultFields[0].UserField
+	resultModel.AclResvGroups = resultFields[1].UserField
+	resultModel.AclResvHosts = resultFields[2].UserField
+	resultModel.AclResvUsers = resultFields[3].UserField
+	resultModel.AclRoots = resultFields[4].UserField
+	resultModel.AclUsers = resultFields[5].UserField
+}
+
+// preserveUserServerAclFormatFromState preserves user-provided ACL field formats from state when semantically equivalent.
+func preserveUserServerAclFormatFromState(state, updatedState *serverModel) {
+	stateFields := []AclFieldPair{
+		{UserField: state.AclHosts, NormalizedField: state.AclHostsNormalized},
+		{UserField: state.AclResvGroups, NormalizedField: state.AclResvGroupsNormalized},
+		{UserField: state.AclResvHosts, NormalizedField: state.AclResvHostsNormalized},
+		{UserField: state.AclResvUsers, NormalizedField: state.AclResvUsersNormalized},
+		{UserField: state.AclRoots, NormalizedField: state.AclRootsNormalized},
+		{UserField: state.AclUsers, NormalizedField: state.AclUsersNormalized},
+	}
+
+	updatedFields := []AclFieldPair{
+		{UserField: updatedState.AclHosts, NormalizedField: updatedState.AclHostsNormalized},
+		{UserField: updatedState.AclResvGroups, NormalizedField: updatedState.AclResvGroupsNormalized},
+		{UserField: updatedState.AclResvHosts, NormalizedField: updatedState.AclResvHostsNormalized},
+		{UserField: updatedState.AclResvUsers, NormalizedField: updatedState.AclResvUsersNormalized},
+		{UserField: updatedState.AclRoots, NormalizedField: updatedState.AclRootsNormalized},
+		{UserField: updatedState.AclUsers, NormalizedField: updatedState.AclUsersNormalized},
+	}
+
+	preserveUserAclFormatsFromState(stateFields, updatedFields)
+
+	// Update the updated state with preserved values.
+	updatedState.AclHosts = updatedFields[0].UserField
+	updatedState.AclResvGroups = updatedFields[1].UserField
+	updatedState.AclResvHosts = updatedFields[2].UserField
+	updatedState.AclResvUsers = updatedFields[3].UserField
+	updatedState.AclRoots = updatedFields[4].UserField
+	updatedState.AclUsers = updatedFields[5].UserField
 }
