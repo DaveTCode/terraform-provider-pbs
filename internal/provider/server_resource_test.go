@@ -23,7 +23,7 @@ func TestAccServerResource_createShouldFail(t *testing.T) {
 	})
 }
 
-// TestAccServerResource_dataSourceFirst tests reading server data before import
+// TestAccServerResource_dataSourceFirst tests reading server data before import.
 func TestAccServerResource_dataSourceFirst(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -40,7 +40,7 @@ func TestAccServerResource_dataSourceFirst(t *testing.T) {
 	})
 }
 
-// TestAccServerResource_import tests importing a server resource
+// TestAccServerResource_import tests importing a server resource.
 func TestAccServerResource_import(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -72,7 +72,7 @@ func TestAccServerResource_import(t *testing.T) {
 	})
 }
 
-// TestAccServerResource_importAndUpdate tests importing a server resource and then updating it
+// TestAccServerResource_importAndUpdate tests importing a server resource and then updating it.
 func TestAccServerResource_importAndUpdate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

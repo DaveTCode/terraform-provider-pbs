@@ -225,7 +225,7 @@ resource "pbs_queue" "test" {
 
 // Integration tests for comprehensive queue attributes
 
-// TestAccQueueResource_comprehensive_ACL tests ACL configurations
+// TestAccQueueResource_comprehensive_ACL tests ACL configurations.
 func TestAccQueueResource_comprehensive_ACL(t *testing.T) {
 	queueName := testAccResourceName("tq_acl")
 
@@ -265,7 +265,7 @@ func TestAccQueueResource_comprehensive_ACL(t *testing.T) {
 	})
 }
 
-// TestAccQueueResource_comprehensive_ResourceLimits tests resource limit configurations
+// TestAccQueueResource_comprehensive_ResourceLimits tests resource limit configurations.
 func TestAccQueueResource_comprehensive_ResourceLimits(t *testing.T) {
 	queueName := testAccResourceName("tq_limits")
 
@@ -307,7 +307,7 @@ func TestAccQueueResource_comprehensive_ResourceLimits(t *testing.T) {
 	})
 }
 
-// TestAccQueueResource_comprehensive_RoutingConfig tests routing configurations
+// TestAccQueueResource_comprehensive_RoutingConfig tests routing configurations.
 func TestAccQueueResource_comprehensive_RoutingConfig(t *testing.T) {
 	queueName := testAccResourceName("tq_routing")
 	destQueueName := testAccResourceName("tq_dest")
@@ -346,7 +346,7 @@ func TestAccQueueResource_comprehensive_RoutingConfig(t *testing.T) {
 	})
 }
 
-// TestAccQueueResource_comprehensive_AdvancedLimits tests advanced limit configurations
+// TestAccQueueResource_comprehensive_AdvancedLimits tests advanced limit configurations.
 func TestAccQueueResource_comprehensive_AdvancedLimits(t *testing.T) {
 	queueName := testAccResourceName("tq_advanced")
 
@@ -390,7 +390,7 @@ func TestAccQueueResource_comprehensive_AdvancedLimits(t *testing.T) {
 	})
 }
 
-// Configuration functions for comprehensive queue tests
+// Configuration functions for comprehensive queue tests.
 
 func testAccQueueResourceConfigACL(name string) string {
 	return providerConfig() + fmt.Sprintf(`
@@ -576,7 +576,7 @@ resource "pbs_queue" "test" {
 `, name)
 }
 
-// TestAccQueueResource_comprehensiveAttributes tests queue with comprehensive attribute coverage
+// TestAccQueueResource_comprehensiveAttributes tests queue with comprehensive attribute coverage.
 func TestAccQueueResource_comprehensiveAttributes(t *testing.T) {
 	queueName := testAccResourceName("tq_comprehensive")
 
@@ -623,7 +623,7 @@ func TestAccQueueResource_comprehensiveAttributes(t *testing.T) {
 	})
 }
 
-// TestAccQueueResource_routingQueueSimple tests routing queue specific attributes
+// TestAccQueueResource_routingQueueSimple tests routing queue specific attributes.
 func TestAccQueueResource_routingQueueSimple(t *testing.T) {
 	queueName := testAccResourceName("tq_routing_simple")
 
@@ -647,7 +647,7 @@ func TestAccQueueResource_routingQueueSimple(t *testing.T) {
 	})
 }
 
-// TestAccQueueResource_disabledQueue tests disabled queue state
+// TestAccQueueResource_disabledQueue tests disabled queue state.
 func TestAccQueueResource_disabledQueue(t *testing.T) {
 	queueName := testAccResourceName("tq_disabled")
 
@@ -669,7 +669,7 @@ func TestAccQueueResource_disabledQueue(t *testing.T) {
 	})
 }
 
-// TestAccQueueResource_limitsByUser tests user-specific limit configurations
+// TestAccQueueResource_limitsByUser tests user-specific limit configurations.
 func TestAccQueueResource_limitsByUser(t *testing.T) {
 	queueName := testAccResourceName("tq_userlimits")
 
