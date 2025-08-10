@@ -417,29 +417,13 @@ func (r *serverResource) Configure(_ context.Context, req resource.ConfigureRequ
 }
 
 func (r *serverResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var model serverModel
-	var server pbsclient.PbsServer
-	diags := req.Plan.Get(ctx, &model)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	pbsServerObj := model.ToPbsServer(ctx)
-	resp.Diagnostics.Append(diags...)
-	server, err := r.client.CreatePbsServer(pbsServerObj)
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating server", "Could not create server, unexpected error: "+err.Error())
-		return
-	}
-
-	_ = createServerModel(server)
-
-	diags = resp.State.Set(ctx, model)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// PBS server resources cannot be created - they must be imported
+	resp.Diagnostics.AddError(
+		"Server Resource Cannot Be Created",
+		"PBS server resources cannot be created through Terraform as there is exactly one server per PBS cluster that already exists. "+
+			"Please use 'terraform import' to import the existing server configuration. "+
+			"Example: terraform import pbs_server.example server",
+	)
 }
 
 func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -492,24 +476,34 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
+	// Read the updated server to get the actual state including computed fields
+	serverName := data.Name.ValueString()
+	if serverName == "" && !data.ID.IsNull() {
+		serverName = data.ID.ValueString()
+	}
+
+	updatedServer, err := r.client.GetPbsServer(serverName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read updated server, got error: %s", err))
+		return
+	}
+
+	// Create model from the actual server state
+	updatedData := createServerModel(updatedServer)
+
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedData)...)
 }
 
 func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var server serverModel
-
-	resp.Diagnostics.Append(req.State.Get(ctx, &server)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	err := r.client.DeletePbsServer(server.Name.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete server, got error: %s", err))
-		return
-	}
+	// PBS server resources cannot be deleted - just remove from Terraform state
+	// The actual PBS server continues to exist in the cluster
+	resp.Diagnostics.AddWarning(
+		"Server Resource Not Deleted",
+		"The PBS server resource has been removed from Terraform state but the actual PBS server configuration remains unchanged. "+
+			"PBS server resources cannot be deleted as there is exactly one server per PBS cluster.",
+	)
+	// State is automatically removed by the framework
 }
 
 func (r *serverResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
