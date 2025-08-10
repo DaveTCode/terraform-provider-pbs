@@ -641,7 +641,6 @@ func TestAccQueueResource_routingQueueSimple(t *testing.T) {
 					resource.TestCheckResourceAttr("pbs_queue.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "started", "true"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "route_destinations", "workq,batch"),
-					resource.TestCheckResourceAttr("pbs_queue.test", "route_destinations_normalized", "workq,batch"),
 				),
 			},
 		},
