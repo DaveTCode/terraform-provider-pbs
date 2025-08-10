@@ -185,7 +185,7 @@ func TestParseQmgrMultiLineResource(t *testing.T) {
     freq = 120
     order = 100
     debug = false
-    fail_action = "none"`
+    fail_action = none`
 	parsedOutput := parseGenericQmgrOutput(sourceTest)
 
 	if len(parsedOutput) != 1 {
