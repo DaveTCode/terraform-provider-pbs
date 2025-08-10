@@ -31,5 +31,5 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 
 COPY testpbs.entrypoint.sh /testpbs.entrypoint.sh
 RUN chmod +x /testpbs.entrypoint.sh
-
+COPY --chmod=+x testpbs.entrypoint.sh /testpbs.entrypoint.sh
 ENTRYPOINT ["/testpbs.entrypoint.sh"]
