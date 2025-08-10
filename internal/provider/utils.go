@@ -58,7 +58,7 @@ func ConvertTypesStringMapFiltered(source map[string]types.String, excludeKeys [
 	for _, key := range excludeKeys {
 		excludeSet[key] = true
 	}
-	
+
 	for k, v := range source {
 		if !excludeSet[k] {
 			result[k] = v.ValueString()
