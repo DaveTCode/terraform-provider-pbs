@@ -26,7 +26,12 @@ func SetInt32PointerIfNotNull(field types.Int32, target **int32) {
 }
 
 // SetInt64PointerIfNotNull sets an int64 pointer field if the types.Int64 is not null.
-
+func SetInt64PointerIfNotNull(field types.Int64, target **int64) {
+	if !field.IsNull() {
+		val := field.ValueInt64()
+		*target = &val
+	}
+}
 
 // ConvertTypesStringMap converts a map[string]types.String to map[string]string.
 func ConvertTypesStringMap(source map[string]types.String) map[string]string {
