@@ -343,32 +343,16 @@ func createServerModel(server pbsclient.PbsServer) serverModel {
 	model.WebapiOidcProviderUrl = types.StringPointerValue(server.WebapiOidcProviderUrl)
 
 	if server.DefaultChunk != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range server.DefaultChunk {
-			elements[k] = types.StringValue(v)
-		}
-		model.DefaultChunk = elements
+		model.DefaultChunk = convertStringMapToTypesStringMap(server.DefaultChunk)
 	}
 	if server.ResourcesAvailable != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range server.ResourcesAvailable {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesAvailable = elements
+		model.ResourcesAvailable = convertStringMapToTypesStringMap(server.ResourcesAvailable)
 	}
 	if server.ResourcesDefault != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range server.ResourcesDefault {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesDefault = elements
+		model.ResourcesDefault = convertStringMapToTypesStringMap(server.ResourcesDefault)
 	}
 	if server.ResourcesMax != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range server.ResourcesMax {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesMax = elements
+		model.ResourcesMax = convertStringMapToTypesStringMap(server.ResourcesMax)
 	}
 
 	return model

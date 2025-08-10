@@ -174,110 +174,50 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	model.RouteWaitingJobs = types.BoolPointerValue(queue.RouteWaitingJobs)
 
 	if queue.MaxGroupRes != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.MaxGroupRes {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxGroupRes = elements
+		model.MaxGroupRes = convertStringMapToTypesStringMap(queue.MaxGroupRes)
 	}
 	if queue.MaxGroupResSoft != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.MaxGroupResSoft {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxGroupResSoft = elements
+		model.MaxGroupResSoft = convertStringMapToTypesStringMap(queue.MaxGroupResSoft)
 	}
 	if queue.MaxQueued != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.MaxQueued {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxQueued = elements
+		model.MaxQueued = convertStringMapToTypesStringMap(queue.MaxQueued)
 	}
 	if queue.MaxQueuedRes != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.MaxQueuedRes {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxQueuedRes = elements
+		model.MaxQueuedRes = convertStringMapToTypesStringMap(queue.MaxQueuedRes)
 	}
 	if queue.MaxRun != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.MaxRun {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxRun = elements
+		model.MaxRun = convertStringMapToTypesStringMap(queue.MaxRun)
 	}
 	if queue.MaxRunRes != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.MaxRunRes {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxRunRes = elements
+		model.MaxRunRes = convertStringMapToTypesStringMap(queue.MaxRunRes)
 	}
 	if queue.MaxRunResSoft != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.MaxRunResSoft {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxRunResSoft = elements
+		model.MaxRunResSoft = convertStringMapToTypesStringMap(queue.MaxRunResSoft)
 	}
 	if queue.MaxRunSoft != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.MaxRunSoft {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxRunSoft = elements
+		model.MaxRunSoft = convertStringMapToTypesStringMap(queue.MaxRunSoft)
 	}
 	if queue.MaxUserRes != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.MaxUserRes {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxUserRes = elements
+		model.MaxUserRes = convertStringMapToTypesStringMap(queue.MaxUserRes)
 	}
 	if queue.MaxUserResSoft != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.MaxUserResSoft {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxUserResSoft = elements
+		model.MaxUserResSoft = convertStringMapToTypesStringMap(queue.MaxUserResSoft)
 	}
 
 	if queue.ResourcesAssigned != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.ResourcesAssigned {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesAssigned = elements
+		model.ResourcesAssigned = convertStringMapToTypesStringMap(queue.ResourcesAssigned)
 	}
 	if queue.ResourcesAvailable != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.ResourcesAvailable {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesAvailable = elements
+		model.ResourcesAvailable = convertStringMapToTypesStringMap(queue.ResourcesAvailable)
 	}
 	if queue.ResourcesDefault != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.ResourcesDefault {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesDefault = elements
+		model.ResourcesDefault = convertStringMapToTypesStringMap(queue.ResourcesDefault)
 	}
 	if queue.ResourcesMax != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.ResourcesMax {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesMax = elements
+		model.ResourcesMax = convertStringMapToTypesStringMap(queue.ResourcesMax)
 	}
 	if queue.ResourcesMin != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.ResourcesMin {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesMin = elements
+		model.ResourcesMin = convertStringMapToTypesStringMap(queue.ResourcesMin)
 	}
 
 	return model

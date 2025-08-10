@@ -128,3 +128,12 @@ func addNormalizedAclField(source *string, target *types.String) {
 		*target = types.StringValue(normalizeCommaSeparatedString(*source))
 	}
 }
+
+// convertStringMapToTypesStringMap converts a map[string]string to map[string]types.String.
+func convertStringMapToTypesStringMap(source map[string]string) map[string]types.String {
+	elements := make(map[string]types.String)
+	for k, v := range source {
+		elements[k] = types.StringValue(v)
+	}
+	return elements
+}
