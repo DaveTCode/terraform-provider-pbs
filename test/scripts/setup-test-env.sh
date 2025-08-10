@@ -193,7 +193,7 @@ main() {
             else
                 echo "Warning: PBS verification failed after 3 attempts"
                 echo "Container may still be starting up. Check manually with:"
-                echo "  cd docker_compose && docker compose logs pbs"
+                echo "  cd ${COMPOSE_DIR} && docker compose logs pbs"
             fi
         fi
     done

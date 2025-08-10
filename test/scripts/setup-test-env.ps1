@@ -271,7 +271,7 @@ function Start-TestSetup {
             else {
                 Write-Host "Warning: PBS verification failed after 3 attempts" -ForegroundColor Yellow
                 Write-Host "Container may still be starting up. Check manually with:" -ForegroundColor Yellow
-                Write-Host "  cd docker_compose && docker compose logs pbs" -ForegroundColor Yellow
+                Write-Host "  cd $ComposeDir && docker compose logs pbs" -ForegroundColor Yellow
             }
         }
     }
