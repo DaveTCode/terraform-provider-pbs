@@ -26,33 +26,15 @@ func (m pbsHookModel) ToPbsHook() pbsclient.PbsHook {
 	}
 
 	// Only set pointer fields if the value is not null
-	if !m.Type.IsNull() {
-		hook.Type = m.Type.ValueStringPointer()
-	}
-	if !m.Alarm.IsNull() {
-		hook.Alarm = m.Alarm.ValueInt32Pointer()
-	}
-	if !m.Debug.IsNull() {
-		hook.Debug = m.Debug.ValueBoolPointer()
-	}
-	if !m.Enabled.IsNull() {
-		hook.Enabled = m.Enabled.ValueBoolPointer()
-	}
-	if !m.Event.IsNull() {
-		hook.Event = m.Event.ValueStringPointer()
-	}
-	if !m.FailAction.IsNull() {
-		hook.FailAction = m.FailAction.ValueStringPointer()
-	}
-	if !m.Freq.IsNull() {
-		hook.Freq = m.Freq.ValueInt32Pointer()
-	}
-	if !m.Order.IsNull() {
-		hook.Order = m.Order.ValueInt32Pointer()
-	}
-	if !m.User.IsNull() {
-		hook.User = m.User.ValueStringPointer()
-	}
+	SetStringPointerIfNotNull(m.Type, &hook.Type)
+	SetInt32PointerIfNotNull(m.Alarm, &hook.Alarm)
+	SetBoolPointerIfNotNull(m.Debug, &hook.Debug)
+	SetBoolPointerIfNotNull(m.Enabled, &hook.Enabled)
+	SetStringPointerIfNotNull(m.Event, &hook.Event)
+	SetStringPointerIfNotNull(m.FailAction, &hook.FailAction)
+	SetInt32PointerIfNotNull(m.Freq, &hook.Freq)
+	SetInt32PointerIfNotNull(m.Order, &hook.Order)
+	SetStringPointerIfNotNull(m.User, &hook.User)
 
 	return hook
 }

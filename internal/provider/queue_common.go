@@ -69,157 +69,54 @@ func (m queueModel) ToPbsQueue(ctx context.Context) (pbsclient.PbsQueue, diag.Di
 	}
 
 	// Only set pointer fields if the value is not null
-	if !m.AclGroupEnable.IsNull() {
-		queue.AclGroupEnable = m.AclGroupEnable.ValueBoolPointer()
-	}
-	if !m.AclGroups.IsNull() {
-		queue.AclGroups = m.AclGroups.ValueStringPointer()
-	}
-	if !m.AclHostEnable.IsNull() {
-		queue.AclHostEnable = m.AclHostEnable.ValueBoolPointer()
-	}
-	if !m.AclHosts.IsNull() {
-		queue.AclHosts = m.AclHosts.ValueStringPointer()
-	}
-	if !m.AclUserEnable.IsNull() {
-		queue.AclUserEnable = m.AclUserEnable.ValueBoolPointer()
-	}
-	if !m.AclUsers.IsNull() {
-		queue.AclUsers = m.AclUsers.ValueStringPointer()
-	}
-	if !m.AltRouter.IsNull() {
-		queue.AltRouter = m.AltRouter.ValueStringPointer()
-	}
-	if !m.BackfillDepth.IsNull() {
-		queue.BackfillDepth = m.BackfillDepth.ValueInt32Pointer()
-	}
-	if !m.CheckpointMin.IsNull() {
-		queue.CheckpointMin = m.CheckpointMin.ValueInt32Pointer()
-	}
-	if !m.DefaultChunk.IsNull() {
-		queue.DefaultChunk = m.DefaultChunk.ValueStringPointer()
-	}
-	if !m.FromRouteOnly.IsNull() {
-		queue.FromRouteOnly = m.FromRouteOnly.ValueBoolPointer()
-	}
-	if !m.KillDelay.IsNull() {
-		queue.KillDelay = m.KillDelay.ValueInt32Pointer()
-	}
-	if !m.MaxArraySize.IsNull() {
-		queue.MaxArraySize = m.MaxArraySize.ValueInt32Pointer()
-	}
-	if !m.MaxGroupRun.IsNull() {
-		queue.MaxGroupRun = m.MaxGroupRun.ValueInt32Pointer()
-	}
-	if !m.MaxGroupRunSoft.IsNull() {
-		queue.MaxGroupRunSoft = m.MaxGroupRunSoft.ValueInt32Pointer()
-	}
-	if !m.MaxQueuable.IsNull() {
-		queue.MaxQueuable = m.MaxQueuable.ValueInt32Pointer()
-	}
-	if !m.MaxRunning.IsNull() {
-		queue.MaxRunning = m.MaxRunning.ValueInt32Pointer()
-	}
-	if !m.MaxUserRun.IsNull() {
-		queue.MaxUserRun = m.MaxUserRun.ValueInt32Pointer()
-	}
-	if !m.MaxUserRunSoft.IsNull() {
-		queue.MaxUserRunSoft = m.MaxUserRunSoft.ValueInt32Pointer()
-	}
-	if !m.NodeGroupKey.IsNull() {
-		queue.NodeGroupKey = m.NodeGroupKey.ValueStringPointer()
-	}
-	if !m.Partition.IsNull() {
-		queue.Partition = m.Partition.ValueStringPointer()
-	}
-	if !m.Priority.IsNull() {
-		queue.Priority = m.Priority.ValueInt32Pointer()
-	}
-	if !m.QueuedJobsThreshold.IsNull() {
-		queue.QueuedJobsThreshold = m.QueuedJobsThreshold.ValueStringPointer()
-	}
-	if !m.QueuedJobsThresholdRes.IsNull() {
-		queue.QueuedJobsThresholdRes = m.QueuedJobsThresholdRes.ValueStringPointer()
-	}
-	if !m.RouteDestinations.IsNull() {
-		queue.RouteDestinations = m.RouteDestinations.ValueStringPointer()
-	}
-	if !m.RouteHeldJobs.IsNull() {
-		queue.RouteHeldJobs = m.RouteHeldJobs.ValueBoolPointer()
-	}
-	if !m.RouteLifetime.IsNull() {
-		queue.RouteLifetime = m.RouteLifetime.ValueInt32Pointer()
-	}
-	if !m.RouteRetryTime.IsNull() {
-		queue.RouteRetryTime = m.RouteRetryTime.ValueInt32Pointer()
-	}
-	if !m.RouteWaitingJobs.IsNull() {
-		queue.RouteWaitingJobs = m.RouteWaitingJobs.ValueBoolPointer()
-	}
+	SetBoolPointerIfNotNull(m.AclGroupEnable, &queue.AclGroupEnable)
+	SetStringPointerIfNotNull(m.AclGroups, &queue.AclGroups)
+	SetBoolPointerIfNotNull(m.AclHostEnable, &queue.AclHostEnable)
+	SetStringPointerIfNotNull(m.AclHosts, &queue.AclHosts)
+	SetBoolPointerIfNotNull(m.AclUserEnable, &queue.AclUserEnable)
+	SetStringPointerIfNotNull(m.AclUsers, &queue.AclUsers)
+	SetStringPointerIfNotNull(m.AltRouter, &queue.AltRouter)
+	SetInt32PointerIfNotNull(m.BackfillDepth, &queue.BackfillDepth)
+	SetInt32PointerIfNotNull(m.CheckpointMin, &queue.CheckpointMin)
+	SetStringPointerIfNotNull(m.DefaultChunk, &queue.DefaultChunk)
+	SetBoolPointerIfNotNull(m.FromRouteOnly, &queue.FromRouteOnly)
+	SetInt32PointerIfNotNull(m.KillDelay, &queue.KillDelay)
+	SetInt32PointerIfNotNull(m.MaxArraySize, &queue.MaxArraySize)
+	SetInt32PointerIfNotNull(m.MaxGroupRun, &queue.MaxGroupRun)
+	SetInt32PointerIfNotNull(m.MaxGroupRunSoft, &queue.MaxGroupRunSoft)
+	SetInt32PointerIfNotNull(m.MaxQueuable, &queue.MaxQueuable)
+	SetInt32PointerIfNotNull(m.MaxRunning, &queue.MaxRunning)
+	SetInt32PointerIfNotNull(m.MaxUserRun, &queue.MaxUserRun)
+	SetInt32PointerIfNotNull(m.MaxUserRunSoft, &queue.MaxUserRunSoft)
+	SetStringPointerIfNotNull(m.NodeGroupKey, &queue.NodeGroupKey)
+	SetStringPointerIfNotNull(m.Partition, &queue.Partition)
+	SetInt32PointerIfNotNull(m.Priority, &queue.Priority)
+	SetStringPointerIfNotNull(m.QueuedJobsThreshold, &queue.QueuedJobsThreshold)
+	SetStringPointerIfNotNull(m.QueuedJobsThresholdRes, &queue.QueuedJobsThresholdRes)
+	SetStringPointerIfNotNull(m.RouteDestinations, &queue.RouteDestinations)
+	SetBoolPointerIfNotNull(m.RouteHeldJobs, &queue.RouteHeldJobs)
+	SetInt32PointerIfNotNull(m.RouteLifetime, &queue.RouteLifetime)
+	SetInt32PointerIfNotNull(m.RouteRetryTime, &queue.RouteRetryTime)
+	SetBoolPointerIfNotNull(m.RouteWaitingJobs, &queue.RouteWaitingJobs)
 
 	var diags diag.Diagnostics
 
-	// Set non-pointer computed fields
-	queue.MaxGroupRes = make(map[string]string)
-	for k, v := range m.MaxGroupRes {
-		queue.MaxGroupRes[k] = v.ValueString()
-	}
-	queue.MaxGroupResSoft = make(map[string]string)
-	for k, v := range m.MaxGroupResSoft {
-		queue.MaxGroupResSoft[k] = v.ValueString()
-	}
-	queue.MaxQueued = make(map[string]string)
-	for k, v := range m.MaxQueued {
-		queue.MaxQueued[k] = v.ValueString()
-	}
-	queue.MaxQueuedRes = make(map[string]string)
-	for k, v := range m.MaxQueuedRes {
-		queue.MaxQueuedRes[k] = v.ValueString()
-	}
-	queue.MaxRun = make(map[string]string)
-	for k, v := range m.MaxRun {
-		queue.MaxRun[k] = v.ValueString()
-	}
-	queue.MaxRunRes = make(map[string]string)
-	for k, v := range m.MaxRunRes {
-		queue.MaxRunRes[k] = v.ValueString()
-	}
-	queue.MaxRunResSoft = make(map[string]string)
-	for k, v := range m.MaxRunResSoft {
-		queue.MaxRunResSoft[k] = v.ValueString()
-	}
-	queue.MaxRunSoft = make(map[string]string)
-	for k, v := range m.MaxRunSoft {
-		queue.MaxRunSoft[k] = v.ValueString()
-	}
-	queue.MaxUserRes = make(map[string]string)
-	for k, v := range m.MaxUserRes {
-		queue.MaxUserRes[k] = v.ValueString()
-	}
-	queue.MaxUserResSoft = make(map[string]string)
-	for k, v := range m.MaxUserResSoft {
-		queue.MaxUserResSoft[k] = v.ValueString()
-	}
-	queue.ResourcesAssigned = make(map[string]string)
-	for k, v := range m.ResourcesAssigned {
-		queue.ResourcesAssigned[k] = v.ValueString()
-	}
-	queue.ResourcesAvailable = make(map[string]string)
-	for k, v := range m.ResourcesAvailable {
-		queue.ResourcesAvailable[k] = v.ValueString()
-	}
-	queue.ResourcesDefault = make(map[string]string)
-	for k, v := range m.ResourcesDefault {
-		queue.ResourcesDefault[k] = v.ValueString()
-	}
-	queue.ResourcesMax = make(map[string]string)
-	for k, v := range m.ResourcesMax {
-		queue.ResourcesMax[k] = v.ValueString()
-	}
-	queue.ResourcesMin = make(map[string]string)
-	for k, v := range m.ResourcesMin {
-		queue.ResourcesMin[k] = v.ValueString()
-	}
+	// Set non-pointer computed fields using utility functions
+	queue.MaxGroupRes = ConvertTypesStringMap(m.MaxGroupRes)
+	queue.MaxGroupResSoft = ConvertTypesStringMap(m.MaxGroupResSoft)
+	queue.MaxQueued = ConvertTypesStringMap(m.MaxQueued)
+	queue.MaxQueuedRes = ConvertTypesStringMap(m.MaxQueuedRes)
+	queue.MaxRun = ConvertTypesStringMap(m.MaxRun)
+	queue.MaxRunRes = ConvertTypesStringMap(m.MaxRunRes)
+	queue.MaxRunResSoft = ConvertTypesStringMap(m.MaxRunResSoft)
+	queue.MaxRunSoft = ConvertTypesStringMap(m.MaxRunSoft)
+	queue.MaxUserRes = ConvertTypesStringMap(m.MaxUserRes)
+	queue.MaxUserResSoft = ConvertTypesStringMap(m.MaxUserResSoft)
+	queue.ResourcesAssigned = ConvertTypesStringMap(m.ResourcesAssigned)
+	queue.ResourcesAvailable = ConvertTypesStringMap(m.ResourcesAvailable)
+	queue.ResourcesDefault = ConvertTypesStringMap(m.ResourcesDefault)
+	queue.ResourcesMax = ConvertTypesStringMap(m.ResourcesMax)
+	queue.ResourcesMin = ConvertTypesStringMap(m.ResourcesMin)
 
 	return queue, diags
 }

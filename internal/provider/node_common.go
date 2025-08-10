@@ -29,33 +29,31 @@ type pbsNodeModel struct {
 
 func (m pbsNodeModel) ToPbsNode() pbsclient.PbsNode {
 	node := pbsclient.PbsNode{
-		Comment:           m.Comment.ValueStringPointer(),
-		CurrentAoe:        m.CurrentAoe.ValueStringPointer(),
-		CurrentEoe:        m.CurrentEoe.ValueStringPointer(),
-		InMultiNodeHost:   m.InMultiNodeHost.ValueInt32Pointer(),
-		Mom:               m.Mom.ValueStringPointer(),
-		Name:              m.Name.ValueString(),
-		NoMultinodeJobs:   m.NoMultinodeJobs.ValueBoolPointer(),
-		Partition:         m.Partition.ValueStringPointer(),
-		PNames:            m.PNames.ValueStringPointer(),
-		Port:              m.Port.ValueInt32Pointer(),
-		PowerOffEligible:  m.PowerOffEligible.ValueBoolPointer(),
-		PowerProvisioning: m.PowerProvisioning.ValueBoolPointer(),
-		Priority:          m.Priority.ValueInt32Pointer(),
-		ProvisionEnable:   m.ProvisionEnable.ValueBoolPointer(),
-		Queue:             m.Queue.ValueStringPointer(),
-		ResvEnable:        m.ResvEnable.ValueBoolPointer(),
+		Name: m.Name.ValueString(),
 	}
 
-	node.ResourcesAvailable = make(map[string]string)
-	for k, v := range m.ResourcesAvailable {
-		// This is a bit hacky but the host and vnode attributes arent something you can
-		// set on the resources_available so we don't want terraform getting confused about
-		// what it's managing
-		if k != "host" && k != "vnode" {
-			node.ResourcesAvailable[k] = v.ValueString()
-		}
-	}
+	// Set pointer fields using utility functions for null checking
+	SetStringPointerIfNotNull(m.Comment, &node.Comment)
+	SetStringPointerIfNotNull(m.CurrentAoe, &node.CurrentAoe)
+	SetStringPointerIfNotNull(m.CurrentEoe, &node.CurrentEoe)
+	SetInt32PointerIfNotNull(m.InMultiNodeHost, &node.InMultiNodeHost)
+	SetStringPointerIfNotNull(m.Mom, &node.Mom)
+	SetBoolPointerIfNotNull(m.NoMultinodeJobs, &node.NoMultinodeJobs)
+	SetStringPointerIfNotNull(m.Partition, &node.Partition)
+	SetStringPointerIfNotNull(m.PNames, &node.PNames)
+	SetInt32PointerIfNotNull(m.Port, &node.Port)
+	SetBoolPointerIfNotNull(m.PowerOffEligible, &node.PowerOffEligible)
+	SetBoolPointerIfNotNull(m.PowerProvisioning, &node.PowerProvisioning)
+	SetInt32PointerIfNotNull(m.Priority, &node.Priority)
+	SetBoolPointerIfNotNull(m.ProvisionEnable, &node.ProvisionEnable)
+	SetStringPointerIfNotNull(m.Queue, &node.Queue)
+	SetBoolPointerIfNotNull(m.ResvEnable, &node.ResvEnable)
+
+	// Convert ResourcesAvailable map, excluding 'host' and 'vnode' keys
+	// This is a bit hacky but the host and vnode attributes aren't something you can
+	// set on the resources_available so we don't want terraform getting confused about
+	// what it's managing
+	node.ResourcesAvailable = ConvertTypesStringMapFiltered(m.ResourcesAvailable, []string{"host", "vnode"})
 
 	return node
 }

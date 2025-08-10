@@ -94,153 +94,94 @@ type serverModel struct {
 
 func (m serverModel) ToPbsServer(ctx context.Context) pbsclient.PbsServer {
 	server := pbsclient.PbsServer{
-		Name:                          m.Name.ValueString(),
-		AclHostEnable:                 m.AclHostEnable.ValueBoolPointer(),
-		AclHostMomsEnable:             m.AclHostMomsEnable.ValueBoolPointer(),
-		AclHosts:                      m.AclHosts.ValueStringPointer(),
-		AclResvGroupEnable:            m.AclResvGroupEnable.ValueBoolPointer(),
-		AclResvGroups:                 m.AclResvGroups.ValueStringPointer(),
-		AclResvHostEnable:             m.AclResvHostEnable.ValueBoolPointer(),
-		AclResvHosts:                  m.AclResvHosts.ValueStringPointer(),
-		AclResvUserEnable:             m.AclResvUserEnable.ValueBoolPointer(),
-		AclResvUsers:                  m.AclResvUsers.ValueStringPointer(),
-		AclRoots:                      m.AclRoots.ValueStringPointer(),
-		AclUserEnable:                 m.AclUserEnable.ValueBoolPointer(),
-		AclUsers:                      m.AclUsers.ValueStringPointer(),
-		BackfillDepth:                 m.BackfillDepth.ValueInt32Pointer(),
-		Comment:                       m.Comment.ValueStringPointer(),
-		DefaultQdelArguments:          m.DefaultQdelArguments.ValueStringPointer(),
-		DefaultQsubArguments:          m.DefaultQsubArguments.ValueStringPointer(),
-		DefaultQueue:                  m.DefaultQueue.ValueStringPointer(),
-		EligibleTimeEnable:            m.EligibleTimeEnable.ValueBoolPointer(),
-		ElimOnSubjobs:                 m.ElimOnSubjobs.ValueBoolPointer(),
-		Flatuid:                       m.Flatuid.ValueBoolPointer(),
-		JobHistoryDuration:            m.JobHistoryDuration.ValueStringPointer(),
-		JobHistoryEnable:              m.JobHistoryEnable.ValueBoolPointer(),
-		JobRequeueTimeout:             m.JobRequeueTimeout.ValueStringPointer(),
-		JobSortFormula:                m.JobSortFormula.ValueStringPointer(),
-		JobscriptMaxSize:              m.JobscriptMaxSize.ValueStringPointer(),
-		LogEvents:                     m.LogEvents.ValueInt32Pointer(),
-		Mailer:                        m.Mailer.ValueStringPointer(),
-		MailFrom:                      m.MailFrom.ValueStringPointer(),
-		Managers:                      m.Managers.ValueStringPointer(),
-		MaxArraySize:                  m.MaxArraySize.ValueInt32Pointer(),
-		MaxConcurrentProvision:        m.MaxConcurrentProvision.ValueInt32Pointer(),
-		MaxGroupRun:                   m.MaxGroupRun.ValueInt32Pointer(),
-		MaxGroupRunSoft:               m.MaxGroupRunSoft.ValueInt32Pointer(),
-		MaxJobSequenceId:              m.MaxJobSequenceId.ValueInt64Pointer(),
-		MaxRunning:                    m.MaxRunning.ValueInt32Pointer(),
-		MaxUserRun:                    m.MaxUserRun.ValueInt32Pointer(),
-		MaxUserRunSoft:                m.MaxUserRunSoft.ValueInt32Pointer(),
-		NodeFailRequeue:               m.NodeFailRequeue.ValueInt32Pointer(),
-		NodeGroupEnable:               m.NodeGroupEnable.ValueBoolPointer(),
-		NodeGroupKey:                  m.NodeGroupKey.ValueStringPointer(),
-		Operators:                     m.Operators.ValueStringPointer(),
-		PbsLicenseInfo:                m.PbsLicenseInfo.ValueStringPointer(),
-		PbsLicenseLingerTime:          m.PbsLicenseLingerTime.ValueInt32Pointer(),
-		PbsLicenseMax:                 m.PbsLicenseMax.ValueInt32Pointer(),
-		PbsLicenseMin:                 m.PbsLicenseMin.ValueInt32Pointer(),
-		PowerProvisioning:             m.PowerProvisioning.ValueBoolPointer(),
-		PythonGcMinInterval:           m.PythonGcMinInterval.ValueInt32Pointer(),
-		PythonRestartMaxPbsServers:    m.PythonRestartMaxPbsServers.ValueInt32Pointer(),
-		PythonRestartMaxObjects:       m.PythonRestartMaxObjects.ValueInt32Pointer(),
-		PythonRestartMinInterval:      m.PythonRestartMinInterval.ValueStringPointer(),
-		QueryOtherJobs:                m.QueryOtherJobs.ValueBoolPointer(),
-		QueuedJobsThreshold:           m.QueuedJobsThreshold.ValueStringPointer(),
-		QueuedJobsThresholdRes:        m.QueuedJobsThresholdRes.ValueStringPointer(),
-		ReserveRetryInit:              m.ReserveRetryInit.ValueInt32Pointer(),
-		ReserveRetryTime:              m.ReserveRetryTime.ValueInt32Pointer(),
-		RestrictResToReleaseOnSuspend: m.RestrictResToReleaseOnSuspend.ValueStringPointer(),
-		ResvEnable:                    m.ResvEnable.ValueBoolPointer(),
-		ResvPostProcessingTime:        m.ResvPostProcessingTime.ValueStringPointer(),
-		RppHighwater:                  m.RppHighwater.ValueInt32Pointer(),
-		RppMaxPktCheck:                m.RppMaxPktCheck.ValueInt32Pointer(),
-		RppRetry:                      m.RppRetry.ValueInt32Pointer(),
-		SchedulerIteration:            m.SchedulerIteration.ValueInt32Pointer(),
-		WebapiAuthIssuers:             m.WebapiAuthIssuers.ValueStringPointer(),
-		WebapiEnable:                  m.WebapiEnable.ValueBoolPointer(),
-		WebapiOidcClientid:            m.WebapiOidcClientid.ValueStringPointer(),
-		WebapiOidcProviderUrl:         m.WebapiOidcProviderUrl.ValueStringPointer(),
+		Name: m.Name.ValueString(),
 	}
 
-	server.DefaultChunk = make(map[string]string)
-	for k, v := range m.DefaultChunk {
-		server.DefaultChunk[k] = v.ValueString()
-	}
-	server.ResourcesAvailable = make(map[string]string)
-	for k, v := range m.ResourcesAvailable {
-		server.ResourcesAvailable[k] = v.ValueString()
-	}
-	server.ResourcesDefault = make(map[string]string)
-	for k, v := range m.ResourcesDefault {
-		server.ResourcesDefault[k] = v.ValueString()
-	}
-	server.ResourcesMax = make(map[string]string)
-	for k, v := range m.ResourcesMax {
-		server.ResourcesMax[k] = v.ValueString()
-	}
+	// Set pointer fields using utility functions for null checking
+	SetBoolPointerIfNotNull(m.AclHostEnable, &server.AclHostEnable)
+	SetBoolPointerIfNotNull(m.AclHostMomsEnable, &server.AclHostMomsEnable)
+	SetStringPointerIfNotNull(m.AclHosts, &server.AclHosts)
+	SetBoolPointerIfNotNull(m.AclResvGroupEnable, &server.AclResvGroupEnable)
+	SetStringPointerIfNotNull(m.AclResvGroups, &server.AclResvGroups)
+	SetBoolPointerIfNotNull(m.AclResvHostEnable, &server.AclResvHostEnable)
+	SetStringPointerIfNotNull(m.AclResvHosts, &server.AclResvHosts)
+	SetBoolPointerIfNotNull(m.AclResvUserEnable, &server.AclResvUserEnable)
+	SetStringPointerIfNotNull(m.AclResvUsers, &server.AclResvUsers)
+	SetStringPointerIfNotNull(m.AclRoots, &server.AclRoots)
+	SetBoolPointerIfNotNull(m.AclUserEnable, &server.AclUserEnable)
+	SetStringPointerIfNotNull(m.AclUsers, &server.AclUsers)
+	SetInt32PointerIfNotNull(m.BackfillDepth, &server.BackfillDepth)
+	SetStringPointerIfNotNull(m.Comment, &server.Comment)
+	SetStringPointerIfNotNull(m.DefaultQdelArguments, &server.DefaultQdelArguments)
+	SetStringPointerIfNotNull(m.DefaultQsubArguments, &server.DefaultQsubArguments)
+	SetStringPointerIfNotNull(m.DefaultQueue, &server.DefaultQueue)
+	SetBoolPointerIfNotNull(m.EligibleTimeEnable, &server.EligibleTimeEnable)
+	SetBoolPointerIfNotNull(m.ElimOnSubjobs, &server.ElimOnSubjobs)
+	SetBoolPointerIfNotNull(m.Flatuid, &server.Flatuid)
+	SetStringPointerIfNotNull(m.JobHistoryDuration, &server.JobHistoryDuration)
+	SetBoolPointerIfNotNull(m.JobHistoryEnable, &server.JobHistoryEnable)
+	SetStringPointerIfNotNull(m.JobRequeueTimeout, &server.JobRequeueTimeout)
+	SetStringPointerIfNotNull(m.JobSortFormula, &server.JobSortFormula)
+	SetStringPointerIfNotNull(m.JobscriptMaxSize, &server.JobscriptMaxSize)
+	SetInt32PointerIfNotNull(m.LogEvents, &server.LogEvents)
+	SetStringPointerIfNotNull(m.Mailer, &server.Mailer)
+	SetStringPointerIfNotNull(m.MailFrom, &server.MailFrom)
+	SetStringPointerIfNotNull(m.Managers, &server.Managers)
+	SetInt32PointerIfNotNull(m.MaxArraySize, &server.MaxArraySize)
+	SetInt32PointerIfNotNull(m.MaxConcurrentProvision, &server.MaxConcurrentProvision)
+	SetInt32PointerIfNotNull(m.MaxGroupRun, &server.MaxGroupRun)
+	SetInt32PointerIfNotNull(m.MaxGroupRunSoft, &server.MaxGroupRunSoft)
+	SetInt64PointerIfNotNull(m.MaxJobSequenceId, &server.MaxJobSequenceId)
+	SetInt32PointerIfNotNull(m.MaxRunning, &server.MaxRunning)
+	SetInt32PointerIfNotNull(m.MaxUserRun, &server.MaxUserRun)
+	SetInt32PointerIfNotNull(m.MaxUserRunSoft, &server.MaxUserRunSoft)
+	SetInt32PointerIfNotNull(m.NodeFailRequeue, &server.NodeFailRequeue)
+	SetBoolPointerIfNotNull(m.NodeGroupEnable, &server.NodeGroupEnable)
+	SetStringPointerIfNotNull(m.NodeGroupKey, &server.NodeGroupKey)
+	SetStringPointerIfNotNull(m.Operators, &server.Operators)
+	SetStringPointerIfNotNull(m.PbsLicenseInfo, &server.PbsLicenseInfo)
+	SetInt32PointerIfNotNull(m.PbsLicenseLingerTime, &server.PbsLicenseLingerTime)
+	SetInt32PointerIfNotNull(m.PbsLicenseMax, &server.PbsLicenseMax)
+	SetInt32PointerIfNotNull(m.PbsLicenseMin, &server.PbsLicenseMin)
+	SetBoolPointerIfNotNull(m.PowerProvisioning, &server.PowerProvisioning)
+	SetInt32PointerIfNotNull(m.PythonGcMinInterval, &server.PythonGcMinInterval)
+	SetInt32PointerIfNotNull(m.PythonRestartMaxPbsServers, &server.PythonRestartMaxPbsServers)
+	SetInt32PointerIfNotNull(m.PythonRestartMaxObjects, &server.PythonRestartMaxObjects)
+	SetStringPointerIfNotNull(m.PythonRestartMinInterval, &server.PythonRestartMinInterval)
+	SetBoolPointerIfNotNull(m.QueryOtherJobs, &server.QueryOtherJobs)
+	SetStringPointerIfNotNull(m.QueuedJobsThreshold, &server.QueuedJobsThreshold)
+	SetStringPointerIfNotNull(m.QueuedJobsThresholdRes, &server.QueuedJobsThresholdRes)
+	SetInt32PointerIfNotNull(m.ReserveRetryInit, &server.ReserveRetryInit)
+	SetInt32PointerIfNotNull(m.ReserveRetryTime, &server.ReserveRetryTime)
+	SetStringPointerIfNotNull(m.RestrictResToReleaseOnSuspend, &server.RestrictResToReleaseOnSuspend)
+	SetBoolPointerIfNotNull(m.ResvEnable, &server.ResvEnable)
+	SetStringPointerIfNotNull(m.ResvPostProcessingTime, &server.ResvPostProcessingTime)
+	SetInt32PointerIfNotNull(m.RppHighwater, &server.RppHighwater)
+	SetInt32PointerIfNotNull(m.RppMaxPktCheck, &server.RppMaxPktCheck)
+	SetInt32PointerIfNotNull(m.RppRetry, &server.RppRetry)
+	SetInt32PointerIfNotNull(m.SchedulerIteration, &server.SchedulerIteration)
+	SetStringPointerIfNotNull(m.WebapiAuthIssuers, &server.WebapiAuthIssuers)
+	SetBoolPointerIfNotNull(m.WebapiEnable, &server.WebapiEnable)
+	SetStringPointerIfNotNull(m.WebapiOidcClientid, &server.WebapiOidcClientid)
+	SetStringPointerIfNotNull(m.WebapiOidcProviderUrl, &server.WebapiOidcProviderUrl)
 
-	// Convert limit attribute maps from Terraform types to Go maps
-	if len(m.MaxGroupRes) > 0 {
-		server.MaxGroupRes = make(map[string]string)
-		for k, v := range m.MaxGroupRes {
-			server.MaxGroupRes[k] = v.ValueString()
-		}
-	}
-	if len(m.MaxGroupResSoft) > 0 {
-		server.MaxGroupResSoft = make(map[string]string)
-		for k, v := range m.MaxGroupResSoft {
-			server.MaxGroupResSoft[k] = v.ValueString()
-		}
-	}
-	if len(m.MaxQueued) > 0 {
-		server.MaxQueued = make(map[string]string)
-		for k, v := range m.MaxQueued {
-			server.MaxQueued[k] = v.ValueString()
-		}
-	}
-	if len(m.MaxQueuedRes) > 0 {
-		server.MaxQueuedRes = make(map[string]string)
-		for k, v := range m.MaxQueuedRes {
-			server.MaxQueuedRes[k] = v.ValueString()
-		}
-	}
-	if len(m.MaxRun) > 0 {
-		server.MaxRun = make(map[string]string)
-		for k, v := range m.MaxRun {
-			server.MaxRun[k] = v.ValueString()
-		}
-	}
-	if len(m.MaxRunRes) > 0 {
-		server.MaxRunRes = make(map[string]string)
-		for k, v := range m.MaxRunRes {
-			server.MaxRunRes[k] = v.ValueString()
-		}
-	}
-	if len(m.MaxRunResSoft) > 0 {
-		server.MaxRunResSoft = make(map[string]string)
-		for k, v := range m.MaxRunResSoft {
-			server.MaxRunResSoft[k] = v.ValueString()
-		}
-	}
-	if len(m.MaxRunSoft) > 0 {
-		server.MaxRunSoft = make(map[string]string)
-		for k, v := range m.MaxRunSoft {
-			server.MaxRunSoft[k] = v.ValueString()
-		}
-	}
-	if len(m.MaxUserRes) > 0 {
-		server.MaxUserRes = make(map[string]string)
-		for k, v := range m.MaxUserRes {
-			server.MaxUserRes[k] = v.ValueString()
-		}
-	}
-	if len(m.MaxUserResSoft) > 0 {
-		server.MaxUserResSoft = make(map[string]string)
-		for k, v := range m.MaxUserResSoft {
-			server.MaxUserResSoft[k] = v.ValueString()
-		}
-	}
+	// Convert map fields using utility functions
+	server.DefaultChunk = ConvertTypesStringMap(m.DefaultChunk)
+	server.ResourcesAvailable = ConvertTypesStringMap(m.ResourcesAvailable)
+	server.ResourcesDefault = ConvertTypesStringMap(m.ResourcesDefault)
+	server.ResourcesMax = ConvertTypesStringMap(m.ResourcesMax)
+
+	// Convert limit attribute maps from Terraform types to Go maps (only if not empty)
+	ConvertTypesStringMapIfNotEmpty(m.MaxGroupRes, &server.MaxGroupRes)
+	ConvertTypesStringMapIfNotEmpty(m.MaxGroupResSoft, &server.MaxGroupResSoft)
+	ConvertTypesStringMapIfNotEmpty(m.MaxQueued, &server.MaxQueued)
+	ConvertTypesStringMapIfNotEmpty(m.MaxQueuedRes, &server.MaxQueuedRes)
+	ConvertTypesStringMapIfNotEmpty(m.MaxRun, &server.MaxRun)
+	ConvertTypesStringMapIfNotEmpty(m.MaxRunRes, &server.MaxRunRes)
+	ConvertTypesStringMapIfNotEmpty(m.MaxRunResSoft, &server.MaxRunResSoft)
+	ConvertTypesStringMapIfNotEmpty(m.MaxRunSoft, &server.MaxRunSoft)
+	ConvertTypesStringMapIfNotEmpty(m.MaxUserRes, &server.MaxUserRes)
+	ConvertTypesStringMapIfNotEmpty(m.MaxUserResSoft, &server.MaxUserResSoft)
 
 	return server
 }

@@ -14,11 +14,15 @@ type pbsResourceModel struct {
 }
 
 func (m pbsResourceModel) ToPbsResource() pbsclient.PbsResource {
-	return pbsclient.PbsResource{
+	resource := pbsclient.PbsResource{
 		Name: m.Name.ValueString(),
 		Type: m.Type.ValueString(),
-		Flag: m.Flag.ValueStringPointer(),
 	}
+
+	// Set pointer fields using utility functions for null checking
+	SetStringPointerIfNotNull(m.Flag, &resource.Flag)
+
+	return resource
 }
 
 func createPbsResoureModel(r pbsclient.PbsResource) pbsResourceModel {
