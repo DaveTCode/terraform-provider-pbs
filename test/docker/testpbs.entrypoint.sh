@@ -15,7 +15,9 @@ fi
 sed -i "s/PBS_SERVER=.*/PBS_SERVER=$pbs_server/" $pbs_conf_file
 sed -i "s/\$clienthost .*/\$clienthost $hostname/" $mom_conf_file
 
-ssh-keygen -A
+# Generate SSH host keys with stronger algorithms
+ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N ""
+ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -N ""
 /usr/sbin/sshd
 
 /etc/init.d/pbs start

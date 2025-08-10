@@ -23,8 +23,7 @@ WORKDIR /
 RUN rm -rf /v23.06.06
 
 RUN apt update && apt install -y openssh-server
-RUN ssh-keygen -A && \
-    mkdir -p /var/run/sshd && \
+RUN mkdir -p /var/run/sshd && \
     chmod 0755 /var/run/sshd
 
 RUN echo "root:pbs" | chpasswd
