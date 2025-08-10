@@ -130,7 +130,7 @@ func TestAccServerResource_importAndUpdate(t *testing.T) {
 	})
 }
 
-// Helper functions
+// Helper functions.
 func testAccServerResourceConfigBasic() string {
 	return providerConfig() + `
 resource "pbs_server" "pbs" {
