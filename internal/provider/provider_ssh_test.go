@@ -78,13 +78,3 @@ resource "pbs_hook" "test" {
 		hookName,
 	)
 }
-
-// Helper function to get SSH private key content for testing.
-func getTestSSHPrivateKey() (string, error) {
-	// Try direct key first
-	if key := os.Getenv("PBS_TEST_SSH_PRIVATE_KEY"); key != "" {
-		return key, nil
-	}
-
-	return "", fmt.Errorf("no SSH private key found in environment")
-}
