@@ -3,7 +3,8 @@
 page_title: "pbs_node Resource - pbs"
 subcategory: ""
 description: |-
-  Manage PBS vnodes. This resource creates, updates, and deletes vnodes in PBS.
+  Manage PBS vnodes. This resource creates, updates, and deletes vnodes in PBS. Bear in mind that a node created this way must still exist as a resolvable DNS record
+  from the PBS server.
 ---
 
 # pbs_node (Resource)
