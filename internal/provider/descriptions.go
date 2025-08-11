@@ -3,7 +3,7 @@ package provider
 // Centralized descriptions for reuse across resources and data sources.
 // Prefer MarkdownDescription in schemas so tfplugindocs renders them.
 
-// Hook docs
+// Hook docs.
 const (
 	DescHookID         = "The unique identifier for this hook. This is the same as the name."
 	DescHookAlarm      = "Specifies the number of seconds to allow a hook to run before the hook times out."
@@ -18,7 +18,7 @@ const (
 	DescHookUser       = "Specifies who executes the hook."
 )
 
-// Node docs
+// Node docs.
 const (
 	DescNodeID                 = "The unique identifier for this node. This is the same as the name."
 	DescNodeComment            = "Information about this vnode. This attribute may be set by the manager to any string to inform users of any information relating to the node. If this attribute is not explicitly set, the PBS server will use the attribute to pass information about the node status, specifically why the node is down. If the attribute is explicitly set by the manager, it will not be modified by the server."
@@ -40,7 +40,7 @@ const (
 	DescNodeResvEnable         = "Controls whether the vnode can be used for advance and standing reservations. Reservations are incompatible with cycle harvesting."
 )
 
-// PBS Resource docs
+// PBS Resource docs.
 const (
 	DescPbsResourceID   = "The unique identifier for this resource. This is the same as the name."
 	DescPbsResourceName = "The unique name of the resource on the server"
@@ -48,7 +48,7 @@ const (
 	DescPbsResourceFlag = "One of the flags specifying where the resource is defined (f, fh, nh, q, m) and the ones defining it's visibility (i, r)"
 )
 
-// Queue docs
+// Queue docs.
 const (
 	DescQueueID                     = "The unique identifier for this queue. This is the same as the name."
 	DescQueueAclGroupEnable         = "Controls whether group access to the queue obeys the access control list defined in the acl_groups queue attribute."
@@ -107,7 +107,7 @@ const (
 	DescQueueStarted                = "If this is an execution queue, specifies whether jobs in this queue can be scheduled for execution, or if this is a routing queue, whether jobs can be routed."
 )
 
-// Server docs
+// Server docs.
 const (
 	DescServerID                            = "The unique identifier for this server. This is the same as the name."
 	DescServerAclHostEnable                 = "Specifies whether the server obeys the host access control list in the acl_hosts server attribute."
