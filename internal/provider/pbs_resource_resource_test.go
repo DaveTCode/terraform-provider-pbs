@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccPbsResourceResource_basic(t *testing.T) {
-	resourceName := testAccResourceName("test_resource")
+	resourceName := testAccResourceName("test_resource'")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

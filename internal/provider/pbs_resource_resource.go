@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"terraform-provider-pbs/internal/pbsclient"
+	validators "terraform-provider-pbs/internal/provider/validators"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -41,6 +42,9 @@ func (r *pbsResourceResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"name": schema.StringAttribute{
 				MarkdownDescription: DescPbsResourceName,
 				Required:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"type": schema.StringAttribute{
 				MarkdownDescription: DescPbsResourceType,

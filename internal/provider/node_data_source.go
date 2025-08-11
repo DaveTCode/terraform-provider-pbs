@@ -64,7 +64,7 @@ func (d *pbsNodeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Computed:            true,
 				MarkdownDescription: DescNodePartition,
 			},
-			"p_names": schema.StringAttribute{
+			"pnames": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: DescNodePNames,
 			},
