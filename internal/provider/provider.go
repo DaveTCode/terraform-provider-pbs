@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"terraform-provider-pbs/internal/pbsclient"
@@ -20,10 +21,11 @@ var (
 )
 
 type pbsProviderModel struct {
-	Server   types.String `tfsdk:"server"`
-	SshPort  types.String `tfsdk:"sshport"`
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
+	Server        types.String `tfsdk:"server"`
+	SshPort       types.String `tfsdk:"sshport"`
+	Username      types.String `tfsdk:"username"`
+	Password      types.String `tfsdk:"password"`
+	SshPrivateKey types.String `tfsdk:"ssh_private_key"`
 }
 
 func New(version string) func() provider.Provider {
@@ -65,6 +67,11 @@ func (p *pbsProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 				Optional:            true,
 				Sensitive:           true,
 				MarkdownDescription: "The password for the SSH username",
+			},
+			"ssh_private_key": schema.StringAttribute{
+				Optional:            true,
+				Sensitive:           true,
+				MarkdownDescription: "The SSH private key content for authentication (alternative to password)",
 			},
 		},
 	}
@@ -114,6 +121,14 @@ func (p *pbsProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		)
 	}
 
+	if config.SshPrivateKey.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("ssh_private_key"),
+			"Unknown SSH Private Key",
+			"The provider cannot create the PBS client as there is an unknown configuration value for the SSH private key.",
+		)
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -125,12 +140,13 @@ func (p *pbsProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	sshPort := os.Getenv("PBS_SSH_PORT")
 	username := os.Getenv("PBS_USERNAME")
 	password := os.Getenv("PBS_PASSWORD")
+	sshPrivateKey := os.Getenv("PBS_SSH_PRIVATE_KEY")
 
 	if !config.Server.IsNull() {
 		server = config.Server.ValueString()
 	}
 
-	if !config.Server.IsNull() {
+	if !config.SshPort.IsNull() {
 		sshPort = config.SshPort.ValueString()
 	}
 
@@ -140,6 +156,10 @@ func (p *pbsProvider) Configure(ctx context.Context, req provider.ConfigureReque
 
 	if !config.Password.IsNull() {
 		password = config.Password.ValueString()
+	}
+
+	if !config.SshPrivateKey.IsNull() {
+		sshPrivateKey = config.SshPrivateKey.ValueString()
 	}
 
 	if server == "" {
@@ -172,13 +192,16 @@ func (p *pbsProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		)
 	}
 
-	if password == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Missing PBS Password",
-			"The provider cannot create the PBS client as there is a missing or empty value for the PBS password. "+
-				"Set the password value in the configuration or use the PBS_PASSWORD environment variable. "+
-				"If either is already set, ensure the value is not empty.",
+	// Validate authentication methods - either password OR SSH key must be provided
+	hasPassword := password != ""
+	hasSshKey := sshPrivateKey != ""
+
+	if !hasPassword && !hasSshKey {
+		resp.Diagnostics.AddError(
+			"Missing authentication credentials",
+			"The provider requires either password or SSH key authentication. Provide either:\n"+
+				"- password (via 'password' configuration or PBS_PASSWORD environment variable)\n"+
+				"- ssh_private_key (via 'ssh_private_key' configuration or PBS_SSH_PRIVATE_KEY environment variable)",
 		)
 	}
 
@@ -186,12 +209,34 @@ func (p *pbsProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		return
 	}
 
+	// Build SSH authentication methods
+	var authMethods []ssh.AuthMethod
+
+	// Add password authentication if provided
+	if hasPassword {
+		authMethods = append(authMethods, ssh.Password(password))
+	}
+
+	// Add SSH key authentication if provided
+	if hasSshKey {
+		// Parse the private key
+		signer, err := ssh.ParsePrivateKey([]byte(sshPrivateKey))
+		if err != nil {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("ssh_private_key"),
+				"Invalid SSH private key",
+				fmt.Sprintf("Cannot parse SSH private key: %v", err),
+			)
+			return
+		}
+
+		authMethods = append(authMethods, ssh.PublicKeys(signer))
+	}
+
 	// Create a new SSH client using the configuration values
 	sshConfig := &ssh.ClientConfig{
-		User: username,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(password),
-		},
+		User:            username,
+		Auth:            authMethods,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 	pbsClient := &pbsclient.PbsClient{

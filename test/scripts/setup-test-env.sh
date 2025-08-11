@@ -91,9 +91,9 @@ create_test_data() {
 verify_pbs() {
     echo "Verifying PBS installation..."
     
-    # Test SSH connection
-    if ! docker compose exec -T pbs ssh -o StrictHostKeyChecking=no root@localhost -p 22 "echo 'SSH connection successful'" 2>/dev/null; then
-        echo "Error: SSH connection to PBS container failed"
+    # Test SSH connection with password
+    if ! docker compose exec -T pbs ssh -o StrictHostKeyChecking=no root@localhost -p 22 "echo 'SSH password connection successful'" 2>/dev/null; then
+        echo "Error: SSH password connection to PBS container failed"
         return 1
     fi
     
@@ -140,16 +140,112 @@ verify_pbs() {
     return 0
 }
 
+# Function to generate SSH keys for testing
+generate_ssh_keys() {
+    echo "Generating SSH keys for testing..."
+    
+    SSH_KEY_DIR="${PROJECT_ROOT}/test/ssh-keys"
+    mkdir -p "${SSH_KEY_DIR}"
+    
+    # Generate SSH key pair if it doesn't exist
+    if [ ! -f "${SSH_KEY_DIR}/test_rsa" ]; then
+        ssh-keygen -t rsa -b 4096 -f "${SSH_KEY_DIR}/test_rsa" -N "" -C "pbs-provider-test"
+        echo "Generated SSH key pair in ${SSH_KEY_DIR}"
+    else
+        echo "SSH key pair already exists in ${SSH_KEY_DIR}"
+    fi
+
+    chmod 600 "${SSH_KEY_DIR}/test_rsa"
+    chmod 644 "${SSH_KEY_DIR}/test_rsa.pub"
+    
+    # Copy public key to authorized_keys in container
+    echo "Setting up SSH key authentication in PBS container..."
+    cd "${COMPOSE_DIR}"
+    
+    # Create .ssh directory and authorized_keys file in container
+    docker compose exec -T pbs mkdir -p /root/.ssh
+    docker compose exec -T pbs chmod 700 /root/.ssh
+    
+    # Copy public key to container
+    docker compose cp "${SSH_KEY_DIR}/test_rsa.pub" pbs:/root/.ssh/authorized_keys
+    docker compose exec -T pbs chmod 600 /root/.ssh/authorized_keys
+    docker compose exec -T pbs chown root:root /root/.ssh/authorized_keys
+    
+    # Configure SSH daemon to allow key authentication
+    docker compose exec -T pbs sh -c "grep -q '^PubkeyAuthentication yes' /etc/ssh/sshd_config || echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config"
+    docker compose exec -T pbs sh -c "grep -q '^AuthorizedKeysFile' /etc/ssh/sshd_config || echo 'AuthorizedKeysFile .ssh/authorized_keys' >> /etc/ssh/sshd_config"
+    docker compose exec -T pbs sh -c "grep -q '^PermitRootLogin yes' /etc/ssh/sshd_config || echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config"
+    
+    # Restart SSH daemon
+    docker compose exec -T pbs service ssh restart || docker compose exec -T pbs /usr/sbin/sshd -D &
+    
+    echo "SSH key authentication configured successfully"
+}
+
+# Function to verify SSH key authentication
+verify_ssh_key_auth() {
+    echo "Verifying SSH key authentication..."
+    
+    SSH_KEY_DIR="${PROJECT_ROOT}/test/ssh-keys"
+    
+    # Debug: Check if key files exist
+    if [ ! -f "${SSH_KEY_DIR}/test_rsa" ]; then
+        echo "Error: Private key not found at ${SSH_KEY_DIR}/test_rsa"
+        return 1
+    fi
+    
+    if [ ! -f "${SSH_KEY_DIR}/test_rsa.pub" ]; then
+        echo "Error: Public key not found at ${SSH_KEY_DIR}/test_rsa.pub"
+        return 1
+    fi
+    
+    # Debug: Check authorized_keys in container
+    echo "Checking authorized_keys in container..."
+    docker compose exec -T pbs cat /root/.ssh/authorized_keys 2>/dev/null || echo "No authorized_keys file found"
+    
+    # Test SSH connection with key
+    echo "Testing SSH connection with key..."
+    if ssh -i "${SSH_KEY_DIR}/test_rsa" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PasswordAuthentication=no -p 2222 root@localhost "echo 'SSH key authentication successful'" 2>/dev/null; then
+        echo "SSH key authentication verified successfully"
+        return 0
+    else
+        echo "Warning: SSH key authentication verification failed"
+        echo "Debugging SSH connection..."
+        ssh -i "${SSH_KEY_DIR}/test_rsa" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PasswordAuthentication=no -p 2222 -v root@localhost "echo 'SSH key authentication test'" 2>&1 | head -20
+        echo "Password authentication will still work"
+        return 1
+    fi
+}
+
 # Function to setup test environment variables
 setup_test_env() {
     echo "Setting up test environment variables..."
     
+    SSH_KEY_DIR="${PROJECT_ROOT}/test/ssh-keys"
+    SSH_PRIVATE_KEY=""
+    
+    # Read private key and encode it for environment variable
+    if [ -f "${SSH_KEY_DIR}/test_rsa" ]; then
+        # Use -w 0 for Linux base64, -i for macOS
+        if base64 --help 2>&1 | grep -q "wrap"; then
+            SSH_PRIVATE_KEY=$(base64 -w 0 "${SSH_KEY_DIR}/test_rsa")
+        else
+            SSH_PRIVATE_KEY=$(base64 -i "${SSH_KEY_DIR}/test_rsa" | tr -d '\n')
+        fi
+    fi
+    
     cat > "${PROJECT_ROOT}/.env.test" << EOF
-# PBS Test Environment Variables
+# PBS Test Environment Variables - Password Authentication
 PBS_TEST_SERVER=localhost
 PBS_TEST_PORT=2222
 PBS_TEST_USERNAME=root
 PBS_TEST_PASSWORD=pbs
+
+# PBS Test Environment Variables - SSH Key Authentication
+PBS_TEST_SSH_PRIVATE_KEY_BASE64=${SSH_PRIVATE_KEY}
+PBS_TEST_SSH_PRIVATE_KEY_PATH=${SSH_KEY_DIR}/test_rsa
+
+# Common Test Variables
 TF_ACC=1
 EOF
     
@@ -179,6 +275,9 @@ main() {
     check_docker
     start_pbs_container
     
+    # Generate SSH keys for testing
+    generate_ssh_keys
+    
     # Create test data first
     create_test_data
     
@@ -198,12 +297,18 @@ main() {
         fi
     done
     
+    # Verify SSH key authentication
+    verify_ssh_key_auth
+    
     setup_test_env
     show_container_status
     
     echo ""
     echo "=== Setup Complete ==="
     echo "PBS container is running and accessible on localhost:2222"
+    echo "Authentication methods available:"
+    echo "  - Password: root/pbs"
+    echo "  - SSH Key: test/ssh-keys/test_rsa"
     echo "Run tests with: make testacc"
     echo "Or: source .env.test && go test -v -timeout 120m ./internal/provider/"
 }

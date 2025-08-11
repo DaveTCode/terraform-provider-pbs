@@ -15,9 +15,18 @@ website/node_modules
 .vagrant/
 *.backup
 ./*.tfstate
+# Terraform and state files
 .terraform/
-*.log
-*.bak
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.backup
+
+# SSH keys for testing (should not be committed)
+test/ssh-keys/
+.env.test
+
+# Test data and logs
 *~
 .*.swp
 .idea
@@ -35,3 +44,4 @@ website/vendor
 *.winfile eol=crlf
 
 coverage*
+terraform-provider-pbs
