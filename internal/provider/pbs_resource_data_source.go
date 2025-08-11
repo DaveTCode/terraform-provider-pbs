@@ -25,14 +25,21 @@ func (d *pbsResourceDataSource) Metadata(_ context.Context, req datasource.Metad
 func (d *pbsResourceDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: DescPbsResourceID,
+			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: DescPbsResourceName,
 			},
 			"type": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescPbsResourceType,
 			},
 			"flag": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescPbsResourceFlag,
 			},
 		},
 	}

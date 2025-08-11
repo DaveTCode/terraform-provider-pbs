@@ -20,7 +20,9 @@ func runSshCommand(sshClient *ssh.Client, cmd string) ([]byte, []byte, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create SSH session %s: %s", err.Error(), cmd)
 	}
-	defer session.Close()
+	defer func() {
+		_ = session.Close() // Ignore close error in defer
+	}()
 
 	stdout, err := session.StdoutPipe()
 	if err != nil {
@@ -55,7 +57,9 @@ func (client *PbsClient) runCommands(commands []string) ([][]byte, [][]byte, err
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to connect to server with SSH config provided %s", err.Error())
 	}
-	defer sshClient.Close()
+	defer func() {
+		_ = sshClient.Close() // Ignore close error in defer
+	}()
 
 	var output [][]byte
 	var errOutput [][]byte
@@ -242,7 +246,7 @@ func generateCreateCommands(newObj any, qmgrObjectType string, qmgrObjectName st
 		}
 	case map[string]string:
 		for k, subval := range newObj {
-			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, subval))
+			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, subval))
 		}
 	default:
 		return commands, fmt.Errorf("unsupported type %T", newObj)
@@ -308,12 +312,12 @@ func generateUpdateAttributeCommand(oldAttr any, newAttr any, qmgrObjectType str
 				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'unset %s %s %s.%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k))
 
 			} else if oldAttrVal != newAttrVal {
-				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, newAttrVal))
+				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, newAttrVal))
 			}
 		}
 		for k, newAttrVal := range newValue {
 			if _, ok := old[k]; !ok {
-				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, newAttrVal))
+				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, newAttrVal))
 			}
 		}
 

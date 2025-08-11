@@ -20,3 +20,9 @@ This repository will probably never provision jobs/reservations etc as those are
 
 This repository will also never provision the VM/containers required to actually run PBS. That's typically handled by another layer of automation, 
 whether cloud based or manual.
+
+## Generate documentation
+
+There is a make target (`make generate`) will run the documentation generation however there is a gotcha to this where it will rely on cached prior binaries over building from scratch.
+
+On windows I was able to resolve this by running `Remove-Item "$env:APPDATA\terraform.d\plugin-cache" -Recurse -Force -ErrorAction SilentlyContinue` before using the generator.

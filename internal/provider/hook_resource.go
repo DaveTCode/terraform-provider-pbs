@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"terraform-provider-pbs/internal/pbsclient"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
@@ -34,54 +35,58 @@ func (r *pbsHookResource) Metadata(_ context.Context, req resource.MetadataReque
 func (r *pbsHookResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{ // TODO - How to avoid duplication of this schema with data source?
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: DescHookID,
+			},
 			"alarm": schema.Int32Attribute{
-				Description: "Specifies the number of seconds to allow a hook to run before the hook times out.",
-				Optional:    true,
+				MarkdownDescription: DescHookAlarm,
+				Optional:            true,
 				Validators: []validator.Int32{
-					int32validator.AtLeast(0),
+					int32validator.AtLeast(1),
 				},
 			},
 			"debug": schema.BoolAttribute{
-				Description: "debugging files under PBS_HOME/server_priv/hooks/tmp or PBS_HOME/mom_priv/hooks/tmp.  Files are named hook_<hook event>_<hook name>_<unique ID>.in, .data, and .out",
-				Optional:    true,
+				MarkdownDescription: DescHookDebug,
+				Optional:            true,
 			},
 			"enabled": schema.BoolAttribute{
-				Description: " Determines whether or not a hook  is  run when its triggering event occurs.",
-				Optional:    true,
+				MarkdownDescription: DescHookEnabled,
+				Optional:            true,
 			},
 			"event": schema.StringAttribute{
-				Description: "List of events that trigger the hook. The provision event cannot be combined with any other events.",
-				Optional:    true,
+				MarkdownDescription: DescHookEvent,
+				Optional:            true,
 			},
 			"fail_action": schema.StringAttribute{
-				MarkdownDescription: "Specifies the action to be taken when hook fails due to alarm call or unhandled exception, or to an internal error such as not enough disk space or memory.  Can also specify a subsequent action to be taken when hook runs successfully.  Value can be either `none` or one or more of `offline_vnodes`, `clear_vnodes_upon_recovery`, and `scheduler_restart_cycle`. If this attribute is set to multiple values, scheduler restart happens last.",
+				MarkdownDescription: DescHookFailAction,
 				Optional:            true,
 			},
 			"freq": schema.Int32Attribute{
-				MarkdownDescription: " Number of seconds between `periodic` or `exechost_periodic` triggers.",
+				MarkdownDescription: DescHookFreq,
 				Optional:            true,
 			},
 			"name": schema.StringAttribute{
-				Description: "The unique name of the hook on the server",
-				Required:    true,
+				MarkdownDescription: DescHookName,
+				Required:            true,
 			},
 			"order": schema.Int32Attribute{
-				Description: "Indicates relative order of hook execution, for hooks of the same type sharing a trigger.  Hooks with lower order values execute before those with higher values. Does not apply to periodic or exechost_periodic hooks. ",
-				Optional:    true,
+				MarkdownDescription: DescHookOrder,
+				Optional:            true,
 				Validators: []validator.Int32{
 					int32validator.Between(-1000, 2000), // Range: built-in hooks: [-1000, 2000] site hooks: [1,1000] but we are not enforcing this
 				},
 			},
 			"type": schema.StringAttribute{
-				Description: "The type of the hook. Cannot be set for a built-in hook.",
-				Optional:    true,
+				MarkdownDescription: DescHookType,
+				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("site", "pbs"),
 				},
 			},
 			"user": schema.StringAttribute{
-				Description: "Specifies who executes the hook.",
-				Optional:    true,
+				MarkdownDescription: DescHookUser,
+				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("pbsadmin", "pbsuser"),
 				},
@@ -124,7 +129,7 @@ func (r *pbsHookResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	_ = createPbsHookModel(pbsHook)
+	model = createPbsHookModel(pbsHook)
 
 	diags = resp.State.Set(ctx, model)
 	resp.Diagnostics.Append(diags...)
@@ -134,17 +139,28 @@ func (r *pbsHookResource) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *pbsHookResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data pbsHookModel
+	var state pbsHookModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbsHook, err := r.client.GetHook(data.Name.ValueString())
+	// For import, use ID if name is not set
+	hookName := state.Name.ValueString()
+	if hookName == "" && !state.ID.IsNull() {
+		hookName = state.ID.ValueString()
+	}
+
+	pbsHook, err := r.client.GetHook(hookName)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read resources, got error: %s", err))
+		// Check if hook doesn't exist and remove from state
+		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "Unknown hook") {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read hook, got error: %s", err))
 		return
 	}
 
@@ -154,9 +170,15 @@ func (r *pbsHookResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	rModel := createPbsHookModel(pbsHook)
+	// Update state with current values, preserving plan-only values
+	updatedState := createPbsHookModel(pbsHook)
+	// Preserve the name from the original state to avoid unnecessary changes,
+	// but only if it's not empty (during import, state.Name will be empty)
+	if !state.Name.IsNull() && state.Name.ValueString() != "" {
+		updatedState.Name = state.Name
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &rModel)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *pbsHookResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -164,7 +186,7 @@ func (r *pbsHookResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	_, err := r.client.UpdateHook(data.ToPbsHook())
+	updatedHook, err := r.client.UpdateHook(data.ToPbsHook())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Update Resource",
@@ -176,8 +198,11 @@ func (r *pbsHookResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
+	// Create the model from the updated hook to ensure all fields including ID are properly set
+	updatedModel := createPbsHookModel(updatedHook)
+
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedModel)...)
 }
 
 func (r *pbsHookResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -197,5 +222,6 @@ func (r *pbsHookResource) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *pbsHookResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	// Use the standard passthrough for ID, which will set both id and trigger a Read
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

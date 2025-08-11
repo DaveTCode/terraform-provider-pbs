@@ -185,7 +185,7 @@ func TestParseQmgrMultiLineResource(t *testing.T) {
     freq = 120
     order = 100
     debug = false
-    fail_action = offline_vnodes`
+    fail_action = none`
 	parsedOutput := parseGenericQmgrOutput(sourceTest)
 
 	if len(parsedOutput) != 1 {
@@ -225,8 +225,8 @@ func TestParseQmgrMultiLineResource(t *testing.T) {
 	if val, ok := parsedOutput[0].attributes["debug"].(string); !ok || val != "false" {
 		t.Errorf("got %q, wanted %q", parsedOutput[0].attributes["debug"], "false")
 	}
-	if val, ok := parsedOutput[0].attributes["fail_action"].(string); !ok || val != "offline_vnodes" {
-		t.Errorf("got %q, wanted %q", parsedOutput[0].attributes["fail_action"], "offline_vnodes")
+	if val, ok := parsedOutput[0].attributes["fail_action"].(string); !ok || val != "none" {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].attributes["fail_action"], "none")
 	}
 
 }

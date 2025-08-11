@@ -26,154 +26,228 @@ func (d *queueDataSource) Metadata(_ context.Context, req datasource.MetadataReq
 func (d *queueDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: DescQueueID,
+			},
 			"acl_group_enable": schema.BoolAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueAclGroupEnable,
 			},
 			"acl_groups": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueAclGroups,
+			},
+			"acl_groups_normalized": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: DescQueueAclGroupsNormalized,
 			},
 			"acl_host_enable": schema.BoolAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueAclHostEnable,
 			},
 			"acl_hosts": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueAclHosts,
+			},
+			"acl_hosts_normalized": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: DescQueueAclHostsNormalized,
 			},
 			"acl_user_enable": schema.BoolAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueAclUserEnable,
 			},
 			"acl_users": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueAclUsers,
+			},
+			"acl_users_normalized": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: DescQueueAclUsersNormalized,
 			},
 			"alt_router": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueAltRouter,
 			},
 			"backfill_depth": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueBackfillDepth,
 			},
 			"checkpoint_min": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueCheckpointMin,
 			},
 			"default_chunk": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueDefaultChunk,
 			},
 			"enabled": schema.BoolAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueEnabled,
 			},
 			"from_route_only": schema.BoolAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueFromRouteOnly,
 			},
 			"kill_delay": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueKillDelay,
 			},
 			"max_array_size": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueMaxArraySize,
 			},
-			"max_group_res": schema.Int32Attribute{
-				Computed: true,
+			"max_group_res": schema.MapAttribute{
+				ElementType:         types.StringType,
+				Computed:            true,
+				MarkdownDescription: DescQueueMaxGroupRes,
 			},
-			"max_group_res_soft": schema.Int32Attribute{
-				Computed: true,
+			"max_group_res_soft": schema.MapAttribute{
+				ElementType:         types.StringType,
+				Computed:            true,
+				MarkdownDescription: DescQueueMaxGroupResSoft,
 			},
 			"max_group_run": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueMaxGroupRun,
 			},
 			"max_group_run_soft": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueMaxGroupRunSoft,
 			},
 			"max_queuable": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueMaxQueuable,
 			},
-			"max_queued": schema.StringAttribute{
-				Computed: true,
+			"max_queued": schema.MapAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueMaxQueued,
 			},
-			"max_queued_res": schema.StringAttribute{
-				Computed: true,
+			"max_queued_res": schema.MapAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueMaxQueuedRes,
 			},
-			"max_run": schema.StringAttribute{
-				Computed: true,
+			"max_run": schema.MapAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueMaxRun,
 			},
-			"max_run_res": schema.StringAttribute{
-				Computed: true,
+			"max_run_res": schema.MapAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueMaxRunRes,
 			},
-			"max_run_res_soft": schema.StringAttribute{
-				Computed: true,
+			"max_run_res_soft": schema.MapAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueMaxRunResSoft,
 			},
-			"max_run_soft": schema.StringAttribute{
-				Computed: true,
+			"max_run_soft": schema.MapAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueMaxRunSoft,
 			},
 			"max_running": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueMaxRunning,
 			},
-			"max_user_res": schema.StringAttribute{
-				Computed: true,
+			"max_user_res": schema.MapAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueMaxUserRes,
 			},
-			"max_user_res_soft": schema.StringAttribute{
-				Computed: true,
+			"max_user_res_soft": schema.MapAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueMaxUserResSoft,
 			},
 			"max_user_run": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueMaxUserRun,
 			},
 			"max_user_run_soft": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueMaxUserRunSoft,
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: DescQueueName,
 			},
 			"node_group_key": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueNodeGroupKey,
 			},
 			"partition": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueuePartition,
 			},
 			"priority": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueuePriority,
 			},
 			"queued_jobs_threshold": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueQueuedJobsThreshold,
 			},
 			"queued_jobs_threshold_res": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueQueuedJobsThresholdRes,
 			},
 			"queue_type": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueQtype,
 			},
 			"resources_assigned": schema.MapAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueResourcesAssigned,
 			},
 			"resources_available": schema.MapAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueResourcesAvailable,
 			},
 			"resources_default": schema.MapAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueResourcesDefault,
 			},
 			"resources_max": schema.MapAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueResourcesMax,
 			},
 			"resources_min": schema.MapAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescQueueResourcesMin,
 			},
 			"route_destinations": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueRouteDestinations,
 			},
 			"route_held_jobs": schema.BoolAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueRouteHeldJobs,
 			},
 			"route_lifetime": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueRouteLifetime,
 			},
 			"route_retry_time": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueRouteRetryTime,
 			},
 			"route_waiting_jobs": schema.BoolAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueRouteWaitingJobs,
 			},
 			"started": schema.BoolAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescQueueStarted,
 			},
 		},
 	}

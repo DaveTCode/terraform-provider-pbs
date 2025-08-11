@@ -25,35 +25,49 @@ func (d *pbsHookDataSource) Metadata(_ context.Context, req datasource.MetadataR
 func (d *pbsHookDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: DescHookID,
+			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: DescHookName,
 			},
 			"type": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescHookType,
 			},
 			"alarm": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescHookAlarm,
 			},
 			"debug": schema.BoolAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescHookDebug,
 			},
 			"enabled": schema.BoolAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescHookEnabled,
 			},
 			"event": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescHookEvent,
 			},
 			"fail_action": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescHookFailAction,
 			},
 			"freq": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescHookFreq,
 			},
 			"order": schema.Int32Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescHookOrder,
 			},
 			"user": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescHookUser,
 			},
 		},
 	}

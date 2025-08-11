@@ -9,12 +9,16 @@ import (
 )
 
 type queueModel struct {
+	ID                     types.String            `tfsdk:"id"`
 	AclGroupEnable         types.Bool              `tfsdk:"acl_group_enable"`
 	AclGroups              types.String            `tfsdk:"acl_groups"`
+	AclGroupsNormalized    types.String            `tfsdk:"acl_groups_normalized"`
 	AclHostEnable          types.Bool              `tfsdk:"acl_host_enable"`
 	AclHosts               types.String            `tfsdk:"acl_hosts"`
+	AclHostsNormalized     types.String            `tfsdk:"acl_hosts_normalized"`
 	AclUserEnable          types.Bool              `tfsdk:"acl_user_enable"`
 	AclUsers               types.String            `tfsdk:"acl_users"`
+	AclUsersNormalized     types.String            `tfsdk:"acl_users_normalized"`
 	AltRouter              types.String            `tfsdk:"alt_router"`
 	BackfillDepth          types.Int32             `tfsdk:"backfill_depth"`
 	CheckpointMin          types.Int32             `tfsdk:"checkpoint_min"`
@@ -23,20 +27,20 @@ type queueModel struct {
 	FromRouteOnly          types.Bool              `tfsdk:"from_route_only"`
 	KillDelay              types.Int32             `tfsdk:"kill_delay"`
 	MaxArraySize           types.Int32             `tfsdk:"max_array_size"`
-	MaxGroupRes            types.Int32             `tfsdk:"max_group_res"`
-	MaxGroupResSoft        types.Int32             `tfsdk:"max_group_res_soft"`
+	MaxGroupRes            map[string]types.String `tfsdk:"max_group_res"`
+	MaxGroupResSoft        map[string]types.String `tfsdk:"max_group_res_soft"`
 	MaxGroupRun            types.Int32             `tfsdk:"max_group_run"`
 	MaxGroupRunSoft        types.Int32             `tfsdk:"max_group_run_soft"`
 	MaxQueuable            types.Int32             `tfsdk:"max_queuable"`
-	MaxQueued              types.String            `tfsdk:"max_queued"`
-	MaxQueuedRes           types.String            `tfsdk:"max_queued_res"`
-	MaxRun                 types.String            `tfsdk:"max_run"`
-	MaxRunRes              types.String            `tfsdk:"max_run_res"`
-	MaxRunResSoft          types.String            `tfsdk:"max_run_res_soft"`
-	MaxRunSoft             types.String            `tfsdk:"max_run_soft"`
+	MaxQueued              map[string]types.String `tfsdk:"max_queued"`
+	MaxQueuedRes           map[string]types.String `tfsdk:"max_queued_res"`
+	MaxRun                 map[string]types.String `tfsdk:"max_run"`
+	MaxRunRes              map[string]types.String `tfsdk:"max_run_res"`
+	MaxRunResSoft          map[string]types.String `tfsdk:"max_run_res_soft"`
+	MaxRunSoft             map[string]types.String `tfsdk:"max_run_soft"`
 	MaxRunning             types.Int32             `tfsdk:"max_running"`
-	MaxUserRes             types.String            `tfsdk:"max_user_res"`
-	MaxUserResSoft         types.String            `tfsdk:"max_user_res_soft"`
+	MaxUserRes             map[string]types.String `tfsdk:"max_user_res"`
+	MaxUserResSoft         map[string]types.String `tfsdk:"max_user_res_soft"`
 	MaxUserRun             types.Int32             `tfsdk:"max_user_run"`
 	MaxUserRunSoft         types.Int32             `tfsdk:"max_user_run_soft"`
 	Name                   types.String            `tfsdk:"name"`
@@ -61,78 +65,68 @@ type queueModel struct {
 
 func (m queueModel) ToPbsQueue(ctx context.Context) (pbsclient.PbsQueue, diag.Diagnostics) {
 	queue := pbsclient.PbsQueue{
-		Name:                   m.Name.ValueString(),
-		Enabled:                m.Enabled.ValueBool(),
-		Started:                m.Started.ValueBool(),
-		QueueType:              m.QueueType.ValueString(),
-		AclGroupEnable:         m.AclGroupEnable.ValueBoolPointer(),
-		AclGroups:              m.AclGroups.ValueStringPointer(),
-		AclHostEnable:          m.AclHostEnable.ValueBoolPointer(),
-		AclHosts:               m.AclHosts.ValueStringPointer(),
-		AclUserEnable:          m.AclUserEnable.ValueBoolPointer(),
-		AclUsers:               m.AclUsers.ValueStringPointer(),
-		AltRouter:              m.AltRouter.ValueStringPointer(),
-		BackfillDepth:          m.BackfillDepth.ValueInt32Pointer(),
-		CheckpointMin:          m.CheckpointMin.ValueInt32Pointer(),
-		DefaultChunk:           m.DefaultChunk.ValueStringPointer(),
-		FromRouteOnly:          m.FromRouteOnly.ValueBoolPointer(),
-		KillDelay:              m.KillDelay.ValueInt32Pointer(),
-		MaxArraySize:           m.MaxArraySize.ValueInt32Pointer(),
-		MaxGroupRes:            m.MaxGroupRes.ValueInt32Pointer(),
-		MaxGroupResSoft:        m.MaxGroupResSoft.ValueInt32Pointer(),
-		MaxGroupRun:            m.MaxGroupRun.ValueInt32Pointer(),
-		MaxGroupRunSoft:        m.MaxGroupRunSoft.ValueInt32Pointer(),
-		MaxQueuable:            m.MaxQueuable.ValueInt32Pointer(),
-		MaxQueued:              m.MaxQueued.ValueStringPointer(),
-		MaxQueuedRes:           m.MaxQueuedRes.ValueStringPointer(),
-		MaxRun:                 m.MaxRun.ValueStringPointer(),
-		MaxRunRes:              m.MaxRunRes.ValueStringPointer(),
-		MaxRunResSoft:          m.MaxRunResSoft.ValueStringPointer(),
-		MaxRunSoft:             m.MaxRunSoft.ValueStringPointer(),
-		MaxRunning:             m.MaxRunning.ValueInt32Pointer(),
-		MaxUserRes:             m.MaxUserRes.ValueStringPointer(),
-		MaxUserResSoft:         m.MaxUserResSoft.ValueStringPointer(),
-		MaxUserRun:             m.MaxUserRun.ValueInt32Pointer(),
-		MaxUserRunSoft:         m.MaxUserRunSoft.ValueInt32Pointer(),
-		NodeGroupKey:           m.NodeGroupKey.ValueStringPointer(),
-		Partition:              m.Partition.ValueStringPointer(),
-		Priority:               m.Priority.ValueInt32Pointer(),
-		QueuedJobsThreshold:    m.QueuedJobsThreshold.ValueStringPointer(),
-		QueuedJobsThresholdRes: m.QueuedJobsThresholdRes.ValueStringPointer(),
-		RouteDestinations:      m.RouteDestinations.ValueStringPointer(),
-		RouteHeldJobs:          m.RouteHeldJobs.ValueBoolPointer(),
-		RouteLifetime:          m.RouteLifetime.ValueInt32Pointer(),
-		RouteRetryTime:         m.RouteRetryTime.ValueInt32Pointer(),
-		RouteWaitingJobs:       m.RouteWaitingJobs.ValueBoolPointer(),
+		Name:      m.Name.ValueString(),
+		Enabled:   m.Enabled.ValueBool(),
+		Started:   m.Started.ValueBool(),
+		QueueType: m.QueueType.ValueString(),
 	}
 
+	// Only set pointer fields if the value is not null
+	SetBoolPointerIfNotNull(m.AclGroupEnable, &queue.AclGroupEnable)
+	SetStringPointerIfNotNull(m.AclGroups, &queue.AclGroups)
+	SetBoolPointerIfNotNull(m.AclHostEnable, &queue.AclHostEnable)
+	SetStringPointerIfNotNull(m.AclHosts, &queue.AclHosts)
+	SetBoolPointerIfNotNull(m.AclUserEnable, &queue.AclUserEnable)
+	SetStringPointerIfNotNull(m.AclUsers, &queue.AclUsers)
+	SetStringPointerIfNotNull(m.AltRouter, &queue.AltRouter)
+	SetInt32PointerIfNotNull(m.BackfillDepth, &queue.BackfillDepth)
+	SetInt32PointerIfNotNull(m.CheckpointMin, &queue.CheckpointMin)
+	SetStringPointerIfNotNull(m.DefaultChunk, &queue.DefaultChunk)
+	SetBoolPointerIfNotNull(m.FromRouteOnly, &queue.FromRouteOnly)
+	SetInt32PointerIfNotNull(m.KillDelay, &queue.KillDelay)
+	SetInt32PointerIfNotNull(m.MaxArraySize, &queue.MaxArraySize)
+	SetInt32PointerIfNotNull(m.MaxGroupRun, &queue.MaxGroupRun)
+	SetInt32PointerIfNotNull(m.MaxGroupRunSoft, &queue.MaxGroupRunSoft)
+	SetInt32PointerIfNotNull(m.MaxQueuable, &queue.MaxQueuable)
+	SetInt32PointerIfNotNull(m.MaxRunning, &queue.MaxRunning)
+	SetInt32PointerIfNotNull(m.MaxUserRun, &queue.MaxUserRun)
+	SetInt32PointerIfNotNull(m.MaxUserRunSoft, &queue.MaxUserRunSoft)
+	SetStringPointerIfNotNull(m.NodeGroupKey, &queue.NodeGroupKey)
+	SetStringPointerIfNotNull(m.Partition, &queue.Partition)
+	SetInt32PointerIfNotNull(m.Priority, &queue.Priority)
+	SetStringPointerIfNotNull(m.QueuedJobsThreshold, &queue.QueuedJobsThreshold)
+	SetStringPointerIfNotNull(m.QueuedJobsThresholdRes, &queue.QueuedJobsThresholdRes)
+	SetStringPointerIfNotNull(m.RouteDestinations, &queue.RouteDestinations)
+	SetBoolPointerIfNotNull(m.RouteHeldJobs, &queue.RouteHeldJobs)
+	SetInt32PointerIfNotNull(m.RouteLifetime, &queue.RouteLifetime)
+	SetInt32PointerIfNotNull(m.RouteRetryTime, &queue.RouteRetryTime)
+	SetBoolPointerIfNotNull(m.RouteWaitingJobs, &queue.RouteWaitingJobs)
+
 	var diags diag.Diagnostics
-	queue.ResourcesAssigned = make(map[string]string)
-	for k, v := range m.ResourcesAssigned {
-		queue.ResourcesAssigned[k] = v.ValueString()
-	}
-	queue.ResourcesAvailable = make(map[string]string)
-	for k, v := range m.ResourcesAvailable {
-		queue.ResourcesAvailable[k] = v.ValueString()
-	}
-	queue.ResourcesDefault = make(map[string]string)
-	for k, v := range m.ResourcesDefault {
-		queue.ResourcesDefault[k] = v.ValueString()
-	}
-	queue.ResourcesMax = make(map[string]string)
-	for k, v := range m.ResourcesMax {
-		queue.ResourcesMax[k] = v.ValueString()
-	}
-	queue.ResourcesMin = make(map[string]string)
-	for k, v := range m.ResourcesMin {
-		queue.ResourcesMin[k] = v.ValueString()
-	}
+
+	// Set non-pointer computed fields using utility functions
+	queue.MaxGroupRes = ConvertTypesStringMap(m.MaxGroupRes)
+	queue.MaxGroupResSoft = ConvertTypesStringMap(m.MaxGroupResSoft)
+	queue.MaxQueued = ConvertTypesStringMap(m.MaxQueued)
+	queue.MaxQueuedRes = ConvertTypesStringMap(m.MaxQueuedRes)
+	queue.MaxRun = ConvertTypesStringMap(m.MaxRun)
+	queue.MaxRunRes = ConvertTypesStringMap(m.MaxRunRes)
+	queue.MaxRunResSoft = ConvertTypesStringMap(m.MaxRunResSoft)
+	queue.MaxRunSoft = ConvertTypesStringMap(m.MaxRunSoft)
+	queue.MaxUserRes = ConvertTypesStringMap(m.MaxUserRes)
+	queue.MaxUserResSoft = ConvertTypesStringMap(m.MaxUserResSoft)
+	queue.ResourcesAssigned = ConvertTypesStringMap(m.ResourcesAssigned)
+	queue.ResourcesAvailable = ConvertTypesStringMap(m.ResourcesAvailable)
+	queue.ResourcesDefault = ConvertTypesStringMap(m.ResourcesDefault)
+	queue.ResourcesMax = ConvertTypesStringMap(m.ResourcesMax)
+	queue.ResourcesMin = ConvertTypesStringMap(m.ResourcesMin)
 
 	return queue, diags
 }
 
 func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	model := queueModel{
+		ID:        types.StringValue(queue.Name), // Use name as ID
 		Name:      types.StringValue(queue.Name),
 		Enabled:   types.BoolValue(queue.Enabled),
 		Started:   types.BoolValue(queue.Started),
@@ -140,10 +134,20 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	}
 
 	model.AclGroupEnable = types.BoolPointerValue(queue.AclGroupEnable)
+	// Store the normalized version as received from PBS.
+	addNormalizedAclField(queue.AclGroups, &model.AclGroupsNormalized)
+	// For AclGroups, we'll preserve the user's format when available (handled in Create/Update).
+	// For Read operations, we'll use the PBS value.
 	model.AclGroups = types.StringPointerValue(queue.AclGroups)
 	model.AclHostEnable = types.BoolPointerValue(queue.AclHostEnable)
+	// Store the normalized version as received from PBS.
+	addNormalizedAclField(queue.AclHosts, &model.AclHostsNormalized)
+	// For AclHosts, we'll preserve the user's format when available (handled in Create/Update).
 	model.AclHosts = types.StringPointerValue(queue.AclHosts)
 	model.AclUserEnable = types.BoolPointerValue(queue.AclUserEnable)
+	// Store the normalized version as received from PBS.
+	addNormalizedAclField(queue.AclUsers, &model.AclUsersNormalized)
+	// For AclUsers, we'll preserve the user's format when available (handled in Create/Update).
 	model.AclUsers = types.StringPointerValue(queue.AclUsers)
 	model.AltRouter = types.StringPointerValue(queue.AltRouter)
 	model.BackfillDepth = types.Int32PointerValue(queue.BackfillDepth)
@@ -152,20 +156,10 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	model.FromRouteOnly = types.BoolPointerValue(queue.FromRouteOnly)
 	model.KillDelay = types.Int32PointerValue(queue.KillDelay)
 	model.MaxArraySize = types.Int32PointerValue(queue.MaxArraySize)
-	model.MaxGroupRes = types.Int32PointerValue(queue.MaxGroupRes)
-	model.MaxGroupResSoft = types.Int32PointerValue(queue.MaxGroupResSoft)
 	model.MaxGroupRun = types.Int32PointerValue(queue.MaxGroupRun)
 	model.MaxGroupRunSoft = types.Int32PointerValue(queue.MaxGroupRunSoft)
 	model.MaxQueuable = types.Int32PointerValue(queue.MaxQueuable)
-	model.MaxQueued = types.StringPointerValue(queue.MaxQueued)
-	model.MaxQueuedRes = types.StringPointerValue(queue.MaxQueuedRes)
-	model.MaxRun = types.StringPointerValue(queue.MaxRun)
-	model.MaxRunRes = types.StringPointerValue(queue.MaxRunRes)
-	model.MaxRunResSoft = types.StringPointerValue(queue.MaxRunResSoft)
-	model.MaxRunSoft = types.StringPointerValue(queue.MaxRunSoft)
 	model.MaxRunning = types.Int32PointerValue(queue.MaxRunning)
-	model.MaxUserRes = types.StringPointerValue(queue.MaxUserRes)
-	model.MaxUserResSoft = types.StringPointerValue(queue.MaxUserResSoft)
 	model.MaxUserRun = types.Int32PointerValue(queue.MaxUserRun)
 	model.MaxUserRunSoft = types.Int32PointerValue(queue.MaxUserRunSoft)
 	model.NodeGroupKey = types.StringPointerValue(queue.NodeGroupKey)
@@ -179,41 +173,96 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	model.RouteRetryTime = types.Int32PointerValue(queue.RouteRetryTime)
 	model.RouteWaitingJobs = types.BoolPointerValue(queue.RouteWaitingJobs)
 
+	if queue.MaxGroupRes != nil {
+		model.MaxGroupRes = convertStringMapToTypesStringMap(queue.MaxGroupRes)
+	}
+	if queue.MaxGroupResSoft != nil {
+		model.MaxGroupResSoft = convertStringMapToTypesStringMap(queue.MaxGroupResSoft)
+	}
+	if queue.MaxQueued != nil {
+		model.MaxQueued = convertStringMapToTypesStringMap(queue.MaxQueued)
+	}
+	if queue.MaxQueuedRes != nil {
+		model.MaxQueuedRes = convertStringMapToTypesStringMap(queue.MaxQueuedRes)
+	}
+	if queue.MaxRun != nil {
+		model.MaxRun = convertStringMapToTypesStringMap(queue.MaxRun)
+	}
+	if queue.MaxRunRes != nil {
+		model.MaxRunRes = convertStringMapToTypesStringMap(queue.MaxRunRes)
+	}
+	if queue.MaxRunResSoft != nil {
+		model.MaxRunResSoft = convertStringMapToTypesStringMap(queue.MaxRunResSoft)
+	}
+	if queue.MaxRunSoft != nil {
+		model.MaxRunSoft = convertStringMapToTypesStringMap(queue.MaxRunSoft)
+	}
+	if queue.MaxUserRes != nil {
+		model.MaxUserRes = convertStringMapToTypesStringMap(queue.MaxUserRes)
+	}
+	if queue.MaxUserResSoft != nil {
+		model.MaxUserResSoft = convertStringMapToTypesStringMap(queue.MaxUserResSoft)
+	}
+
 	if queue.ResourcesAssigned != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.ResourcesAssigned {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesAssigned = elements
+		model.ResourcesAssigned = convertStringMapToTypesStringMap(queue.ResourcesAssigned)
 	}
 	if queue.ResourcesAvailable != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.ResourcesAvailable {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesAvailable = elements
+		model.ResourcesAvailable = convertStringMapToTypesStringMap(queue.ResourcesAvailable)
 	}
 	if queue.ResourcesDefault != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.ResourcesDefault {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesDefault = elements
+		model.ResourcesDefault = convertStringMapToTypesStringMap(queue.ResourcesDefault)
 	}
 	if queue.ResourcesMax != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.ResourcesMax {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesMax = elements
+		model.ResourcesMax = convertStringMapToTypesStringMap(queue.ResourcesMax)
 	}
 	if queue.ResourcesMin != nil {
-		elements := make(map[string]types.String, 0)
-		for k, v := range queue.ResourcesMin {
-			elements[k] = types.StringValue(v)
-		}
-		model.ResourcesMin = elements
+		model.ResourcesMin = convertStringMapToTypesStringMap(queue.ResourcesMin)
 	}
 
 	return model
+}
+
+// preserveUserAclFormat preserves user-provided ACL field formats from plan in the result model.
+func preserveUserAclFormat(planModel, resultModel *queueModel) {
+	planFields := []AclFieldPair{
+		{UserField: planModel.AclGroups, NormalizedField: planModel.AclGroupsNormalized},
+		{UserField: planModel.AclHosts, NormalizedField: planModel.AclHostsNormalized},
+		{UserField: planModel.AclUsers, NormalizedField: planModel.AclUsersNormalized},
+	}
+
+	resultFields := []AclFieldPair{
+		{UserField: resultModel.AclGroups, NormalizedField: resultModel.AclGroupsNormalized},
+		{UserField: resultModel.AclHosts, NormalizedField: resultModel.AclHostsNormalized},
+		{UserField: resultModel.AclUsers, NormalizedField: resultModel.AclUsersNormalized},
+	}
+
+	preserveUserAclFormats(planFields, resultFields)
+
+	// Update the result model with preserved values
+	resultModel.AclGroups = resultFields[0].UserField
+	resultModel.AclHosts = resultFields[1].UserField
+	resultModel.AclUsers = resultFields[2].UserField
+}
+
+// preserveUserAclFormatFromState preserves user-provided ACL field formats from state when semantically equivalent.
+func preserveUserAclFormatFromState(state, updatedState *queueModel) {
+	stateFields := []AclFieldPair{
+		{UserField: state.AclGroups, NormalizedField: state.AclGroupsNormalized},
+		{UserField: state.AclHosts, NormalizedField: state.AclHostsNormalized},
+		{UserField: state.AclUsers, NormalizedField: state.AclUsersNormalized},
+	}
+
+	updatedFields := []AclFieldPair{
+		{UserField: updatedState.AclGroups, NormalizedField: updatedState.AclGroupsNormalized},
+		{UserField: updatedState.AclHosts, NormalizedField: updatedState.AclHostsNormalized},
+		{UserField: updatedState.AclUsers, NormalizedField: updatedState.AclUsersNormalized},
+	}
+
+	preserveUserAclFormatsFromState(stateFields, updatedFields)
+
+	// Update the updated state with preserved values
+	updatedState.AclGroups = updatedFields[0].UserField
+	updatedState.AclHosts = updatedFields[1].UserField
+	updatedState.AclUsers = updatedFields[2].UserField
 }

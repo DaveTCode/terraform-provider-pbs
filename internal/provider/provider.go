@@ -50,21 +50,21 @@ func (p *pbsProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"server": schema.StringAttribute{
-				Optional:    true,
-				Description: "The PBS server address",
+				Optional:            true,
+				MarkdownDescription: "The PBS server address",
 			},
 			"sshport": schema.StringAttribute{
-				Optional:    true,
-				Description: "The PBS server SSH port",
+				Optional:            true,
+				MarkdownDescription: "The PBS server SSH port",
 			},
 			"username": schema.StringAttribute{
-				Optional:    true,
-				Description: "An SSH username with access to run qmgr commands on the PBS server",
+				Optional:            true,
+				MarkdownDescription: "An SSH username with access to run qmgr commands on the PBS server",
 			},
 			"password": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "The password for the SSH username",
+				Optional:            true,
+				Sensitive:           true,
+				MarkdownDescription: "The password for the SSH username",
 			},
 		},
 	}

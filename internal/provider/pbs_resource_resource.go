@@ -32,25 +32,29 @@ func (r *pbsResourceResource) Metadata(_ context.Context, req resource.MetadataR
 }
 
 func (r *pbsResourceResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{ // TODO - How to avoid duplication of this schema with data source?
+	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: DescPbsResourceID,
+			},
 			"name": schema.StringAttribute{
-				Description: "The unique name of the resource on the server",
-				Required:    true,
+				MarkdownDescription: DescPbsResourceName,
+				Required:            true,
 			},
 			"type": schema.StringAttribute{
-				Description: "What data type the resource takes, this can be one of boolean, string, long, size, float, string_array",
-				Required:    true,
+				MarkdownDescription: DescPbsResourceType,
+				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
 						regexp.MustCompile("^(boolean|string|long|size|float|string_array)$"),
-						"resource type must be one of 'execution' or 'route'",
+						"resource type must be one of boolean|string|long|size|float|string_array",
 					),
 				},
 			},
 			"flag": schema.StringAttribute{
-				Description: "One of the flags specifying where the resource is defined (f, fh, nh, q, m) and the ones defining it's visibility (i, r)",
-				Optional:    true,
+				MarkdownDescription: DescPbsResourceFlag,
+				Optional:            true,
 				// TODO - Validators for the flags when I understand them better
 			},
 		},
@@ -109,7 +113,13 @@ func (r *pbsResourceResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	pbsResource, err := r.client.GetResource(data.Name.ValueString())
+	// For import, use ID if name is not set
+	resourceName := data.Name.ValueString()
+	if resourceName == "" && !data.ID.IsNull() {
+		resourceName = data.ID.ValueString()
+	}
+
+	pbsResource, err := r.client.GetResource(resourceName)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read resources, got error: %s", err))
 		return
@@ -131,7 +141,7 @@ func (r *pbsResourceResource) Update(ctx context.Context, req resource.UpdateReq
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	_, err := r.client.UpdateResource(data.ToPbsResource())
+	updatedResource, err := r.client.UpdateResource(data.ToPbsResource())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Update Resource",
@@ -143,8 +153,11 @@ func (r *pbsResourceResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Create the model from the updated resource to ensure all fields including ID are properly set
+	updatedModel := createPbsResoureModel(updatedResource)
+
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedModel)...)
 }
 
 func (r *pbsResourceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -164,5 +177,6 @@ func (r *pbsResourceResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *pbsResourceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	// Use the standard passthrough for ID, which will set both id and trigger a Read
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

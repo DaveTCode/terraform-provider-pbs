@@ -7,6 +7,7 @@ import (
 )
 
 type pbsNodeModel struct {
+	ID                 types.String            `tfsdk:"id"`
 	Comment            types.String            `tfsdk:"comment"`
 	CurrentAoe         types.String            `tfsdk:"current_aoe"`
 	CurrentEoe         types.String            `tfsdk:"current_eoe"`
@@ -17,7 +18,7 @@ type pbsNodeModel struct {
 	Partition          types.String            `tfsdk:"partition"`
 	PNames             types.String            `tfsdk:"p_names"`
 	Port               types.Int32             `tfsdk:"port"`
-	PowerOffEligible   types.Bool              `tfsdk:"power_off_eligible"`
+	PowerOffEligible   types.Bool              `tfsdk:"poweroff_eligible"`
 	PowerProvisioning  types.Bool              `tfsdk:"power_provisioning"`
 	Priority           types.Int32             `tfsdk:"priority"`
 	ProvisionEnable    types.Bool              `tfsdk:"provision_enable"`
@@ -28,39 +29,38 @@ type pbsNodeModel struct {
 
 func (m pbsNodeModel) ToPbsNode() pbsclient.PbsNode {
 	node := pbsclient.PbsNode{
-		Comment:           m.Comment.ValueStringPointer(),
-		CurrentAoe:        m.CurrentAoe.ValueStringPointer(),
-		CurrentEoe:        m.CurrentEoe.ValueStringPointer(),
-		InMultiNodeHost:   m.InMultiNodeHost.ValueInt32Pointer(),
-		Mom:               m.Mom.ValueStringPointer(),
-		Name:              m.Name.ValueString(),
-		NoMultinodeJobs:   m.NoMultinodeJobs.ValueBoolPointer(),
-		Partition:         m.Partition.ValueStringPointer(),
-		PNames:            m.PNames.ValueStringPointer(),
-		Port:              m.Port.ValueInt32Pointer(),
-		PowerOffEligible:  m.PowerOffEligible.ValueBoolPointer(),
-		PowerProvisioning: m.PowerProvisioning.ValueBoolPointer(),
-		Priority:          m.Priority.ValueInt32Pointer(),
-		ProvisionEnable:   m.ProvisionEnable.ValueBoolPointer(),
-		Queue:             m.Queue.ValueStringPointer(),
-		ResvEnable:        m.ResvEnable.ValueBoolPointer(),
+		Name: m.Name.ValueString(),
 	}
 
-	node.ResourcesAvailable = make(map[string]string)
-	for k, v := range m.ResourcesAvailable {
-		// This is a bit hacky but the host and vnode attributes arent something you can
-		// set on the resources_available so we don't want terraform getting confused about
-		// what it's managing
-		if k != "host" && k != "vnode" {
-			node.ResourcesAvailable[k] = v.ValueString()
-		}
-	}
+	// Set pointer fields using utility functions for null checking
+	SetStringPointerIfNotNull(m.Comment, &node.Comment)
+	SetStringPointerIfNotNull(m.CurrentAoe, &node.CurrentAoe)
+	SetStringPointerIfNotNull(m.CurrentEoe, &node.CurrentEoe)
+	SetInt32PointerIfNotNull(m.InMultiNodeHost, &node.InMultiNodeHost)
+	SetStringPointerIfNotNull(m.Mom, &node.Mom)
+	SetBoolPointerIfNotNull(m.NoMultinodeJobs, &node.NoMultinodeJobs)
+	SetStringPointerIfNotNull(m.Partition, &node.Partition)
+	SetStringPointerIfNotNull(m.PNames, &node.PNames)
+	SetInt32PointerIfNotNull(m.Port, &node.Port)
+	SetBoolPointerIfNotNull(m.PowerOffEligible, &node.PowerOffEligible)
+	SetBoolPointerIfNotNull(m.PowerProvisioning, &node.PowerProvisioning)
+	SetInt32PointerIfNotNull(m.Priority, &node.Priority)
+	SetBoolPointerIfNotNull(m.ProvisionEnable, &node.ProvisionEnable)
+	SetStringPointerIfNotNull(m.Queue, &node.Queue)
+	SetBoolPointerIfNotNull(m.ResvEnable, &node.ResvEnable)
+
+	// Convert ResourcesAvailable map, excluding 'host' and 'vnode' keys
+	// This is a bit hacky but the host and vnode attributes aren't something you can
+	// set on the resources_available so we don't want terraform getting confused about
+	// what it's managing
+	node.ResourcesAvailable = ConvertTypesStringMapFiltered(m.ResourcesAvailable, []string{"host", "vnode"})
 
 	return node
 }
 
 func createPbsNodeModel(h pbsclient.PbsNode) pbsNodeModel {
 	model := pbsNodeModel{
+		ID:   types.StringValue(h.Name), // Use name as ID
 		Name: types.StringValue(h.Name),
 	}
 
@@ -80,15 +80,28 @@ func createPbsNodeModel(h pbsclient.PbsNode) pbsNodeModel {
 	model.Queue = types.StringPointerValue(h.Queue)
 	model.ResvEnable = types.BoolPointerValue(h.ResvEnable)
 
-	model.ResourcesAvailable = make(map[string]types.String)
-	for k, v := range h.ResourcesAvailable {
-		// This is a bit hacky but the host and vnode attributes arent something you can
-		// set on the resources_available so we don't want terraform getting confused about
-		// what it's managing
+	// Only set ResourcesAvailable if there are actually resources to set
+	// (excluding host and vnode which are PBS internal)
+	hasResources := false
+	for k := range h.ResourcesAvailable {
 		if k != "host" && k != "vnode" {
-			model.ResourcesAvailable[k] = types.StringValue(v)
+			hasResources = true
+			break
 		}
 	}
+
+	if hasResources {
+		model.ResourcesAvailable = make(map[string]types.String)
+		for k, v := range h.ResourcesAvailable {
+			// This is a bit hacky but the host and vnode attributes arent something you can
+			// set on the resources_available so we don't want terraform getting confused about
+			// what it's managing
+			if k != "host" && k != "vnode" {
+				model.ResourcesAvailable[k] = types.StringValue(v)
+			}
+		}
+	}
+	// If hasResources is false, leave ResourcesAvailable as nil (null in Terraform)
 
 	return model
 }

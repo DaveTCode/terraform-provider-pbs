@@ -2,9 +2,40 @@ package pbsclient
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
+
+// nodeFieldDefinition represents a node field with its attribute name, execution order, and value extractor.
+type nodeFieldDefinition struct {
+	attribute string
+	order     int                    // Lower numbers execute first
+	getValue  func(node PbsNode) any // Function to extract the value from a PbsNode
+}
+
+// getNodeFieldDefinitions returns the ordered list of node field definitions.
+// This ensures consistent ordering across create and update operations.
+func getNodeFieldDefinitions() []nodeFieldDefinition {
+	return []nodeFieldDefinition{
+		{"comment", 10, func(n PbsNode) any { return n.Comment }},
+		{"current_aoe", 10, func(n PbsNode) any { return n.CurrentAoe }},
+		{"current_eoe", 10, func(n PbsNode) any { return n.CurrentEoe }},
+		{"in_multi_node_host", 10, func(n PbsNode) any { return n.InMultiNodeHost }},
+		{"jobs", 10, func(n PbsNode) any { return n.Jobs }},
+		{"no_multinode_jobs", 10, func(n PbsNode) any { return n.NoMultinodeJobs }},
+		{"partition", 10, func(n PbsNode) any { return n.Partition }},
+		{"p_names", 10, func(n PbsNode) any { return n.PNames }},
+		{"poweroff_eligible", 10, func(n PbsNode) any { return n.PowerOffEligible }},
+		{"power_provisioning", 10, func(n PbsNode) any { return n.PowerProvisioning }},
+		{"priority", 10, func(n PbsNode) any { return n.Priority }},
+		{"provision_enable", 10, func(n PbsNode) any { return n.ProvisionEnable }},
+		{"queue", 10, func(n PbsNode) any { return n.Queue }},
+		{"resources_available", 10, func(n PbsNode) any { return n.ResourcesAvailable }},
+		{"resv", 10, func(n PbsNode) any { return n.Resv }},
+		{"resv_enable", 10, func(n PbsNode) any { return n.ResvEnable }},
+	}
+}
 
 type PbsNode struct {
 	Comment             *string
@@ -126,7 +157,7 @@ func parseNodeOutput(output []byte) ([]PbsNode, error) {
 						}
 						i32Value := int32(intValue)
 						current.Port = &i32Value
-					case "power_off_eligible":
+					case "poweroff_eligible":
 						boolValue, err := strconv.ParseBool(s)
 						if err != nil {
 
@@ -229,29 +260,16 @@ func (c *PbsClient) CreateNode(newNode PbsNode) (PbsNode, error) {
 		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create node %s %s'", newNode.Name, extraSettingsOnBaseCmd),
 	}
 
-	fields := []struct {
-		attribute string
-		newAttr   any
-	}{
-		{"comment", newNode.Comment},
-		{"current_aoe", newNode.CurrentAoe},
-		{"current_eoe", newNode.CurrentEoe},
-		{"in_multi_node_host", newNode.InMultiNodeHost},
-		{"jobs", newNode.Jobs},
-		{"no_multinode_jobs", newNode.NoMultinodeJobs},
-		{"partition", newNode.Partition},
-		{"p_names", newNode.PNames},
-		{"power_off_eligible", newNode.PowerOffEligible},
-		{"power_provisioning", newNode.PowerProvisioning},
-		{"priority", newNode.Priority},
-		{"provision_enable", newNode.ProvisionEnable},
-		{"queue", newNode.Queue},
-		{"resources_available", newNode.ResourcesAvailable},
-		{"resv", newNode.Resv},
-		{"resv_enable", newNode.ResvEnable},
-	}
-	for _, v := range fields {
-		c, err := generateCreateCommands(v.newAttr, "node", newNode.Name, v.attribute)
+	// Get field definitions and sort by order
+	fieldDefs := getNodeFieldDefinitions()
+	sort.Slice(fieldDefs, func(i, j int) bool {
+		return fieldDefs[i].order < fieldDefs[j].order
+	})
+
+	// Process fields in order
+	for _, fieldDef := range fieldDefs {
+		value := fieldDef.getValue(newNode)
+		c, err := generateCreateCommands(value, "node", newNode.Name, fieldDef.attribute)
 		if err != nil {
 			return PbsNode{}, err
 		}
@@ -277,34 +295,24 @@ func (c *PbsClient) UpdateNode(newNode PbsNode) (PbsNode, error) {
 	}
 
 	var commands = []string{}
-	fields := []struct {
-		attribute string
-		oldAttr   any
-		newAttr   any
-	}{
-		{"comment", oldNode.Comment, newNode.Comment},
-		{"current_aoe", oldNode.CurrentAoe, newNode.CurrentAoe},
-		{"current_eoe", oldNode.CurrentEoe, newNode.CurrentEoe},
-		{"in_multi_node_host", oldNode.InMultiNodeHost, newNode.InMultiNodeHost},
-		{"no_multinode_jobs", oldNode.NoMultinodeJobs, newNode.NoMultinodeJobs},
-		{"partition", oldNode.Partition, newNode.Partition},
-		{"p_names", oldNode.PNames, newNode.PNames},
-		{"power_off_eligible", oldNode.PowerOffEligible, newNode.PowerOffEligible},
-		{"power_provisioning", oldNode.PowerProvisioning, newNode.PowerProvisioning},
-		{"priority", oldNode.Priority, newNode.Priority},
-		{"provision_enable", oldNode.ProvisionEnable, newNode.ProvisionEnable},
-		{"queue", oldNode.Queue, newNode.Queue},
-		{"resources_available", oldNode.ResourcesAvailable, newNode.ResourcesAvailable},
-		{"resv_enable", oldNode.ResvEnable, newNode.ResvEnable},
-	}
+
+	// Get field definitions and sort by order
+	fieldDefs := getNodeFieldDefinitions()
+	sort.Slice(fieldDefs, func(i, j int) bool {
+		return fieldDefs[i].order < fieldDefs[j].order
+	})
 
 	// Horrible hack because host and vnode are properties in the resources_available map but actually set by the MoM not the user
 	delete(oldNode.ResourcesAvailable, "host")
 	delete(oldNode.ResourcesAvailable, "vnode")
 	delete(newNode.ResourcesAvailable, "host")
 	delete(newNode.ResourcesAvailable, "vnode")
-	for _, v := range fields {
-		newCommands, err := generateUpdateAttributeCommand(v.oldAttr, v.newAttr, "node", newNode.Name, v.attribute)
+
+	// Process fields in order
+	for _, fieldDef := range fieldDefs {
+		oldValue := fieldDef.getValue(oldNode)
+		newValue := fieldDef.getValue(newNode)
+		newCommands, err := generateUpdateAttributeCommand(oldValue, newValue, "node", newNode.Name, fieldDef.attribute)
 		if err != nil {
 			return oldNode, err
 		}

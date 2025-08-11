@@ -2,9 +2,34 @@ package pbsclient
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
+
+// hookFieldDefinition represents a hook field with its attribute name, execution order, and value extractor.
+type hookFieldDefinition struct {
+	attribute string
+	order     int                    // Lower numbers execute first
+	getValue  func(hook PbsHook) any // Function to extract the value from a PbsHook
+}
+
+// getHookFieldDefinitions returns the ordered list of hook field definitions.
+// This ensures consistent ordering across create and update operations.
+func getHookFieldDefinitions() []hookFieldDefinition {
+	return []hookFieldDefinition{
+		{"alarm", 10, func(h PbsHook) any { return h.Alarm }},
+		{"debug", 10, func(h PbsHook) any { return h.Debug }},
+		{"event", 10, func(h PbsHook) any { return h.Event }},
+		{"fail_action", 10, func(h PbsHook) any { return h.FailAction }},
+		{"freq", 10, func(h PbsHook) any { return h.Freq }},
+		{"order", 10, func(h PbsHook) any { return h.Order }},
+		{"type", 10, func(h PbsHook) any { return h.Type }},
+		{"user", 10, func(h PbsHook) any { return h.User }},
+		// Enable the hook last - similar to queue pattern
+		{"enabled", 90, func(h PbsHook) any { return h.Enabled }},
+	}
+}
 
 type PbsHook struct {
 	Alarm      *int32
@@ -116,22 +141,16 @@ func (c *PbsClient) CreateHook(newHook PbsHook) (PbsHook, error) {
 		fmt.Sprintf("/opt/pbs/bin/qmgr -c 'create hook %s'", newHook.Name),
 	}
 
-	fields := []struct {
-		attribute string
-		newAttr   any
-	}{
-		{"alarm", newHook.Alarm},
-		{"debug", newHook.Debug},
-		{"enabled", newHook.Enabled},
-		{"event", newHook.Event},
-		{"fail_action", newHook.FailAction},
-		{"freq", newHook.Freq},
-		{"order", newHook.Order},
-		{"type", newHook.Type},
-		{"user", newHook.User},
-	}
-	for _, v := range fields {
-		c, err := generateCreateCommands(v.newAttr, "hook", newHook.Name, v.attribute)
+	// Get field definitions and sort by order
+	fieldDefs := getHookFieldDefinitions()
+	sort.Slice(fieldDefs, func(i, j int) bool {
+		return fieldDefs[i].order < fieldDefs[j].order
+	})
+
+	// Process fields in order
+	for _, fieldDef := range fieldDefs {
+		value := fieldDef.getValue(newHook)
+		c, err := generateCreateCommands(value, "hook", newHook.Name, fieldDef.attribute)
 		if err != nil {
 			return PbsHook{}, err
 		}
@@ -157,23 +176,18 @@ func (c *PbsClient) UpdateHook(newHook PbsHook) (PbsHook, error) {
 	}
 
 	var commands = []string{}
-	fields := []struct {
-		attribute string
-		oldAttr   any
-		newAttr   any
-	}{
-		{"alarm", oldHook.Alarm, newHook.Alarm},
-		{"debug", oldHook.Debug, newHook.Debug},
-		{"enabled", oldHook.Enabled, newHook.Enabled},
-		{"event", oldHook.Event, newHook.Event},
-		{"fail_action", oldHook.FailAction, newHook.FailAction},
-		{"freq", oldHook.Freq, newHook.Freq},
-		{"order", oldHook.Order, newHook.Order},
-		{"type", oldHook.Type, newHook.Type},
-		{"user", oldHook.User, newHook.User},
-	}
-	for _, v := range fields {
-		newCommands, err := generateUpdateAttributeCommand(v.oldAttr, v.newAttr, "hook", newHook.Name, v.attribute)
+
+	// Get field definitions and sort by order
+	fieldDefs := getHookFieldDefinitions()
+	sort.Slice(fieldDefs, func(i, j int) bool {
+		return fieldDefs[i].order < fieldDefs[j].order
+	})
+
+	// Process fields in order
+	for _, fieldDef := range fieldDefs {
+		oldValue := fieldDef.getValue(oldHook)
+		newValue := fieldDef.getValue(newHook)
+		newCommands, err := generateUpdateAttributeCommand(oldValue, newValue, "hook", newHook.Name, fieldDef.attribute)
 		if err != nil {
 			return oldHook, err
 		}
