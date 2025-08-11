@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// testAccPreCheckSSHKey verifies SSH key authentication setup
+// testAccPreCheckSSHKey verifies SSH key authentication setup.
 func testAccPreCheckSSHKey(t *testing.T) {
 	// Run the standard pre-check first
 	testAccPreCheck(t)
@@ -30,7 +30,7 @@ func testAccPreCheckSSHKey(t *testing.T) {
 	}
 }
 
-// Test provider configuration with SSH key from environment
+// Test provider configuration with SSH key from environment.
 func TestAccProviderSSHKey_EnvironmentVariable(t *testing.T) {
 	// This test verifies that the provider can authenticate using SSH keys
 
@@ -53,7 +53,7 @@ func TestAccProviderSSHKey_EnvironmentVariable(t *testing.T) {
 	})
 }
 
-// Configuration using SSH key from environment variable
+// Configuration using SSH key from environment variable.
 func testAccProviderSSHKeyConfig(hookName string) string {
 	return fmt.Sprintf(`
 provider "pbs" {
@@ -79,7 +79,7 @@ resource "pbs_hook" "test" {
 	)
 }
 
-// Helper function to get SSH private key content for testing
+// Helper function to get SSH private key content for testing.
 func getTestSSHPrivateKey() (string, error) {
 	// Try direct key first
 	if key := os.Getenv("PBS_TEST_SSH_PRIVATE_KEY"); key != "" {
