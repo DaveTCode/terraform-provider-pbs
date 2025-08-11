@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"encoding/base64"
 	"fmt"
 	"os"
 	"testing"
@@ -14,19 +13,9 @@ func testAccPreCheckSSHKey(t *testing.T) {
 	// Run the standard pre-check first
 	testAccPreCheck(t)
 
-	// Check for SSH key environment variable
-	sshKey := os.Getenv("PBS_TEST_SSH_PRIVATE_KEY")
-
-	if sshKey == "" {
-		t.Skip("SSH key authentication tests require PBS_TEST_SSH_PRIVATE_KEY to be set")
-	}
-
-	// Verify the SSH key is parseable
-	if _, err := base64.StdEncoding.DecodeString(sshKey); err != nil {
-		// If it's not base64, try to parse it directly as a key
-		if _, err := os.ReadFile(sshKey); err != nil {
-			// If it's not a file, assume it's raw key content and that's fine
-		}
+	// Check for SSH key content environment variable
+	if sshKeyContent := os.Getenv("PBS_TEST_SSH_PRIVATE_KEY"); sshKeyContent == "" {
+		t.Skip("SSH key authentication tests require PBS_TEST_SSH_PRIVATE_KEY to be set with SSH private key content")
 	}
 }
 
@@ -60,15 +49,21 @@ provider "pbs" {
   server   = "%s"
   sshport  = "%s" 
   username = "%s"
-  ssh_private_key = base64decode("%s")
+  ssh_private_key = <<-EOT
+%s
+EOT
 }
 
 resource "pbs_hook" "test" {
-  name    = "%s"
-  type    = "site"
-  enabled = true
-  event   = "execjob_begin"
-  order   = 1
+  name        = "%s"
+  enabled     = true
+  debug       = true
+  event       = "execjob_begin"
+  order       = 1
+  type        = "site"
+  user        = "pbsadmin"
+  alarm       = 60
+  fail_action = "none"
 }
 `,
 		os.Getenv("PBS_TEST_SERVER"),
