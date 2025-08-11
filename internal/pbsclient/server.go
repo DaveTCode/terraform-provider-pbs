@@ -160,7 +160,7 @@ func getServerFieldDefinitions() []serverFieldDefinition {
 		{"pbs_license_min", 10, func(q PbsServer) any { return q.PbsLicenseMin }},
 		{"power_provisioning", 10, func(q PbsServer) any { return q.PowerProvisioning }},
 		{"python_gc_min_interval", 10, func(q PbsServer) any { return q.PythonGcMinInterval }},
-		{"python_restart_max_pbs_servers", 10, func(q PbsServer) any { return q.PythonRestartMaxPbsServers }},
+		{"python_restart_max_hooks", 10, func(q PbsServer) any { return q.PythonRestartMaxPbsServers }},
 		{"python_restart_max_objects", 10, func(q PbsServer) any { return q.PythonRestartMaxObjects }},
 		{"python_restart_min_interval", 10, func(q PbsServer) any { return q.PythonRestartMinInterval }},
 		{"query_other_jobs", 10, func(q PbsServer) any { return q.QueryOtherJobs }},
@@ -434,10 +434,10 @@ func parseServerOutput(output []byte) ([]PbsServer, error) {
 						}
 						int32Value := int32(intValue)
 						current.PythonGcMinInterval = &int32Value
-					case "python_restart_max_pbs_servers":
+					case "python_restart_max_hooks":
 						intValue, err := strconv.ParseInt(s, 10, 32)
 						if err != nil {
-							return nil, fmt.Errorf("failed to convert python_restart_max_pbs_servers value to int32 %s", err.Error())
+							return nil, fmt.Errorf("failed to convert python_restart_max_hooks value to int32 %s", err.Error())
 						}
 						int32Value := int32(intValue)
 						current.PythonRestartMaxPbsServers = &int32Value

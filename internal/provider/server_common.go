@@ -74,7 +74,7 @@ type serverModel struct {
 	PbsLicenseMin                 types.Int32             `tfsdk:"pbs_license_min"`
 	PowerProvisioning             types.Bool              `tfsdk:"power_provisioning"`
 	PythonGcMinInterval           types.Int32             `tfsdk:"python_gc_min_interval"`
-	PythonRestartMaxPbsServers    types.Int32             `tfsdk:"python_restart_max_pbs_servers"`
+	PythonRestartMaxHooks         types.Int32             `tfsdk:"python_restart_max_hooks"`
 	PythonRestartMaxObjects       types.Int32             `tfsdk:"python_restart_max_objects"`
 	PythonRestartMinInterval      types.String            `tfsdk:"python_restart_min_interval"`
 	QueryOtherJobs                types.Bool              `tfsdk:"query_other_jobs"`
@@ -151,7 +151,7 @@ func (m serverModel) ToPbsServer(ctx context.Context) pbsclient.PbsServer {
 	SetInt32PointerIfNotNull(m.PbsLicenseMin, &server.PbsLicenseMin)
 	SetBoolPointerIfNotNull(m.PowerProvisioning, &server.PowerProvisioning)
 	SetInt32PointerIfNotNull(m.PythonGcMinInterval, &server.PythonGcMinInterval)
-	SetInt32PointerIfNotNull(m.PythonRestartMaxPbsServers, &server.PythonRestartMaxPbsServers)
+	SetInt32PointerIfNotNull(m.PythonRestartMaxHooks, &server.PythonRestartMaxPbsServers)
 	SetInt32PointerIfNotNull(m.PythonRestartMaxObjects, &server.PythonRestartMaxObjects)
 	SetStringPointerIfNotNull(m.PythonRestartMinInterval, &server.PythonRestartMinInterval)
 	SetBoolPointerIfNotNull(m.QueryOtherJobs, &server.QueryOtherJobs)
@@ -322,7 +322,7 @@ func createServerModel(server pbsclient.PbsServer) serverModel {
 	model.PbsLicenseMin = types.Int32PointerValue(server.PbsLicenseMin)
 	model.PowerProvisioning = types.BoolPointerValue(server.PowerProvisioning)
 	model.PythonGcMinInterval = types.Int32PointerValue(server.PythonGcMinInterval)
-	model.PythonRestartMaxPbsServers = types.Int32PointerValue(server.PythonRestartMaxPbsServers)
+	model.PythonRestartMaxHooks = types.Int32PointerValue(server.PythonRestartMaxPbsServers)
 	model.PythonRestartMaxObjects = types.Int32PointerValue(server.PythonRestartMaxObjects)
 	model.PythonRestartMinInterval = types.StringPointerValue(server.PythonRestartMinInterval)
 	model.QueryOtherJobs = types.BoolPointerValue(server.QueryOtherJobs)

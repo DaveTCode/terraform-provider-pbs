@@ -26,17 +26,20 @@ func (d *pbsResourceDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed:    true,
-				Description: "The unique identifier for this resource. This is the same as the name.",
+				Computed:            true,
+				MarkdownDescription: DescPbsResourceID,
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: DescPbsResourceName,
 			},
 			"type": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescPbsResourceType,
 			},
 			"flag": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: DescPbsResourceFlag,
 			},
 		},
 	}

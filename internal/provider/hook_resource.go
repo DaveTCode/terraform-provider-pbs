@@ -36,57 +36,57 @@ func (r *pbsHookResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 	resp.Schema = schema.Schema{ // TODO - How to avoid duplication of this schema with data source?
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed:    true,
-				Description: "The unique identifier for this hook. This is the same as the name.",
+				Computed:            true,
+				MarkdownDescription: DescHookID,
 			},
 			"alarm": schema.Int32Attribute{
-				Description: "Specifies the number of seconds to allow a hook to run before the hook times out.",
-				Optional:    true,
+				MarkdownDescription: DescHookAlarm,
+				Optional:            true,
 				Validators: []validator.Int32{
 					int32validator.AtLeast(1),
 				},
 			},
 			"debug": schema.BoolAttribute{
-				Description: "debugging files under PBS_HOME/server_priv/hooks/tmp or PBS_HOME/mom_priv/hooks/tmp.  Files are named hook_<hook event>_<hook name>_<unique ID>.in, .data, and .out",
-				Optional:    true,
+				MarkdownDescription: DescHookDebug,
+				Optional:            true,
 			},
 			"enabled": schema.BoolAttribute{
-				Description: " Determines whether or not a hook  is  run when its triggering event occurs.",
-				Optional:    true,
+				MarkdownDescription: DescHookEnabled,
+				Optional:            true,
 			},
 			"event": schema.StringAttribute{
-				Description: "List of events that trigger the hook. The provision event cannot be combined with any other events.",
-				Optional:    true,
+				MarkdownDescription: DescHookEvent,
+				Optional:            true,
 			},
 			"fail_action": schema.StringAttribute{
-				MarkdownDescription: "Specifies the action to be taken when hook fails due to alarm call or unhandled exception, or to an internal error such as not enough disk space or memory.  Can also specify a subsequent action to be taken when hook runs successfully.  Value can be either `none` or one or more of `offline_vnodes`, `clear_vnodes_upon_recovery`, and `scheduler_restart_cycle`. If this attribute is set to multiple values, scheduler restart happens last.",
+				MarkdownDescription: DescHookFailAction,
 				Optional:            true,
 			},
 			"freq": schema.Int32Attribute{
-				MarkdownDescription: " Number of seconds between `periodic` or `exechost_periodic` triggers.",
+				MarkdownDescription: DescHookFreq,
 				Optional:            true,
 			},
 			"name": schema.StringAttribute{
-				Description: "The unique name of the hook on the server",
-				Required:    true,
+				MarkdownDescription: DescHookName,
+				Required:            true,
 			},
 			"order": schema.Int32Attribute{
-				Description: "Indicates relative order of hook execution, for hooks of the same type sharing a trigger.  Hooks with lower order values execute before those with higher values. Does not apply to periodic or exechost_periodic hooks. ",
-				Optional:    true,
+				MarkdownDescription: DescHookOrder,
+				Optional:            true,
 				Validators: []validator.Int32{
 					int32validator.Between(-1000, 2000), // Range: built-in hooks: [-1000, 2000] site hooks: [1,1000] but we are not enforcing this
 				},
 			},
 			"type": schema.StringAttribute{
-				Description: "The type of the hook. Cannot be set for a built-in hook.",
-				Optional:    true,
+				MarkdownDescription: DescHookType,
+				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("site", "pbs"),
 				},
 			},
 			"user": schema.StringAttribute{
-				Description: "Specifies who executes the hook.",
-				Optional:    true,
+				MarkdownDescription: DescHookUser,
+				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("pbsadmin", "pbsuser"),
 				},
