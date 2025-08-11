@@ -86,15 +86,11 @@ jobs:
         run: |
           make test-setup
           
-      - name: Run Queue Resource Tests
+      - name: Run All Acceptance Tests (Password + SSH Key)
         env:
           TF_ACC: 1
-          PBS_TEST_SERVER: localhost
-          PBS_TEST_PORT: 2222
-          PBS_TEST_USERNAME: root
-          PBS_TEST_PASSWORD: pbs
         run: |
-          make testacc
+          make testacc-all-docker
           
       - name: Collect PBS logs on failure
         if: failure()
