@@ -33,11 +33,11 @@ func testAccPreCheckSSHKey(t *testing.T) {
 // Test provider configuration with SSH key from environment
 func TestAccProviderSSHKey_EnvironmentVariable(t *testing.T) {
 	// This test verifies that the provider can authenticate using SSH keys
-	
+
 	hookName := testAccResourceName("ssh_test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheckSSHKey(t) },
+		PreCheck:                 func() { testAccPreCheckSSHKey(t) },
 		ProtoV6ProviderFactories: testAccProviderFactories,
 		CheckDestroy:             testAccCheckHookDestroy,
 		Steps: []resource.TestStep{
