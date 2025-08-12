@@ -16,7 +16,7 @@ type pbsNodeModel struct {
 	Name               types.String            `tfsdk:"name"`
 	NoMultinodeJobs    types.Bool              `tfsdk:"no_multinode_jobs"`
 	Partition          types.String            `tfsdk:"partition"`
-	PNames             types.String            `tfsdk:"p_names"`
+	PNames             types.String            `tfsdk:"pnames"`
 	Port               types.Int32             `tfsdk:"port"`
 	PowerOffEligible   types.Bool              `tfsdk:"poweroff_eligible"`
 	PowerProvisioning  types.Bool              `tfsdk:"power_provisioning"`

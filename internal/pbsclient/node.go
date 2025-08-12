@@ -25,7 +25,7 @@ func getNodeFieldDefinitions() []nodeFieldDefinition {
 		{"jobs", 10, func(n PbsNode) any { return n.Jobs }},
 		{"no_multinode_jobs", 10, func(n PbsNode) any { return n.NoMultinodeJobs }},
 		{"partition", 10, func(n PbsNode) any { return n.Partition }},
-		{"p_names", 10, func(n PbsNode) any { return n.PNames }},
+		{"pnames", 10, func(n PbsNode) any { return n.PNames }},
 		{"poweroff_eligible", 10, func(n PbsNode) any { return n.PowerOffEligible }},
 		{"power_provisioning", 10, func(n PbsNode) any { return n.PowerProvisioning }},
 		{"priority", 10, func(n PbsNode) any { return n.Priority }},

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"terraform-provider-pbs/internal/pbsclient"
+	validators "terraform-provider-pbs/internal/provider/validators"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -57,10 +58,16 @@ func (r *pbsHookResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"event": schema.StringAttribute{
 				MarkdownDescription: DescHookEvent,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"fail_action": schema.StringAttribute{
 				MarkdownDescription: DescHookFailAction,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"freq": schema.Int32Attribute{
 				MarkdownDescription: DescHookFreq,
@@ -69,6 +76,9 @@ func (r *pbsHookResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"name": schema.StringAttribute{
 				MarkdownDescription: DescHookName,
 				Required:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"order": schema.Int32Attribute{
 				MarkdownDescription: DescHookOrder,

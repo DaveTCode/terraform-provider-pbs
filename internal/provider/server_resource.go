@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"terraform-provider-pbs/internal/pbsclient"
+	validators "terraform-provider-pbs/internal/provider/validators"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -50,6 +51,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"acl_hosts": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerAclHosts,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"acl_hosts_normalized": schema.StringAttribute{
 				Computed:            true,
@@ -62,6 +66,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"acl_resv_groups": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerAclResvGroups,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"acl_resv_groups_normalized": schema.StringAttribute{
 				Computed:            true,
@@ -74,6 +81,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"acl_resv_hosts": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerAclResvHosts,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"acl_resv_hosts_normalized": schema.StringAttribute{
 				Computed:            true,
@@ -86,6 +96,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"acl_resv_users": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerAclResvUsers,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"acl_resv_users_normalized": schema.StringAttribute{
 				Computed:            true,
@@ -94,6 +107,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"acl_roots": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerAclRoots,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"acl_roots_normalized": schema.StringAttribute{
 				Computed:            true,
@@ -106,6 +122,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"acl_users": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerAclUsers,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"acl_users_normalized": schema.StringAttribute{
 				Computed:            true,
@@ -121,6 +140,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"comment": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerComment,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"default_chunk": schema.MapAttribute{
 				Optional:            true,
@@ -130,14 +152,23 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"default_qdel_arguments": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerDefaultQdelArguments,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"default_qsub_arguments": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerDefaultQsubArguments,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"default_queue": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerDefaultQueue,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"eligible_time_enable": schema.BoolAttribute{
 				Optional:            true,
@@ -154,6 +185,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"job_history_duration": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerJobHistoryDuration,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"job_history_enable": schema.BoolAttribute{
 				Optional:            true,
@@ -162,14 +196,23 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"job_requeue_timeout": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerJobRequeueTimeout,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"job_sort_formula": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerJobSortFormula,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"jobscript_max_size": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerJobscriptMaxSize,
+				Validators: []validator.String{
+					validators.PbsSize(),
+				},
 			},
 			"log_events": schema.Int32Attribute{
 				Optional:            true,
@@ -178,14 +221,23 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"mailer": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerMailer,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"mail_from": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerMailFrom,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"managers": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerManagers,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"max_array_size": schema.Int32Attribute{
 				Optional:            true,
@@ -278,6 +330,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"name": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: DescServerName,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"node_fail_requeue": schema.Int32Attribute{
 				Optional:            true,
@@ -290,14 +345,23 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"node_group_key": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerNodeGroupKey,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"operators": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerOperators,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"pbs_license_info": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerPbsLicenseInfo,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"pbs_license_linger_time": schema.Int32Attribute{
 				Optional:            true,
@@ -330,6 +394,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"python_restart_min_interval": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerPythonRestartMinInterval,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"query_other_jobs": schema.BoolAttribute{
 				Optional:            true,
@@ -338,10 +405,16 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"queued_jobs_threshold": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerQueuedJobsThreshold,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"queued_jobs_threshold_res": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerQueuedJobsThresholdRes,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"reserve_retry_init": schema.Int32Attribute{
 				Optional:            true,
@@ -376,6 +449,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"restrict_res_to_release_on_suspend": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerRestrictResToReleaseOnSuspend,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"resv_enable": schema.BoolAttribute{
 				Optional:            true,
@@ -384,6 +460,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"resv_post_processing_time": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerResvPostProcessingTime,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"rpp_highwater": schema.Int32Attribute{
 				Optional:            true,
@@ -404,6 +483,9 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"webapi_auth_issuers": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerWebapiAuthIssuers,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"webapi_enable": schema.BoolAttribute{
 				Optional:            true,
@@ -412,10 +494,16 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"webapi_oidc_clientid": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerWebapiOidcClientid,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"webapi_oidc_provider_url": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescServerWebapiOidcProviderUrl,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 		},
 	}

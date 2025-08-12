@@ -47,8 +47,8 @@ terraform import pbs_node.this node1.example.com
 - `in_multi_node_host` (Number) Specifies whether a vnode is part of a multi-vnoded host. Used internally. Do not set.
 - `mom` (String) Hostname where server queries for MoM host. By default the server queries the canonicalized name of the MoM host, unless you set this attribute when you create the vnode. Can be explicitly set by Manager only via qmgr, and only at vnode creation. The server can set this to the FQDN of the host on which MoM runs, if the vnode name is the same as the hostname.
 - `no_multinode_jobs` (Boolean) Controls whether jobs which request more than one chunk are allowed to execute on this vnode. Used for cycle harvesting.
-- `p_names` (String) The list of resources being used for placement sets. Not used for scheduling; advisory only.
 - `partition` (String) Name of partition to which this vnode is assigned. A vnode can be assigned to at most one partition.
+- `pnames` (String) The list of resources being used for placement sets. Not used for scheduling; advisory only.
 - `port` (Number) Port number on which MoM daemon listens. Can be explicitly set only via qmgr, and only at vnode creation.
 - `power_provisioning` (Boolean) Specifies whether this node is eligible to have its power managed by PBS, including whether it can use power profiles.
 - `poweroff_eligible` (Boolean) Enables powering this vnode up and down by PBS.

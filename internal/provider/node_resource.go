@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"terraform-provider-pbs/internal/pbsclient"
+	validators "terraform-provider-pbs/internal/provider/validators"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
@@ -46,18 +47,30 @@ func (r *pbsNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"comment": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescNodeComment,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"current_aoe": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescNodeCurrentAoe,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"current_eoe": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescNodeCurrentEoe,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"in_multi_node_host": schema.Int32Attribute{
 				Optional:            true,
 				MarkdownDescription: DescNodeInMultiNodeHost,
+				Validators: []validator.Int32{
+					int32validator.OneOf(1),
+				},
 			},
 			"mom": schema.StringAttribute{
 				Optional:            true,
@@ -65,10 +78,16 @@ func (r *pbsNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: DescNodeName,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"no_multinode_jobs": schema.BoolAttribute{
 				Optional:            true,
@@ -77,10 +96,16 @@ func (r *pbsNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"partition": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescNodePartition,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
-			"p_names": schema.StringAttribute{
+			"pnames": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: DescNodePNames,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"port": schema.Int32Attribute{
 				Optional:            true,
@@ -112,6 +137,9 @@ func (r *pbsNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Optional:            true,
 				MarkdownDescription: DescNodeQueue,
 				DeprecationMessage:  "This attribute is deprecated",
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"resources_available": schema.MapAttribute{
 				Optional:            true,

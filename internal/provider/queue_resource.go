@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"terraform-provider-pbs/internal/pbsclient"
+	validators "terraform-provider-pbs/internal/provider/validators"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -49,6 +50,9 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"acl_groups": schema.StringAttribute{
 				MarkdownDescription: DescQueueAclGroups,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"acl_groups_normalized": schema.StringAttribute{
 				MarkdownDescription: DescQueueAclGroupsNormalized + " This field is computed and reflects the actual value used by PBS.",
@@ -61,6 +65,9 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"acl_hosts": schema.StringAttribute{
 				MarkdownDescription: DescQueueAclHosts,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"acl_hosts_normalized": schema.StringAttribute{
 				MarkdownDescription: DescQueueAclHostsNormalized + " This field is computed and reflects the actual value used by PBS.",
@@ -73,6 +80,9 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"acl_users": schema.StringAttribute{
 				MarkdownDescription: DescQueueAclUsers,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"acl_users_normalized": schema.StringAttribute{
 				MarkdownDescription: DescQueueAclUsersNormalized + " This field is computed and reflects the actual value used by PBS.",
@@ -82,6 +92,9 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				DeprecationMessage:  DescQueueAltRouter,
 				MarkdownDescription: DescQueueAltRouter,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"backfill_depth": schema.Int32Attribute{
 				MarkdownDescription: DescQueueBackfillDepth,
@@ -97,6 +110,9 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"default_chunk": schema.StringAttribute{
 				MarkdownDescription: DescQueueDefaultChunk,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"enabled": schema.BoolAttribute{
 				MarkdownDescription: DescQueueEnabled,
@@ -194,14 +210,23 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"name": schema.StringAttribute{
 				MarkdownDescription: DescQueueName,
 				Required:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"node_group_key": schema.StringAttribute{
 				MarkdownDescription: DescQueueNodeGroupKey,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"partition": schema.StringAttribute{
 				MarkdownDescription: DescQueuePartition,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"priority": schema.Int32Attribute{
 				MarkdownDescription: DescQueuePriority,
@@ -213,10 +238,16 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"queued_jobs_threshold": schema.StringAttribute{
 				MarkdownDescription: DescQueueQueuedJobsThreshold,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"queued_jobs_threshold_res": schema.StringAttribute{
 				MarkdownDescription: DescQueueQueuedJobsThresholdRes,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"queue_type": schema.StringAttribute{
 				MarkdownDescription: DescQueueQtype,
@@ -256,6 +287,9 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"route_destinations": schema.StringAttribute{
 				MarkdownDescription: DescQueueRouteDestinations,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"route_held_jobs": schema.BoolAttribute{
 				MarkdownDescription: DescQueueRouteHeldJobs,

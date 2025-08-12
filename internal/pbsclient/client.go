@@ -10,6 +10,29 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// escapeStringForQmgr safely quotes a string value for use in qmgr commands.
+// If the string contains double quotes, we use single quotes around it.
+// If the string contains single quotes, we use double quotes around it.
+// Since PBS validates that a string cannot contain both types of quotes,
+// one of these approaches will always work.
+func escapeStringForQmgr(value string) string {
+	hasDoubleQuote := strings.Contains(value, "\"")
+	hasSingleQuote := strings.Contains(value, "'")
+
+	if hasDoubleQuote && hasSingleQuote {
+		// This should not happen if PBS validation is working correctly,
+		// but if it does, we'll escape the double quotes and use double quotes
+		escapedValue := strings.ReplaceAll(value, "\"", "\\\"")
+		return fmt.Sprintf("\"%s\"", escapedValue)
+	} else if hasDoubleQuote {
+		// Use single quotes to wrap the string containing double quotes
+		return fmt.Sprintf("'%s'", value)
+	} else {
+		// Default: use double quotes (handles strings with single quotes or no quotes)
+		return fmt.Sprintf("\"%s\"", value)
+	}
+}
+
 type PbsClient struct {
 	SshClientConfig *ssh.ClientConfig
 	Address         string
@@ -143,13 +166,13 @@ func generateUpdateInt64AttributeCommand(obj string, name string, attribute stri
 func generateUpdateStringAttributeCommand(obj string, name string, attribute string, oldValue *string, newValue *string) []string {
 	if oldValue == nil {
 		if newValue != nil {
-			return []string{fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=\"%s\"'", obj, name, attribute, *newValue)}
+			return []string{fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=%s'", obj, name, attribute, escapeStringForQmgr(*newValue))}
 		}
 	} else {
 		if newValue == nil {
 			return []string{fmt.Sprintf("/opt/pbs/bin/qmgr -c 'unset %s %s %s'", obj, name, attribute)}
 		} else if *oldValue != *newValue {
-			return []string{fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=\"%s\"'", obj, name, attribute, *newValue)}
+			return []string{fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=%s'", obj, name, attribute, escapeStringForQmgr(*newValue))}
 		}
 	}
 
@@ -242,11 +265,11 @@ func generateCreateCommands(newObj any, qmgrObjectType string, qmgrObjectName st
 		}
 	case *string:
 		if newObj != nil {
-			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, *newObj))
+			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, escapeStringForQmgr(*newObj)))
 		}
 	case map[string]string:
 		for k, subval := range newObj {
-			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, subval))
+			commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, escapeStringForQmgr(subval)))
 		}
 	default:
 		return commands, fmt.Errorf("unsupported type %T", newObj)
@@ -312,12 +335,12 @@ func generateUpdateAttributeCommand(oldAttr any, newAttr any, qmgrObjectType str
 				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'unset %s %s %s.%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k))
 
 			} else if oldAttrVal != newAttrVal {
-				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, newAttrVal))
+				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, escapeStringForQmgr(newAttrVal)))
 			}
 		}
 		for k, newAttrVal := range newValue {
 			if _, ok := old[k]; !ok {
-				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=\"%s\"'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, newAttrVal))
+				commands = append(commands, fmt.Sprintf("/opt/pbs/bin/qmgr -c 'set %s %s %s.%s=%s'", qmgrObjectType, qmgrObjectName, qmgrAttribute, k, escapeStringForQmgr(newAttrVal)))
 			}
 		}
 
