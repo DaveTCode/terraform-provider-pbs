@@ -22,7 +22,7 @@ type queueModel struct {
 	AltRouter              types.String            `tfsdk:"alt_router"`
 	BackfillDepth          types.Int32             `tfsdk:"backfill_depth"`
 	CheckpointMin          types.Int32             `tfsdk:"checkpoint_min"`
-	DefaultChunk           types.String            `tfsdk:"default_chunk"`
+	DefaultChunk           map[string]types.String `tfsdk:"default_chunk"`
 	Enabled                types.Bool              `tfsdk:"enabled"`
 	FromRouteOnly          types.Bool              `tfsdk:"from_route_only"`
 	KillDelay              types.Int32             `tfsdk:"kill_delay"`
@@ -81,7 +81,6 @@ func (m queueModel) ToPbsQueue(ctx context.Context) (pbsclient.PbsQueue, diag.Di
 	SetStringPointerIfNotNull(m.AltRouter, &queue.AltRouter)
 	SetInt32PointerIfNotNull(m.BackfillDepth, &queue.BackfillDepth)
 	SetInt32PointerIfNotNull(m.CheckpointMin, &queue.CheckpointMin)
-	SetStringPointerIfNotNull(m.DefaultChunk, &queue.DefaultChunk)
 	SetBoolPointerIfNotNull(m.FromRouteOnly, &queue.FromRouteOnly)
 	SetInt32PointerIfNotNull(m.KillDelay, &queue.KillDelay)
 	SetInt32PointerIfNotNull(m.MaxArraySize, &queue.MaxArraySize)
@@ -105,6 +104,7 @@ func (m queueModel) ToPbsQueue(ctx context.Context) (pbsclient.PbsQueue, diag.Di
 	var diags diag.Diagnostics
 
 	// Set non-pointer computed fields using utility functions
+	queue.DefaultChunk = ConvertTypesStringMap(m.DefaultChunk)
 	queue.MaxGroupRes = ConvertTypesStringMap(m.MaxGroupRes)
 	queue.MaxGroupResSoft = ConvertTypesStringMap(m.MaxGroupResSoft)
 	queue.MaxQueued = ConvertTypesStringMap(m.MaxQueued)
@@ -152,7 +152,6 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	model.AltRouter = types.StringPointerValue(queue.AltRouter)
 	model.BackfillDepth = types.Int32PointerValue(queue.BackfillDepth)
 	model.CheckpointMin = types.Int32PointerValue(queue.CheckpointMin)
-	model.DefaultChunk = types.StringPointerValue(queue.DefaultChunk)
 	model.FromRouteOnly = types.BoolPointerValue(queue.FromRouteOnly)
 	model.KillDelay = types.Int32PointerValue(queue.KillDelay)
 	model.MaxArraySize = types.Int32PointerValue(queue.MaxArraySize)
@@ -173,6 +172,9 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	model.RouteRetryTime = types.Int32PointerValue(queue.RouteRetryTime)
 	model.RouteWaitingJobs = types.BoolPointerValue(queue.RouteWaitingJobs)
 
+	if queue.DefaultChunk != nil {
+		model.DefaultChunk = convertStringMapToTypesStringMap(queue.DefaultChunk)
+	}
 	if queue.MaxGroupRes != nil {
 		model.MaxGroupRes = convertStringMapToTypesStringMap(queue.MaxGroupRes)
 	}

@@ -1,6 +1,6 @@
 module terraform-provider-pbs
 
-go 1.24.0
+go 1.24.6
 
 require (
 	github.com/hashicorp/terraform-plugin-framework v1.15.1

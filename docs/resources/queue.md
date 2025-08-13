@@ -50,7 +50,7 @@ terraform import pbs_queue.this work
 - `alt_router` (String, Deprecated) Deprecated. No longer used.
 - `backfill_depth` (Number) Specifies backfilling behavior for this queue. Sets the number of jobs that are to be backfilled around in this queue. Overrides backfill_depth server attribute. Recommendation: set this to less than 100.
 - `checkpoint_min` (Number) Minimum number of minutes of CPU time or walltime allowed between checkpoints of a job. If a user specifies a time less than this value, this value is used instead. The value given in checkpoint_min is used for both CPU minutes and walltime minutes.
-- `default_chunk` (String) The list of resources which will be inserted into each chunk of a job's select specification if the corresponding resource is not specified by the user. This provides a means for a site to be sure a given resource is properly accounted for even if not specified by the user.
+- `default_chunk` (Map of String) The list of resources which will be inserted into each chunk of a job's select specification if the corresponding resource is not specified by the user. This provides a means for a site to be sure a given resource is properly accounted for even if not specified by the user.
 - `enabled` (Boolean) Specifies whether this queue accepts new jobs.
 - `from_route_only` (Boolean) Specifies whether this queue accepts jobs only from routing queues, or from both execution and routing queues.
 - `kill_delay` (Number) The time delay (seconds) between sending SIGTERM and SIGKILL when a `qdel` command is issued against a running job. Default value is 10 seconds.

@@ -88,7 +88,7 @@ type PbsQueue struct {
 	AltRouter              *string
 	BackfillDepth          *int32
 	CheckpointMin          *int32
-	DefaultChunk           *string
+	DefaultChunk           map[string]string
 	Enabled                bool
 	FromRouteOnly          *bool
 	KillDelay              *int32
@@ -182,9 +182,7 @@ func parseQueueOutput(output []byte) ([]PbsQueue, error) {
 							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
 						}
 						current.CheckpointMin = &i32Value
-					case "default_chunk":
-						current.DefaultChunk = &s
-					case "enabled": //                bool
+					case "enabled":
 						boolValue, err := strconv.ParseBool(s)
 						if err != nil {
 							return nil, fmt.Errorf("failed to convert %s value to bool %s", k, err.Error())
@@ -308,6 +306,8 @@ func parseQueueOutput(output []byte) ([]PbsQueue, error) {
 					}
 				} else if a, ok := value.(map[string]string); ok {
 					switch strings.ToLower(k) {
+					case "default_chunk":
+						current.DefaultChunk = a
 					case "max_group_res":
 						current.MaxGroupRes = a
 					case "max_group_res_soft":
@@ -433,8 +433,11 @@ func (client *PbsClient) CreateQueue(newQueue PbsQueue) (PbsQueue, error) {
 		return fieldDefs[i].order < fieldDefs[j].order
 	})
 
-	// Process fields in order
+	// Process fields in order, but skip queue_type since it's already set during creation
 	for _, fieldDef := range fieldDefs {
+		if fieldDef.attribute == "queue_type" {
+			continue // Skip queue_type since it's already set in the create command
+		}
 		value := fieldDef.getValue(newQueue)
 		c, err := generateCreateCommands(value, "queue", newQueue.Name, fieldDef.attribute)
 		if err != nil {

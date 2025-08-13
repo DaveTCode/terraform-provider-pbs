@@ -110,6 +110,8 @@ func TestAccQueueResource_withResources(t *testing.T) {
 					resource.TestCheckResourceAttr("pbs_queue.test", "resources_default.nodect", "1"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "resources_default.nodes", "1"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "resources_default.walltime", "01:30:00"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "default_chunk.mem", "300gb"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "default_chunk.ncpus", "256"),
 				),
 			},
 		},
@@ -128,7 +130,6 @@ func TestAccQueueResource_maxValues(t *testing.T) {
 				Config: testAccQueueResourceConfigWithMaxValues(queueName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists("pbs_queue.test"),
-					resource.TestCheckResourceAttr("pbs_queue.test", "max_running", "50"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "max_queued_res.ncpus", "[o:PBS_ALL=100]"),
 				),
 			},
@@ -193,6 +194,10 @@ resource "pbs_queue" "test" {
     nodes    = "1"
     walltime = "01:30:00"
   }
+  default_chunk = {
+    mem      = "300gb"
+    ncpus    = 256
+  }
 }
 `, name)
 }
@@ -204,7 +209,6 @@ resource "pbs_queue" "test" {
   queue_type  = "Execution"
   enabled     = true
   started     = true
-  max_running = 50
   max_queued_res  = {
     ncpus = "[o:PBS_ALL=100]"
   }

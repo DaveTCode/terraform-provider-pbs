@@ -1,0 +1,53 @@
+FROM golang:1.24-alpine AS builder
+
+# Install terraform
+RUN apk add --no-cache curl unzip
+RUN curl -fsSL https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_amd64.zip -o terraform.zip && \
+    unzip terraform.zip && \
+    mv terraform /usr/local/bin/ && \
+    rm terraform.zip
+
+# Set working directory
+WORKDIR /workspace
+
+# Copy go mod files first for better caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Install tfplugindocs
+RUN go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
+
+# Copy source code
+COPY . .
+
+# Build the provider
+RUN go build -o terraform-provider-pbs .
+
+# Generate docs stage
+FROM golang:1.24-alpine AS docs-generator
+
+# Install terraform
+RUN apk add --no-cache curl unzip
+RUN curl -fsSL https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_amd64.zip -o terraform.zip && \
+    unzip terraform.zip && \
+    mv terraform /usr/local/bin/ && \
+    rm terraform.zip
+
+# Install tfplugindocs
+RUN go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
+
+WORKDIR /workspace
+COPY --from=builder /workspace .
+
+# Clean any existing docs
+RUN rm -rf docs/*
+
+# Add GOPATH/bin to PATH and generate fresh documentation
+ENV PATH="$PATH:/go/bin"
+RUN tfplugindocs generate --provider-name pbs --rendered-provider-name pbs
+
+# Final stage - just copy the docs
+FROM alpine:latest
+WORKDIR /docs
+COPY --from=docs-generator /workspace/docs .
+CMD ["sh", "-c", "find . -name '*.md' -exec echo 'Generated: {}' \\; && cat /dev/null"]
