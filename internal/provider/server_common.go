@@ -52,12 +52,12 @@ type serverModel struct {
 	MaxGroupRun                   types.Int32             `tfsdk:"max_group_run"`
 	MaxGroupRunSoft               types.Int32             `tfsdk:"max_group_run_soft"`
 	MaxJobSequenceId              types.Int64             `tfsdk:"max_job_sequence_id"`
-	MaxQueued                     map[string]types.String `tfsdk:"max_queued"`
+	MaxQueued                     types.String            `tfsdk:"max_queued"`
 	MaxQueuedRes                  map[string]types.String `tfsdk:"max_queued_res"`
-	MaxRun                        map[string]types.String `tfsdk:"max_run"`
+	MaxRun                        types.String            `tfsdk:"max_run"`
 	MaxRunRes                     map[string]types.String `tfsdk:"max_run_res"`
 	MaxRunResSoft                 map[string]types.String `tfsdk:"max_run_res_soft"`
-	MaxRunSoft                    map[string]types.String `tfsdk:"max_run_soft"`
+	MaxRunSoft                    types.String            `tfsdk:"max_run_soft"`
 	MaxRunning                    types.Int32             `tfsdk:"max_running"`
 	MaxUserRes                    map[string]types.String `tfsdk:"max_user_res"`
 	MaxUserResSoft                map[string]types.String `tfsdk:"max_user_res_soft"`
@@ -138,6 +138,9 @@ func (m serverModel) ToPbsServer(ctx context.Context) pbsclient.PbsServer {
 	SetInt32PointerIfNotNull(m.MaxGroupRun, &server.MaxGroupRun)
 	SetInt32PointerIfNotNull(m.MaxGroupRunSoft, &server.MaxGroupRunSoft)
 	SetInt64PointerIfNotNull(m.MaxJobSequenceId, &server.MaxJobSequenceId)
+	SetStringPointerIfNotNull(m.MaxQueued, &server.MaxQueued)
+	SetStringPointerIfNotNull(m.MaxRun, &server.MaxRun)
+	SetStringPointerIfNotNull(m.MaxRunSoft, &server.MaxRunSoft)
 	SetInt32PointerIfNotNull(m.MaxRunning, &server.MaxRunning)
 	SetInt32PointerIfNotNull(m.MaxUserRun, &server.MaxUserRun)
 	SetInt32PointerIfNotNull(m.MaxUserRunSoft, &server.MaxUserRunSoft)
@@ -180,12 +183,9 @@ func (m serverModel) ToPbsServer(ctx context.Context) pbsclient.PbsServer {
 	// Convert limit attribute maps from Terraform types to Go maps (only if not empty)
 	ConvertTypesStringMapIfNotEmpty(m.MaxGroupRes, &server.MaxGroupRes)
 	ConvertTypesStringMapIfNotEmpty(m.MaxGroupResSoft, &server.MaxGroupResSoft)
-	ConvertTypesStringMapIfNotEmpty(m.MaxQueued, &server.MaxQueued)
 	ConvertTypesStringMapIfNotEmpty(m.MaxQueuedRes, &server.MaxQueuedRes)
-	ConvertTypesStringMapIfNotEmpty(m.MaxRun, &server.MaxRun)
 	ConvertTypesStringMapIfNotEmpty(m.MaxRunRes, &server.MaxRunRes)
 	ConvertTypesStringMapIfNotEmpty(m.MaxRunResSoft, &server.MaxRunResSoft)
-	ConvertTypesStringMapIfNotEmpty(m.MaxRunSoft, &server.MaxRunSoft)
 	ConvertTypesStringMapIfNotEmpty(m.MaxUserRes, &server.MaxUserRes)
 	ConvertTypesStringMapIfNotEmpty(m.MaxUserResSoft, &server.MaxUserResSoft)
 
@@ -253,13 +253,7 @@ func createServerModel(server pbsclient.PbsServer) serverModel {
 	model.MaxGroupRun = types.Int32PointerValue(server.MaxGroupRun)
 	model.MaxGroupRunSoft = types.Int32PointerValue(server.MaxGroupRunSoft)
 	model.MaxJobSequenceId = types.Int64PointerValue(server.MaxJobSequenceId)
-	if server.MaxQueued != nil {
-		elements := make(map[string]types.String)
-		for k, v := range server.MaxQueued {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxQueued = elements
-	}
+	model.MaxQueued = types.StringPointerValue(server.MaxQueued)
 	if server.MaxQueuedRes != nil {
 		elements := make(map[string]types.String)
 		for k, v := range server.MaxQueuedRes {
@@ -267,33 +261,14 @@ func createServerModel(server pbsclient.PbsServer) serverModel {
 		}
 		model.MaxQueuedRes = elements
 	}
-	if server.MaxRun != nil {
-		elements := make(map[string]types.String)
-		for k, v := range server.MaxRun {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxRun = elements
-	}
-	if server.MaxRunRes != nil {
-		elements := make(map[string]types.String)
-		for k, v := range server.MaxRunRes {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxRunRes = elements
-	}
+	model.MaxRun = types.StringPointerValue(server.MaxRun)
+	model.MaxRunSoft = types.StringPointerValue(server.MaxRunSoft)
 	if server.MaxRunResSoft != nil {
 		elements := make(map[string]types.String)
 		for k, v := range server.MaxRunResSoft {
 			elements[k] = types.StringValue(v)
 		}
 		model.MaxRunResSoft = elements
-	}
-	if server.MaxRunSoft != nil {
-		elements := make(map[string]types.String)
-		for k, v := range server.MaxRunSoft {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxRunSoft = elements
 	}
 	model.MaxRunning = types.Int32PointerValue(server.MaxRunning)
 	if server.MaxUserRes != nil {

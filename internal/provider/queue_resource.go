@@ -153,20 +153,24 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				MarkdownDescription: DescQueueMaxQueuable,
 				Optional:            true,
 			},
-			"max_queued": schema.MapAttribute{
+			"max_queued": schema.StringAttribute{
 				MarkdownDescription: DescQueueMaxQueued,
-				ElementType:         types.StringType,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"max_queued_res": schema.MapAttribute{
 				MarkdownDescription: DescQueueMaxQueuedRes,
 				ElementType:         types.StringType,
 				Optional:            true,
 			},
-			"max_run": schema.MapAttribute{
+			"max_run": schema.StringAttribute{
 				MarkdownDescription: DescQueueMaxRun,
-				ElementType:         types.StringType,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"max_run_res": schema.MapAttribute{
 				MarkdownDescription: DescQueueMaxRunRes,
@@ -178,10 +182,12 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				ElementType:         types.StringType,
 				Optional:            true,
 			},
-			"max_run_soft": schema.MapAttribute{
+			"max_run_soft": schema.StringAttribute{
 				MarkdownDescription: DescQueueMaxRunSoft,
-				ElementType:         types.StringType,
 				Optional:            true,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"max_running": schema.Int32Attribute{
 				MarkdownDescription: DescQueueMaxRunning,

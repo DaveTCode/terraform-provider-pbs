@@ -369,10 +369,10 @@ func TestAccQueueResource_comprehensive_AdvancedLimits(t *testing.T) {
 					resource.TestCheckResourceAttr("pbs_queue.test", "backfill_depth", "10"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "kill_delay", "30"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "checkpoint_min", "600"),
-					resource.TestCheckResourceAttr("pbs_queue.test", "max_queuable", "500"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "priority", "150"),
-					resource.TestCheckResourceAttr("pbs_queue.test", "max_user_res.ncpus", "4"),
-					resource.TestCheckResourceAttr("pbs_queue.test", "max_group_res.mem", "32gb"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "max_run", "[o:PBS_ALL=2]"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "max_run_soft", "[o:PBS_ALL=1]"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "max_queued", "[u:PBS_GENERIC=200]"),
 				),
 			},
 			// Update advanced limits
@@ -384,10 +384,10 @@ func TestAccQueueResource_comprehensive_AdvancedLimits(t *testing.T) {
 					resource.TestCheckResourceAttr("pbs_queue.test", "backfill_depth", "20"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "kill_delay", "60"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "checkpoint_min", "1200"),
-					resource.TestCheckResourceAttr("pbs_queue.test", "max_queuable", "1000"),
 					resource.TestCheckResourceAttr("pbs_queue.test", "priority", "200"),
-					resource.TestCheckResourceAttr("pbs_queue.test", "max_user_res.ncpus", "8"),
-					resource.TestCheckResourceAttr("pbs_queue.test", "max_group_res.mem", "64gb"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "max_run", "[o:PBS_ALL=2]"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "max_run_soft", "[o:PBS_ALL=1]"),
+					resource.TestCheckResourceAttr("pbs_queue.test", "max_queued", "[u:PBS_GENERIC=200]"),
 				),
 			},
 		},
@@ -541,16 +541,10 @@ resource "pbs_queue" "test" {
   backfill_depth   = 10
   kill_delay       = 30
   checkpoint_min   = 600
-  max_queuable     = 500
   priority         = 150
-  
-  max_user_res = {
-    ncpus = "4"
-  }
-  
-  max_group_res = {
-    mem = "32gb"
-  }
+	max_run          = "[o:PBS_ALL=2]"
+	max_run_soft     = "[o:PBS_ALL=1]"
+	max_queued       = "[u:PBS_GENERIC=200]"
 }
 `, name)
 }
@@ -566,16 +560,10 @@ resource "pbs_queue" "test" {
   backfill_depth   = 20
   kill_delay       = 60
   checkpoint_min   = 1200
-  max_queuable     = 1000
   priority         = 200
-  
-  max_user_res = {
-    ncpus = "8"
-  }
-  
-  max_group_res = {
-    mem = "64gb"
-  }
+	max_run          = "[o:PBS_ALL=2]"
+	max_run_soft     = "[o:PBS_ALL=1]"
+	max_queued       = "[u:PBS_GENERIC=200]"
 }
 `, name)
 }

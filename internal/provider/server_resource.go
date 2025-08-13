@@ -275,20 +275,24 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 					int64validator.Between(9999999, 999999999999),
 				},
 			},
-			"max_queued": schema.MapAttribute{
+			"max_queued": schema.StringAttribute{
 				Optional:            true,
-				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxQueued,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"max_queued_res": schema.MapAttribute{
 				Optional:            true,
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxQueuedRes,
 			},
-			"max_run": schema.MapAttribute{
+			"max_run": schema.StringAttribute{
 				Optional:            true,
-				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxRun,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"max_run_res": schema.MapAttribute{
 				Optional:            true,
@@ -300,10 +304,12 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxRunResSoft,
 			},
-			"max_run_soft": schema.MapAttribute{
+			"max_run_soft": schema.StringAttribute{
 				Optional:            true,
-				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxRunSoft,
+				Validators: []validator.String{
+					validators.PbsString(),
+				},
 			},
 			"max_running": schema.Int32Attribute{
 				Optional:            true,
