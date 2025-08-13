@@ -180,9 +180,9 @@ func generateUpdateStringAttributeCommand(obj string, name string, attribute str
 }
 
 var (
-	nameRegex              = regexp.MustCompile(`^(\w+)\s+(\w+)$`)
+	nameRegex              = regexp.MustCompile(`^(\w+)\s+([a-zA-Z\-_0-9]+)$`)
 	attributeRegex         = regexp.MustCompile(`^    (\w+)\s+=\s+(.+)$`)
-	dotAttributeRegex      = regexp.MustCompile(`^    (\w+)\.(\w+)\s+=\s+(.+)$`)
+	dotAttributeRegex      = regexp.MustCompile(`^    (\w+)\.([a-zA-Z\-_0-9]+)\s+=\s+(.+)$`)
 	continueAttributeRegex = regexp.MustCompile(`^        (.+)$`)
 )
 
