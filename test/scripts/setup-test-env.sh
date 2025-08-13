@@ -58,6 +58,14 @@ create_test_data() {
     docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test resources_default.nodes=1"
     docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test resources_default.walltime=3600"
     
+    # Create hyphen-test queue for hyphen import testing
+    echo "Creating hyphen-test queue for hyphen import testing..."
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "create queue hyphen-test queue_type=execution" 2>/dev/null || echo "Queue 'hyphen-test' may already exist"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue hyphen-test started=true"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue hyphen-test enabled=true"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue hyphen-test priority=100"
+    docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue hyphen-test comment='Queue with hyphen for import testing'"
+    
     # Set up workq as default queue
     echo "Setting default queue..."
     docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set server default_queue=workq"
@@ -115,6 +123,12 @@ verify_pbs() {
     # Check if test queue exists
     if ! docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list queue test" >/dev/null 2>&1; then
         echo "Error: Test queue 'test' not found"
+        return 1
+    fi
+    
+    # Check if hyphen-test queue exists
+    if ! docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list queue hyphen-test" >/dev/null 2>&1; then
+        echo "Error: Test queue 'hyphen-test' not found"
         return 1
     fi
     

@@ -92,6 +92,57 @@ func TestAccQueueResource_import(t *testing.T) {
 	})
 }
 
+// TestAccQueueResource_importWithHyphen tests importing a queue with a hyphen in the name.
+// This addresses issues with importing queues like "hyphen-test" where the hyphen might cause
+// parsing or escaping problems during the import process.
+func TestAccQueueResource_importWithHyphen(t *testing.T) {
+	queueName := "hyphen-test" // Test with actual hyphenated queue name created in setup script
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			// Import testing - test importing the pre-existing hyphen-test queue
+			{
+				Config:        testAccQueueResourceConfigForHyphenImport(queueName),
+				ResourceName:  "pbs_queue.test",
+				ImportState:   true,
+				ImportStateId: queueName,
+				ImportStateCheck: func(s []*terraform.InstanceState) error {
+					if len(s) != 1 {
+						return fmt.Errorf("expected 1 state, got %d", len(s))
+					}
+
+					state := s[0]
+					if state.ID != queueName {
+						return fmt.Errorf("expected ID %s, got %s", queueName, state.ID)
+					}
+
+					if state.Attributes["name"] != queueName {
+						return fmt.Errorf("expected name %s, got %s", queueName, state.Attributes["name"])
+					}
+
+					// Verify that queue_type is set (since it's required)
+					if queueType := state.Attributes["queue_type"]; queueType == "" {
+						return fmt.Errorf("expected queue_type to be set")
+					}
+
+					// Verify enabled and started are set (since they're required)
+					if enabled := state.Attributes["enabled"]; enabled == "" {
+						return fmt.Errorf("expected enabled to be set")
+					}
+
+					if started := state.Attributes["started"]; started == "" {
+						return fmt.Errorf("expected started to be set")
+					}
+
+					return nil
+				},
+			},
+		},
+	})
+}
+
 func TestAccQueueResource_withResources(t *testing.T) {
 	queueName := testAccResourceName("tq_res")
 
@@ -223,6 +274,19 @@ resource "pbs_queue" "test" {
   queue_type = "Execution"
   enabled    = true
   started    = true
+}
+`, name)
+}
+
+func testAccQueueResourceConfigForHyphenImport(name string) string {
+	return providerConfig() + fmt.Sprintf(`
+resource "pbs_queue" "test" {
+  name       = %[1]q
+  queue_type = "Execution"
+  enabled    = true
+  started    = true
+  priority   = 100
+  comment    = "Queue with hyphen in name for import testing"
 }
 `, name)
 }
