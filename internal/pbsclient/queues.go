@@ -7,9 +7,6 @@ import (
 	"strings"
 )
 
-const GET_QUEUE_QMGR_CMD = "/opt/pbs/bin/qmgr -c 'list queue %s'"
-const GET_QUEUES_QMGR_CMD = "/opt/pbs/bin/qmgr -c 'list queue @default'"
-
 // queueFieldDefinition represents a queue field with its attribute name, execution order, and value extractor.
 type queueFieldDefinition struct {
 	attribute string
@@ -367,7 +364,7 @@ func (client *PbsClient) GetQueue(name string) (PbsQueue, error) {
 
 // GetQueues returns all queues configured on the PBS server.
 func (client *PbsClient) GetQueues() ([]PbsQueue, error) {
-	queueOutput, errOutput, err := client.runCommand(GET_QUEUES_QMGR_CMD)
+	queueOutput, errOutput, err := client.runCommand("/opt/pbs/bin/qmgr -c 'list queue @default'")
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute command against PBS server %s: %s", err.Error(), errOutput)
 	}
