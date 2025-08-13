@@ -10,7 +10,8 @@ lint:
 	~/go/bin/golangci-lint run
 
 generate:
-	./generate-docs.sh
+	docker build -f Dockerfile.docs -t terraform-provider-pbs-docs .
+	docker run --rm -v "$(PWD)/docs:/output" terraform-provider-pbs-docs sh -c "cp -r /docs/* /output/"
 
 fmt:
 	gofmt -s -w -e .
