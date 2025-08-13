@@ -198,11 +198,6 @@ func (d *queueDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 				Computed:            true,
 				MarkdownDescription: DescQueueQtype,
 			},
-			"resources_assigned": schema.MapAttribute{
-				Computed:            true,
-				ElementType:         types.StringType,
-				MarkdownDescription: DescQueueResourcesAssigned,
-			},
 			"resources_available": schema.MapAttribute{
 				Computed:            true,
 				ElementType:         types.StringType,

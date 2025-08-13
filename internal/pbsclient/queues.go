@@ -58,7 +58,6 @@ func getQueueFieldDefinitions() []queueFieldDefinition {
 			}
 			return (*string)(nil)
 		}},
-		{"resources_assigned", 10, func(q PbsQueue) any { return q.ResourcesAssigned }},
 		{"resources_available", 10, func(q PbsQueue) any { return q.ResourcesAvailable }},
 		{"resources_default", 10, func(q PbsQueue) any { return q.ResourcesDefault }},
 		{"resources_max", 10, func(q PbsQueue) any { return q.ResourcesMax }},
@@ -113,7 +112,6 @@ type PbsQueue struct {
 	QueuedJobsThreshold    *string
 	QueuedJobsThresholdRes *string
 	QueueType              string
-	ResourcesAssigned      map[string]string
 	ResourcesAvailable     map[string]string
 	ResourcesDefault       map[string]string
 	ResourcesMax           map[string]string
@@ -325,8 +323,6 @@ func parseQueueOutput(output []byte) ([]PbsQueue, error) {
 						current.MaxUserRes = a
 					case "max_user_res_soft":
 						current.MaxUserResSoft = a
-					case "resources_assigned":
-						current.ResourcesAssigned = a
 					case "resources_available":
 						current.ResourcesAvailable = a
 					case "resources_default":

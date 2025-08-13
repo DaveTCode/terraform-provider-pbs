@@ -63,7 +63,6 @@ type PbsNode struct {
 	Priority            *int32
 	ProvisionEnable     *bool
 	Queue               *string
-	ResourcesAssigned   map[string]string
 	ResourcesAvailable  map[string]string
 	Resv                *string
 	ResvEnable          *bool
@@ -202,8 +201,6 @@ func parseNodeOutput(output []byte) ([]PbsNode, error) {
 					}
 				} else if a, ok := v.(map[string]string); ok {
 					switch strings.ToLower(k) {
-					case "resources_assigned":
-						current.ResourcesAssigned = a
 					case "resources_available":
 						current.ResourcesAvailable = a
 					default:

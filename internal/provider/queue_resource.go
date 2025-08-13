@@ -263,11 +263,6 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"resources_assigned": schema.MapAttribute{
-				MarkdownDescription: DescQueueResourcesAssigned,
-				Optional:            true,
-				ElementType:         types.StringType,
-			},
 			"resources_available": schema.MapAttribute{
 				MarkdownDescription: DescQueueResourcesAvailable,
 				Optional:            true,

@@ -94,7 +94,6 @@ const (
 	DescQueueQueuedRes              = "Limit attribute. The maximum number of jobs allowed to be queued in this queue. Can be specified for projects, users, groups, or all. Cannot be used with old limit attributes."
 	DescQueueQueuedResMax           = "Limit attribute. The maximum amount of the specified resource allowed to be allocated to jobs queued in this queue. Can be specified for projects, users, groups, or all. Cannot be used with old limit attributes."
 	DescQueueQtype                  = "The type of this queue. This attribute must be explicitly set at queue creation to one of Execution/Route"
-	DescQueueResourcesAssigned      = "The total for each kind of resource allocated to running and exiting jobs in this queue."
 	DescQueueResourcesAvailable     = "The list of resources and amounts available to jobs running in this queue. The sum of the resource of each type used by all jobs running from this queue cannot exceed the total amount listed here."
 	DescQueueResourcesMax           = "The maximum amount of each resource that can be requested by a single job in this queue. This queue value supersedes any server wide maximum limit."
 	DescQueueResourcesMin           = "The minimum amount of each resource that can be requested by a single job in this queue."

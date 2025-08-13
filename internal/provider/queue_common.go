@@ -50,7 +50,6 @@ type queueModel struct {
 	QueuedJobsThreshold    types.String            `tfsdk:"queued_jobs_threshold"`
 	QueuedJobsThresholdRes types.String            `tfsdk:"queued_jobs_threshold_res"`
 	QueueType              types.String            `tfsdk:"queue_type"`
-	ResourcesAssigned      map[string]types.String `tfsdk:"resources_assigned"`
 	ResourcesAvailable     map[string]types.String `tfsdk:"resources_available"`
 	ResourcesDefault       map[string]types.String `tfsdk:"resources_default"`
 	ResourcesMax           map[string]types.String `tfsdk:"resources_max"`
@@ -115,7 +114,6 @@ func (m queueModel) ToPbsQueue(ctx context.Context) (pbsclient.PbsQueue, diag.Di
 	queue.MaxRunResSoft = ConvertTypesStringMap(m.MaxRunResSoft)
 	queue.MaxUserRes = ConvertTypesStringMap(m.MaxUserRes)
 	queue.MaxUserResSoft = ConvertTypesStringMap(m.MaxUserResSoft)
-	queue.ResourcesAssigned = ConvertTypesStringMap(m.ResourcesAssigned)
 	queue.ResourcesAvailable = ConvertTypesStringMap(m.ResourcesAvailable)
 	queue.ResourcesDefault = ConvertTypesStringMap(m.ResourcesDefault)
 	queue.ResourcesMax = ConvertTypesStringMap(m.ResourcesMax)
@@ -193,16 +191,11 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	if queue.MaxRunResSoft != nil {
 		model.MaxRunResSoft = convertStringMapToTypesStringMap(queue.MaxRunResSoft)
 	}
-
 	if queue.MaxUserRes != nil {
 		model.MaxUserRes = convertStringMapToTypesStringMap(queue.MaxUserRes)
 	}
 	if queue.MaxUserResSoft != nil {
 		model.MaxUserResSoft = convertStringMapToTypesStringMap(queue.MaxUserResSoft)
-	}
-
-	if queue.ResourcesAssigned != nil {
-		model.ResourcesAssigned = convertStringMapToTypesStringMap(queue.ResourcesAssigned)
 	}
 	if queue.ResourcesAvailable != nil {
 		model.ResourcesAvailable = convertStringMapToTypesStringMap(queue.ResourcesAvailable)
