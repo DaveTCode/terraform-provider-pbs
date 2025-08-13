@@ -107,12 +107,10 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				MarkdownDescription: DescQueueCheckpointMin,
 				Optional:            true,
 			},
-			"default_chunk": schema.StringAttribute{
+			"default_chunk": schema.MapAttribute{
 				MarkdownDescription: DescQueueDefaultChunk,
 				Optional:            true,
-				Validators: []validator.String{
-					validators.PbsString(),
-				},
+				ElementType:         types.StringType,
 			},
 			"enabled": schema.BoolAttribute{
 				MarkdownDescription: DescQueueEnabled,

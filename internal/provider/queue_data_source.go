@@ -78,8 +78,9 @@ func (d *queueDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 				Computed:            true,
 				MarkdownDescription: DescQueueCheckpointMin,
 			},
-			"default_chunk": schema.StringAttribute{
+			"default_chunk": schema.MapAttribute{
 				Computed:            true,
+				ElementType:         types.StringType,
 				MarkdownDescription: DescQueueDefaultChunk,
 			},
 			"enabled": schema.BoolAttribute{
