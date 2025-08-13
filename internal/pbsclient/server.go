@@ -45,12 +45,12 @@ type PbsServer struct {
 	MaxGroupRun                   *int32
 	MaxGroupRunSoft               *int32
 	MaxJobSequenceId              *int64
-	MaxQueued                     map[string]string
+	MaxQueued                     *string
 	MaxQueuedRes                  map[string]string
-	MaxRun                        map[string]string
+	MaxRun                        *string
 	MaxRunRes                     map[string]string
 	MaxRunResSoft                 map[string]string
-	MaxRunSoft                    map[string]string
+	MaxRunSoft                    *string
 	MaxRunning                    *int32
 	MaxUserRes                    map[string]string
 	MaxUserResSoft                map[string]string
@@ -345,17 +345,11 @@ func parseServerOutput(output []byte) ([]PbsServer, error) {
 						}
 						current.MaxJobSequenceId = &intValue
 					case "max_queued":
-						// Skip individual parsing - will be handled by map parsing below
-					case "max_queued_res":
-						// Skip individual parsing - will be handled by map parsing below
+						current.MaxQueued = &s
 					case "max_run":
-						// Skip individual parsing - will be handled by map parsing below
-					case "max_run_res":
-						// Skip individual parsing - will be handled by map parsing below
-					case "max_run_res_soft":
-						// Skip individual parsing - will be handled by map parsing below
+						current.MaxRun = &s
 					case "max_run_soft":
-						// Skip individual parsing - will be handled by map parsing below
+						current.MaxRunSoft = &s
 					case "max_running":
 						intValue, err := strconv.ParseInt(s, 10, 32)
 						if err != nil {
@@ -363,10 +357,6 @@ func parseServerOutput(output []byte) ([]PbsServer, error) {
 						}
 						int32Value := int32(intValue)
 						current.MaxRunning = &int32Value
-					case "max_user_res":
-						// Skip individual parsing - will be handled by map parsing below
-					case "max_user_res_soft":
-						// Skip individual parsing - will be handled by map parsing below
 					case "max_user_run":
 						intValue, err := strconv.ParseInt(s, 10, 32)
 						if err != nil {
@@ -545,18 +535,12 @@ func parseServerOutput(output []byte) ([]PbsServer, error) {
 						current.MaxGroupRes = a
 					case "max_group_res_soft":
 						current.MaxGroupResSoft = a
-					case "max_queued":
-						current.MaxQueued = a
 					case "max_queued_res":
 						current.MaxQueuedRes = a
-					case "max_run":
-						current.MaxRun = a
 					case "max_run_res":
 						current.MaxRunRes = a
 					case "max_run_res_soft":
 						current.MaxRunResSoft = a
-					case "max_run_soft":
-						current.MaxRunSoft = a
 					case "max_user_res":
 						current.MaxUserRes = a
 					case "max_user_res_soft":

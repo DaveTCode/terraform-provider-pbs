@@ -88,6 +88,27 @@ func TestAccHookResource_multipleEvents(t *testing.T) {
 	})
 }
 
+func TestAccHookResource_periodic(t *testing.T) {
+	hookName := testAccResourceName("test_hook_periodic")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		CheckDestroy:             testAccCheckHookDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHookResourcePeriodicConfig(hookName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHookExists("pbs_hook.test"),
+					resource.TestCheckResourceAttr("pbs_hook.test", "event", "exechost_periodic"),
+					resource.TestCheckResourceAttr("pbs_hook.test", "type", "site"),
+					resource.TestCheckResourceAttr("pbs_hook.test", "freq", "110"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccHookResource_disabledState(t *testing.T) {
 	hookName := testAccResourceName("test_hook_disabled")
 
@@ -195,6 +216,23 @@ func testAccCheckHookDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccHookResourcePeriodicConfig(name string) string {
+	return providerConfig() + fmt.Sprintf(`
+resource "pbs_hook" "test" {
+  name        = %[1]q
+  enabled     = true
+  event       = "exechost_periodic"
+	type        = "site"
+  user        = "pbsadmin"
+  fail_action = "none"
+	order       = 1
+	alarm       = 30
+	debug       = false
+	freq        = 110
+}
+`, name)
 }
 
 func testAccHookResourceConfig(name, event string, order int) string {

@@ -217,9 +217,8 @@ func (d *serverDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 					int64validator.Between(9999999, 999999999999),
 				},
 			},
-			"max_queued": schema.MapAttribute{
+			"max_queued": schema.StringAttribute{
 				Computed:            true,
-				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxQueued,
 			},
 			"max_queued_res": schema.MapAttribute{
@@ -227,9 +226,8 @@ func (d *serverDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxQueuedRes,
 			},
-			"max_run": schema.MapAttribute{
+			"max_run": schema.StringAttribute{
 				Computed:            true,
-				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxRun,
 			},
 			"max_run_res": schema.MapAttribute{
@@ -242,9 +240,8 @@ func (d *serverDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxRunResSoft,
 			},
-			"max_run_soft": schema.MapAttribute{
+			"max_run_soft": schema.StringAttribute{
 				Computed:            true,
-				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxRunSoft,
 			},
 			"max_running": schema.Int32Attribute{

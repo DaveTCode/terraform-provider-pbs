@@ -342,6 +342,8 @@ func testAccNodeResourceConfigComprehensive(name string) string {
 resource "pbs_node" "test" {
   name = %[1]q
   comment = "Comprehensive test node"
+	no_multinode_jobs = true
+	pnames = "a,b,c"
   port = 15004
   priority = 100
   poweroff_eligible = true

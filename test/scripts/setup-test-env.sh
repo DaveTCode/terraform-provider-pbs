@@ -281,7 +281,7 @@ main() {
     create_test_data
     
     # Try verification a few times
-    for i in {1..3}; do
+    for i in {1..5}; do
         if verify_pbs; then
             break
         else

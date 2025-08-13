@@ -98,12 +98,12 @@ type PbsQueue struct {
 	MaxGroupRun            *int32
 	MaxGroupRunSoft        *int32
 	MaxQueuable            *int32
-	MaxQueued              map[string]string
+	MaxQueued              *string
 	MaxQueuedRes           map[string]string
-	MaxRun                 map[string]string
+	MaxRun                 *string
 	MaxRunRes              map[string]string
 	MaxRunResSoft          map[string]string
-	MaxRunSoft             map[string]string
+	MaxRunSoft             *string
 	MaxRunning             *int32
 	MaxUserRes             map[string]string
 	MaxUserResSoft         map[string]string
@@ -222,6 +222,8 @@ func parseQueueOutput(output []byte) ([]PbsQueue, error) {
 							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
 						}
 						current.MaxGroupRunSoft = &i32Value
+					case "max_queued":
+						current.MaxQueued = &s
 					case "max_queuable":
 						intValue, err := strconv.Atoi(s)
 						i32Value := int32(intValue)
@@ -229,6 +231,10 @@ func parseQueueOutput(output []byte) ([]PbsQueue, error) {
 							return nil, fmt.Errorf("failed to convert %s value to int %s", k, err.Error())
 						}
 						current.MaxQueuable = &i32Value
+					case "max_run":
+						current.MaxRun = &s
+					case "max_run_soft":
+						current.MaxRunSoft = &s
 					case "max_running":
 						intValue, err := strconv.Atoi(s)
 						i32Value := int32(intValue)
@@ -312,18 +318,12 @@ func parseQueueOutput(output []byte) ([]PbsQueue, error) {
 						current.MaxGroupRes = a
 					case "max_group_res_soft":
 						current.MaxGroupResSoft = a
-					case "max_queued":
-						current.MaxQueued = a
 					case "max_queued_res":
 						current.MaxQueuedRes = a
-					case "max_run":
-						current.MaxRun = a
 					case "max_run_res":
 						current.MaxRunRes = a
 					case "max_run_res_soft":
 						current.MaxRunResSoft = a
-					case "max_run_soft":
-						current.MaxRunSoft = a
 					case "max_user_res":
 						current.MaxUserRes = a
 					case "max_user_res_soft":

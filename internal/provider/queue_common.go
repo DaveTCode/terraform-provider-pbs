@@ -32,12 +32,12 @@ type queueModel struct {
 	MaxGroupRun            types.Int32             `tfsdk:"max_group_run"`
 	MaxGroupRunSoft        types.Int32             `tfsdk:"max_group_run_soft"`
 	MaxQueuable            types.Int32             `tfsdk:"max_queuable"`
-	MaxQueued              map[string]types.String `tfsdk:"max_queued"`
+	MaxQueued              types.String            `tfsdk:"max_queued"`
 	MaxQueuedRes           map[string]types.String `tfsdk:"max_queued_res"`
-	MaxRun                 map[string]types.String `tfsdk:"max_run"`
+	MaxRun                 types.String            `tfsdk:"max_run"`
 	MaxRunRes              map[string]types.String `tfsdk:"max_run_res"`
 	MaxRunResSoft          map[string]types.String `tfsdk:"max_run_res_soft"`
-	MaxRunSoft             map[string]types.String `tfsdk:"max_run_soft"`
+	MaxRunSoft             types.String            `tfsdk:"max_run_soft"`
 	MaxRunning             types.Int32             `tfsdk:"max_running"`
 	MaxUserRes             map[string]types.String `tfsdk:"max_user_res"`
 	MaxUserResSoft         map[string]types.String `tfsdk:"max_user_res_soft"`
@@ -86,7 +86,10 @@ func (m queueModel) ToPbsQueue(ctx context.Context) (pbsclient.PbsQueue, diag.Di
 	SetInt32PointerIfNotNull(m.MaxArraySize, &queue.MaxArraySize)
 	SetInt32PointerIfNotNull(m.MaxGroupRun, &queue.MaxGroupRun)
 	SetInt32PointerIfNotNull(m.MaxGroupRunSoft, &queue.MaxGroupRunSoft)
+	SetStringPointerIfNotNull(m.MaxQueued, &queue.MaxQueued)
 	SetInt32PointerIfNotNull(m.MaxQueuable, &queue.MaxQueuable)
+	SetStringPointerIfNotNull(m.MaxRun, &queue.MaxRun)
+	SetStringPointerIfNotNull(m.MaxRunSoft, &queue.MaxRunSoft)
 	SetInt32PointerIfNotNull(m.MaxRunning, &queue.MaxRunning)
 	SetInt32PointerIfNotNull(m.MaxUserRun, &queue.MaxUserRun)
 	SetInt32PointerIfNotNull(m.MaxUserRunSoft, &queue.MaxUserRunSoft)
@@ -107,12 +110,9 @@ func (m queueModel) ToPbsQueue(ctx context.Context) (pbsclient.PbsQueue, diag.Di
 	queue.DefaultChunk = ConvertTypesStringMap(m.DefaultChunk)
 	queue.MaxGroupRes = ConvertTypesStringMap(m.MaxGroupRes)
 	queue.MaxGroupResSoft = ConvertTypesStringMap(m.MaxGroupResSoft)
-	queue.MaxQueued = ConvertTypesStringMap(m.MaxQueued)
 	queue.MaxQueuedRes = ConvertTypesStringMap(m.MaxQueuedRes)
-	queue.MaxRun = ConvertTypesStringMap(m.MaxRun)
 	queue.MaxRunRes = ConvertTypesStringMap(m.MaxRunRes)
 	queue.MaxRunResSoft = ConvertTypesStringMap(m.MaxRunResSoft)
-	queue.MaxRunSoft = ConvertTypesStringMap(m.MaxRunSoft)
 	queue.MaxUserRes = ConvertTypesStringMap(m.MaxUserRes)
 	queue.MaxUserResSoft = ConvertTypesStringMap(m.MaxUserResSoft)
 	queue.ResourcesAssigned = ConvertTypesStringMap(m.ResourcesAssigned)
@@ -157,10 +157,13 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	model.MaxArraySize = types.Int32PointerValue(queue.MaxArraySize)
 	model.MaxGroupRun = types.Int32PointerValue(queue.MaxGroupRun)
 	model.MaxGroupRunSoft = types.Int32PointerValue(queue.MaxGroupRunSoft)
+	model.MaxQueued = types.StringPointerValue(queue.MaxQueued)
 	model.MaxQueuable = types.Int32PointerValue(queue.MaxQueuable)
 	model.MaxRunning = types.Int32PointerValue(queue.MaxRunning)
 	model.MaxUserRun = types.Int32PointerValue(queue.MaxUserRun)
 	model.MaxUserRunSoft = types.Int32PointerValue(queue.MaxUserRunSoft)
+	model.MaxRun = types.StringPointerValue(queue.MaxRun)
+	model.MaxRunSoft = types.StringPointerValue(queue.MaxRunSoft)
 	model.NodeGroupKey = types.StringPointerValue(queue.NodeGroupKey)
 	model.Partition = types.StringPointerValue(queue.Partition)
 	model.Priority = types.Int32PointerValue(queue.Priority)
@@ -181,14 +184,8 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	if queue.MaxGroupResSoft != nil {
 		model.MaxGroupResSoft = convertStringMapToTypesStringMap(queue.MaxGroupResSoft)
 	}
-	if queue.MaxQueued != nil {
-		model.MaxQueued = convertStringMapToTypesStringMap(queue.MaxQueued)
-	}
 	if queue.MaxQueuedRes != nil {
 		model.MaxQueuedRes = convertStringMapToTypesStringMap(queue.MaxQueuedRes)
-	}
-	if queue.MaxRun != nil {
-		model.MaxRun = convertStringMapToTypesStringMap(queue.MaxRun)
 	}
 	if queue.MaxRunRes != nil {
 		model.MaxRunRes = convertStringMapToTypesStringMap(queue.MaxRunRes)
@@ -196,9 +193,7 @@ func createQueueModel(queue pbsclient.PbsQueue) queueModel {
 	if queue.MaxRunResSoft != nil {
 		model.MaxRunResSoft = convertStringMapToTypesStringMap(queue.MaxRunResSoft)
 	}
-	if queue.MaxRunSoft != nil {
-		model.MaxRunSoft = convertStringMapToTypesStringMap(queue.MaxRunSoft)
-	}
+
 	if queue.MaxUserRes != nil {
 		model.MaxUserRes = convertStringMapToTypesStringMap(queue.MaxUserRes)
 	}
