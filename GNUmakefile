@@ -10,7 +10,7 @@ lint:
 	~/go/bin/golangci-lint run
 
 generate:
-	cd tools; go generate ./...
+	./generate-docs.sh
 
 fmt:
 	gofmt -s -w -e .
