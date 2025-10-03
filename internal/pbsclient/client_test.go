@@ -359,4 +359,3 @@ func TestParseQmgrOutputWithTabContinuationLines(t *testing.T) {
 		t.Errorf("got %q, wanted %q", parsedOutput[0].attributes["log_events"], "511")
 	}
 }
-
