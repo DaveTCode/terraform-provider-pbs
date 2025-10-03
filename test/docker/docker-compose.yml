@@ -1,12 +1,11 @@
 services:
   pbs:
-    build:
-      context: .
-      dockerfile: ./TestPbs.Dockerfile
+    image: ghcr.io/davetcode/pbs-docker:latest
     container_name: pbs
     hostname: pbs
     environment:
       - PBS_START_MOM=1
+      - PBS_ROOT_PASSWORD=pbs
     ports:
       - "2222:22"
     networks:
@@ -16,14 +15,9 @@ services:
 
   # Additional compute nodes for testing node creation
   compute1:
-    build:
-      context: .
-      dockerfile: ./TestPbs.Dockerfile
+    image: docker.io/ubuntu:20.04
     container_name: compute1
     hostname: compute1
-    environment:
-      - PBS_START_MOM=1
-      - PBS_SERVER=pbs
     networks:
     - default
     tty: true
@@ -32,14 +26,9 @@ services:
       - pbs
 
   compute2:
-    build:
-      context: .
-      dockerfile: ./TestPbs.Dockerfile
+    image: docker.io/ubuntu:20.04
     container_name: compute2
     hostname: compute2
-    environment:
-      - PBS_START_MOM=1
-      - PBS_SERVER=pbs
     networks:
     - default
     tty: true
@@ -48,14 +37,9 @@ services:
       - pbs
 
   compute3:
-    build:
-      context: .
-      dockerfile: ./TestPbs.Dockerfile
+    image: docker.io/ubuntu:20.04
     container_name: compute3
     hostname: compute3
-    environment:
-      - PBS_START_MOM=1
-      - PBS_SERVER=pbs
     networks:
     - default
     tty: true
@@ -64,14 +48,9 @@ services:
       - pbs
 
   node1:
-    build:
-      context: .
-      dockerfile: ./TestPbs.Dockerfile
+    image: docker.io/ubuntu:20.04
     container_name: node1
     hostname: node1
-    environment:
-      - PBS_START_MOM=1
-      - PBS_SERVER=pbs
     networks:
     - default
     tty: true
@@ -80,14 +59,9 @@ services:
       - pbs
 
   node2:
-    build:
-      context: .
-      dockerfile: ./TestPbs.Dockerfile
+    image: docker.io/ubuntu:20.04
     container_name: node2
     hostname: node2
-    environment:
-      - PBS_START_MOM=1
-      - PBS_SERVER=pbs
     networks:
     - default
     tty: true
