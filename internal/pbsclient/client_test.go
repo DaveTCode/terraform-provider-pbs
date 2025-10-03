@@ -273,3 +273,89 @@ func TestGenerateUpdateAttributeCommand(t *testing.T) {
 		}
 	}
 }
+
+func TestParseQmgrOutputWithAppendOperator(t *testing.T) {
+	sourceText := `Server scheduler02
+    scheduling = True
+    acl_roots = root
+    managers = alice.smith@*
+    managers += bob.jones@*
+    managers += charlie.brown@*
+    managers += diana.prince@*
+    managers += eve.anderson@*
+    managers += frank.castle@*
+    managers += grace.hopper@*
+    managers += henry.ford@*`
+	parsedOutput := parseGenericQmgrOutput(sourceText)
+
+	if len(parsedOutput) != 1 {
+		t.Errorf("expected 1 output from parsing result but got %d", len(parsedOutput))
+		return
+	}
+	if parsedOutput[0].objType != "Server" {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].objType, "Server")
+	}
+	if parsedOutput[0].name != "scheduler02" {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].name, "scheduler02")
+	}
+	if len(parsedOutput[0].attributes) != 3 {
+		t.Errorf("expected 3 attributes but got %d", len(parsedOutput[0].attributes))
+	}
+	if val, ok := parsedOutput[0].attributes["scheduling"].(string); !ok || val != "True" {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].attributes["scheduling"], "True")
+	}
+	if val, ok := parsedOutput[0].attributes["acl_roots"].(string); !ok || val != "root" {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].attributes["acl_roots"], "root")
+	}
+
+	// The managers attribute should contain all values appended together with commas
+	expectedManagers := "alice.smith@*,bob.jones@*,charlie.brown@*,diana.prince@*,eve.anderson@*,frank.castle@*,grace.hopper@*,henry.ford@*"
+	if val, ok := parsedOutput[0].attributes["managers"].(string); !ok || val != expectedManagers {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].attributes["managers"], expectedManagers)
+	}
+}
+
+func TestParseQmgrOutputWithTabContinuationLines(t *testing.T) {
+	// This tests the actual format that PBS uses when outputting long comma-separated values
+	// PBS uses tab characters for continuation lines, not spaces
+	sourceText := "Server pbs\n" +
+		"    scheduling = True\n" +
+		"    acl_roots = root\n" +
+		"    managers = abcdefgh@*,bcdefgha@*,cdefghab@*,defghabc@*,efghabcd@*,\n" +
+		"\tfghabcde@*,\n" +
+		"\tghabcdef@*,\n" +
+		"\thabcdefg@*\n" +
+		"    log_events = 511"
+
+	parsedOutput := parseGenericQmgrOutput(sourceText)
+
+	if len(parsedOutput) != 1 {
+		t.Errorf("expected 1 output from parsing result but got %d", len(parsedOutput))
+		return
+	}
+	if parsedOutput[0].objType != "Server" {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].objType, "Server")
+	}
+	if parsedOutput[0].name != "pbs" {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].name, "pbs")
+	}
+	if len(parsedOutput[0].attributes) != 4 {
+		t.Errorf("expected 4 attributes but got %d", len(parsedOutput[0].attributes))
+	}
+	if val, ok := parsedOutput[0].attributes["scheduling"].(string); !ok || val != "True" {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].attributes["scheduling"], "True")
+	}
+	if val, ok := parsedOutput[0].attributes["acl_roots"].(string); !ok || val != "root" {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].attributes["acl_roots"], "root")
+	}
+
+	// The managers attribute should contain all 8 values with proper comma separation
+	expectedManagers := "abcdefgh@*,bcdefgha@*,cdefghab@*,defghabc@*,efghabcd@*,fghabcde@*,ghabcdef@*,habcdefg@*"
+	if val, ok := parsedOutput[0].attributes["managers"].(string); !ok || val != expectedManagers {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].attributes["managers"], expectedManagers)
+	}
+
+	if val, ok := parsedOutput[0].attributes["log_events"].(string); !ok || val != "511" {
+		t.Errorf("got %q, wanted %q", parsedOutput[0].attributes["log_events"], "511")
+	}
+}

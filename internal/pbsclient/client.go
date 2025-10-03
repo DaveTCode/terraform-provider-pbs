@@ -182,8 +182,9 @@ func generateUpdateStringAttributeCommand(obj string, name string, attribute str
 var (
 	nameRegex              = regexp.MustCompile(`^(\w+)\s+([a-zA-Z\-_0-9]+)$`)
 	attributeRegex         = regexp.MustCompile(`^    (\w+)\s+=\s+(.+)$`)
+	appendAttributeRegex   = regexp.MustCompile(`^    (\w+)\s+\+=\s+(.+)$`)
 	dotAttributeRegex      = regexp.MustCompile(`^    (\w+)\.([a-zA-Z\-_0-9]+)\s+=\s+(.+)$`)
-	continueAttributeRegex = regexp.MustCompile(`^        (.+)$`)
+	continueAttributeRegex = regexp.MustCompile(`^(?:        |\t)(.+)$`)
 )
 
 type qmgrResult struct {
@@ -207,6 +208,17 @@ func parseGenericQmgrOutput(output string) []qmgrResult {
 				name:       nameRegex.FindStringSubmatch(line)[2],
 				attributes: make(map[string]any, 0),
 			}
+		} else if appendAttributeRegex.MatchString(line) {
+			// Handle += operator for appending values
+			subMatch := appendAttributeRegex.FindStringSubmatch(line)
+			attribute := subMatch[1]
+			value := subMatch[2]
+			if existingValue, ok := current.attributes[attribute].(string); ok {
+				current.attributes[attribute] = existingValue + "," + value
+			} else {
+				current.attributes[attribute] = value
+			}
+			prevAttribute = attribute
 		} else if attributeRegex.MatchString(line) {
 			subMatch := attributeRegex.FindStringSubmatch(line)
 			attribute := subMatch[1]

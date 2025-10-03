@@ -112,6 +112,7 @@ func TestAccServerResource_importAndUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr("pbs_server.pbs", "max_array_size", "5000"),
 					resource.TestCheckResourceAttr("pbs_server.pbs", "node_fail_requeue", "600"),
 					resource.TestCheckResourceAttr("pbs_server.pbs", "eligible_time_enable", "true"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "managers", "abcdefgh@*,bcdefgha@*,cdefghab@*,defghabc@*,efghabcd@*,fghabcde@*,ghabcdef@*,habcdefg@*"),
 				),
 			},
 			// Update again with different values to test multiple updates
@@ -171,6 +172,7 @@ func testAccServerResourceConfigUpdated() string {
 resource "pbs_server" "pbs" {
   name                     = "pbs"
   comment                  = "Updated test server"
+	managers                 = "abcdefgh@*,bcdefgha@*,cdefghab@*,defghabc@*,efghabcd@*,fghabcde@*,ghabcdef@*,habcdefg@*"
   scheduler_iteration      = 300
   max_array_size           = 5000
   node_fail_requeue        = 600
