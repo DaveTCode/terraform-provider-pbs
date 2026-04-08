@@ -1,11 +1,11 @@
 module terraform-provider-pbs
 
-go 1.24.6
+go 1.25.0
 
 require (
 	github.com/hashicorp/terraform-plugin-framework v1.18.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
-	github.com/hashicorp/terraform-plugin-go v0.30.0
+	github.com/hashicorp/terraform-plugin-go v0.31.0
 	github.com/hashicorp/terraform-plugin-testing v1.13.3
 	golang.org/x/crypto v0.46.0
 )
