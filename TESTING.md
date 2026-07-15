@@ -26,7 +26,7 @@ This guide covers the comprehensive testing strategy for the PBS Terraform Provi
 ### Prerequisites
 
 1. **Docker**: For running PBS in containers
-2. **Go 1.20+**: For running the tests
+2. **Go 1.26.5+**: For running the tests
 3. **Make**: For using the provided Makefile targets
 
 ### Quick Start
