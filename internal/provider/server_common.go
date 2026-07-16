@@ -4,98 +4,100 @@ import (
 	"context"
 	"terraform-provider-pbs/internal/pbsclient"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type serverModel struct {
-	ID                            types.String            `tfsdk:"id"`
-	AclHostEnable                 types.Bool              `tfsdk:"acl_host_enable"`
-	AclHostMomsEnable             types.Bool              `tfsdk:"acl_host_moms_enable"`
-	AclHosts                      types.String            `tfsdk:"acl_hosts"`
-	AclHostsNormalized            types.String            `tfsdk:"acl_hosts_normalized"`
-	AclResvGroupEnable            types.Bool              `tfsdk:"acl_resv_group_enable"`
-	AclResvGroups                 types.String            `tfsdk:"acl_resv_groups"`
-	AclResvGroupsNormalized       types.String            `tfsdk:"acl_resv_groups_normalized"`
-	AclResvHostEnable             types.Bool              `tfsdk:"acl_resv_host_enable"`
-	AclResvHosts                  types.String            `tfsdk:"acl_resv_hosts"`
-	AclResvHostsNormalized        types.String            `tfsdk:"acl_resv_hosts_normalized"`
-	AclResvUserEnable             types.Bool              `tfsdk:"acl_resv_user_enable"`
-	AclResvUsers                  types.String            `tfsdk:"acl_resv_users"`
-	AclResvUsersNormalized        types.String            `tfsdk:"acl_resv_users_normalized"`
-	AclRoots                      types.String            `tfsdk:"acl_roots"`
-	AclRootsNormalized            types.String            `tfsdk:"acl_roots_normalized"`
-	AclUserEnable                 types.Bool              `tfsdk:"acl_user_enable"`
-	AclUsers                      types.String            `tfsdk:"acl_users"`
-	AclUsersNormalized            types.String            `tfsdk:"acl_users_normalized"`
-	BackfillDepth                 types.Int32             `tfsdk:"backfill_depth"`
-	Comment                       types.String            `tfsdk:"comment"`
-	DefaultChunk                  map[string]types.String `tfsdk:"default_chunk"`
-	DefaultQdelArguments          types.String            `tfsdk:"default_qdel_arguments"`
-	DefaultQsubArguments          types.String            `tfsdk:"default_qsub_arguments"`
-	DefaultQueue                  types.String            `tfsdk:"default_queue"`
-	EligibleTimeEnable            types.Bool              `tfsdk:"eligible_time_enable"`
-	ElimOnSubjobs                 types.Bool              `tfsdk:"elim_on_subjobs"`
-	Flatuid                       types.Bool              `tfsdk:"flatuid"`
-	JobHistoryDuration            types.String            `tfsdk:"job_history_duration"`
-	JobHistoryEnable              types.Bool              `tfsdk:"job_history_enable"`
-	JobRequeueTimeout             types.String            `tfsdk:"job_requeue_timeout"`
-	JobSortFormula                types.String            `tfsdk:"job_sort_formula"`
-	JobscriptMaxSize              types.String            `tfsdk:"jobscript_max_size"`
-	LogEvents                     types.Int32             `tfsdk:"log_events"`
-	Mailer                        types.String            `tfsdk:"mailer"`
-	MailFrom                      types.String            `tfsdk:"mail_from"`
-	Managers                      types.String            `tfsdk:"managers"`
-	MaxArraySize                  types.Int32             `tfsdk:"max_array_size"`
-	MaxConcurrentProvision        types.Int32             `tfsdk:"max_concurrent_provision"`
-	MaxGroupRes                   map[string]types.String `tfsdk:"max_group_res"`
-	MaxGroupResSoft               map[string]types.String `tfsdk:"max_group_res_soft"`
-	MaxGroupRun                   types.Int32             `tfsdk:"max_group_run"`
-	MaxGroupRunSoft               types.Int32             `tfsdk:"max_group_run_soft"`
-	MaxJobSequenceId              types.Int64             `tfsdk:"max_job_sequence_id"`
-	MaxQueued                     types.String            `tfsdk:"max_queued"`
-	MaxQueuedRes                  map[string]types.String `tfsdk:"max_queued_res"`
-	MaxRun                        types.String            `tfsdk:"max_run"`
-	MaxRunRes                     map[string]types.String `tfsdk:"max_run_res"`
-	MaxRunResSoft                 map[string]types.String `tfsdk:"max_run_res_soft"`
-	MaxRunSoft                    types.String            `tfsdk:"max_run_soft"`
-	MaxRunning                    types.Int32             `tfsdk:"max_running"`
-	MaxUserRes                    map[string]types.String `tfsdk:"max_user_res"`
-	MaxUserResSoft                map[string]types.String `tfsdk:"max_user_res_soft"`
-	MaxUserRun                    types.Int32             `tfsdk:"max_user_run"`
-	MaxUserRunSoft                types.Int32             `tfsdk:"max_user_run_soft"`
-	Name                          types.String            `tfsdk:"name"`
-	NodeFailRequeue               types.Int32             `tfsdk:"node_fail_requeue"`
-	NodeGroupEnable               types.Bool              `tfsdk:"node_group_enable"`
-	NodeGroupKey                  types.String            `tfsdk:"node_group_key"`
-	Operators                     types.String            `tfsdk:"operators"`
-	PbsLicenseInfo                types.String            `tfsdk:"pbs_license_info"`
-	PbsLicenseLingerTime          types.Int32             `tfsdk:"pbs_license_linger_time"`
-	PbsLicenseMax                 types.Int32             `tfsdk:"pbs_license_max"`
-	PbsLicenseMin                 types.Int32             `tfsdk:"pbs_license_min"`
-	PowerProvisioning             types.Bool              `tfsdk:"power_provisioning"`
-	PythonGcMinInterval           types.Int32             `tfsdk:"python_gc_min_interval"`
-	PythonRestartMaxHooks         types.Int32             `tfsdk:"python_restart_max_hooks"`
-	PythonRestartMaxObjects       types.Int32             `tfsdk:"python_restart_max_objects"`
-	PythonRestartMinInterval      types.String            `tfsdk:"python_restart_min_interval"`
-	QueryOtherJobs                types.Bool              `tfsdk:"query_other_jobs"`
-	QueuedJobsThreshold           types.String            `tfsdk:"queued_jobs_threshold"`
-	QueuedJobsThresholdRes        types.String            `tfsdk:"queued_jobs_threshold_res"`
-	ReserveRetryInit              types.Int32             `tfsdk:"reserve_retry_init"`
-	ReserveRetryTime              types.Int32             `tfsdk:"reserve_retry_time"`
-	ResourcesAvailable            map[string]types.String `tfsdk:"resources_available"`
-	ResourcesDefault              map[string]types.String `tfsdk:"resources_default"`
-	ResourcesMax                  map[string]types.String `tfsdk:"resources_max"`
-	RestrictResToReleaseOnSuspend types.String            `tfsdk:"restrict_res_to_release_on_suspend"`
-	ResvEnable                    types.Bool              `tfsdk:"resv_enable"`
-	ResvPostProcessingTime        types.String            `tfsdk:"resv_post_processing_time"`
-	RppHighwater                  types.Int32             `tfsdk:"rpp_highwater"`
-	RppMaxPktCheck                types.Int32             `tfsdk:"rpp_max_pkt_check"`
-	RppRetry                      types.Int32             `tfsdk:"rpp_retry"`
-	SchedulerIteration            types.Int32             `tfsdk:"scheduler_iteration"`
-	WebapiAuthIssuers             types.String            `tfsdk:"webapi_auth_issuers"`
-	WebapiEnable                  types.Bool              `tfsdk:"webapi_enable"`
-	WebapiOidcClientid            types.String            `tfsdk:"webapi_oidc_clientid"`
-	WebapiOidcProviderUrl         types.String            `tfsdk:"webapi_oidc_provider_url"`
+	ID                            types.String `tfsdk:"id"`
+	AclHostEnable                 types.Bool   `tfsdk:"acl_host_enable"`
+	AclHostMomsEnable             types.Bool   `tfsdk:"acl_host_moms_enable"`
+	AclHosts                      types.String `tfsdk:"acl_hosts"`
+	AclHostsNormalized            types.String `tfsdk:"acl_hosts_normalized"`
+	AclResvGroupEnable            types.Bool   `tfsdk:"acl_resv_group_enable"`
+	AclResvGroups                 types.String `tfsdk:"acl_resv_groups"`
+	AclResvGroupsNormalized       types.String `tfsdk:"acl_resv_groups_normalized"`
+	AclResvHostEnable             types.Bool   `tfsdk:"acl_resv_host_enable"`
+	AclResvHosts                  types.String `tfsdk:"acl_resv_hosts"`
+	AclResvHostsNormalized        types.String `tfsdk:"acl_resv_hosts_normalized"`
+	AclResvUserEnable             types.Bool   `tfsdk:"acl_resv_user_enable"`
+	AclResvUsers                  types.String `tfsdk:"acl_resv_users"`
+	AclResvUsersNormalized        types.String `tfsdk:"acl_resv_users_normalized"`
+	AclRoots                      types.String `tfsdk:"acl_roots"`
+	AclRootsNormalized            types.String `tfsdk:"acl_roots_normalized"`
+	AclUserEnable                 types.Bool   `tfsdk:"acl_user_enable"`
+	AclUsers                      types.String `tfsdk:"acl_users"`
+	AclUsersNormalized            types.String `tfsdk:"acl_users_normalized"`
+	BackfillDepth                 types.Int32  `tfsdk:"backfill_depth"`
+	Comment                       types.String `tfsdk:"comment"`
+	DefaultChunk                  types.Map    `tfsdk:"default_chunk"`
+	DefaultQdelArguments          types.String `tfsdk:"default_qdel_arguments"`
+	DefaultQsubArguments          types.String `tfsdk:"default_qsub_arguments"`
+	DefaultQueue                  types.String `tfsdk:"default_queue"`
+	EligibleTimeEnable            types.Bool   `tfsdk:"eligible_time_enable"`
+	ElimOnSubjobs                 types.Bool   `tfsdk:"elim_on_subjobs"`
+	Flatuid                       types.Bool   `tfsdk:"flatuid"`
+	JobHistoryDuration            types.String `tfsdk:"job_history_duration"`
+	JobHistoryEnable              types.Bool   `tfsdk:"job_history_enable"`
+	JobRequeueTimeout             types.String `tfsdk:"job_requeue_timeout"`
+	JobSortFormula                types.String `tfsdk:"job_sort_formula"`
+	JobscriptMaxSize              types.String `tfsdk:"jobscript_max_size"`
+	LogEvents                     types.Int32  `tfsdk:"log_events"`
+	Mailer                        types.String `tfsdk:"mailer"`
+	MailFrom                      types.String `tfsdk:"mail_from"`
+	Managers                      types.String `tfsdk:"managers"`
+	MaxArraySize                  types.Int32  `tfsdk:"max_array_size"`
+	MaxConcurrentProvision        types.Int32  `tfsdk:"max_concurrent_provision"`
+	MaxGroupRes                   types.Map    `tfsdk:"max_group_res"`
+	MaxGroupResSoft               types.Map    `tfsdk:"max_group_res_soft"`
+	MaxGroupRun                   types.Int32  `tfsdk:"max_group_run"`
+	MaxGroupRunSoft               types.Int32  `tfsdk:"max_group_run_soft"`
+	MaxJobSequenceId              types.Int64  `tfsdk:"max_job_sequence_id"`
+	MaxQueued                     types.String `tfsdk:"max_queued"`
+	MaxQueuedRes                  types.Map    `tfsdk:"max_queued_res"`
+	MaxRun                        types.String `tfsdk:"max_run"`
+	MaxRunRes                     types.Map    `tfsdk:"max_run_res"`
+	MaxRunResSoft                 types.Map    `tfsdk:"max_run_res_soft"`
+	MaxRunSoft                    types.String `tfsdk:"max_run_soft"`
+	MaxRunning                    types.Int32  `tfsdk:"max_running"`
+	MaxUserRes                    types.Map    `tfsdk:"max_user_res"`
+	MaxUserResSoft                types.Map    `tfsdk:"max_user_res_soft"`
+	MaxUserRun                    types.Int32  `tfsdk:"max_user_run"`
+	MaxUserRunSoft                types.Int32  `tfsdk:"max_user_run_soft"`
+	Name                          types.String `tfsdk:"name"`
+	NodeFailRequeue               types.Int32  `tfsdk:"node_fail_requeue"`
+	NodeGroupEnable               types.Bool   `tfsdk:"node_group_enable"`
+	NodeGroupKey                  types.String `tfsdk:"node_group_key"`
+	Operators                     types.String `tfsdk:"operators"`
+	PbsLicenseInfo                types.String `tfsdk:"pbs_license_info"`
+	PbsLicenseLingerTime          types.Int32  `tfsdk:"pbs_license_linger_time"`
+	PbsLicenseMax                 types.Int32  `tfsdk:"pbs_license_max"`
+	PbsLicenseMin                 types.Int32  `tfsdk:"pbs_license_min"`
+	PowerProvisioning             types.Bool   `tfsdk:"power_provisioning"`
+	PythonGcMinInterval           types.Int32  `tfsdk:"python_gc_min_interval"`
+	PythonRestartMaxHooks         types.Int32  `tfsdk:"python_restart_max_hooks"`
+	PythonRestartMaxObjects       types.Int32  `tfsdk:"python_restart_max_objects"`
+	PythonRestartMinInterval      types.String `tfsdk:"python_restart_min_interval"`
+	QueryOtherJobs                types.Bool   `tfsdk:"query_other_jobs"`
+	QueuedJobsThreshold           types.String `tfsdk:"queued_jobs_threshold"`
+	QueuedJobsThresholdRes        types.String `tfsdk:"queued_jobs_threshold_res"`
+	ReserveRetryInit              types.Int32  `tfsdk:"reserve_retry_init"`
+	ReserveRetryTime              types.Int32  `tfsdk:"reserve_retry_time"`
+	ResourcesAvailable            types.Map    `tfsdk:"resources_available"`
+	ResourcesDefault              types.Map    `tfsdk:"resources_default"`
+	ResourcesMax                  types.Map    `tfsdk:"resources_max"`
+	RestrictResToReleaseOnSuspend types.String `tfsdk:"restrict_res_to_release_on_suspend"`
+	ResvEnable                    types.Bool   `tfsdk:"resv_enable"`
+	ResvPostProcessingTime        types.String `tfsdk:"resv_post_processing_time"`
+	RppHighwater                  types.Int32  `tfsdk:"rpp_highwater"`
+	RppMaxPktCheck                types.Int32  `tfsdk:"rpp_max_pkt_check"`
+	RppRetry                      types.Int32  `tfsdk:"rpp_retry"`
+	SchedulerIteration            types.Int32  `tfsdk:"scheduler_iteration"`
+	UnsetAttributes               types.Set    `tfsdk:"unset_attributes"`
+	WebapiAuthIssuers             types.String `tfsdk:"webapi_auth_issuers"`
+	WebapiEnable                  types.Bool   `tfsdk:"webapi_enable"`
+	WebapiOidcClientid            types.String `tfsdk:"webapi_oidc_clientid"`
+	WebapiOidcProviderUrl         types.String `tfsdk:"webapi_oidc_provider_url"`
 }
 
 func (m serverModel) ToPbsServer(ctx context.Context) pbsclient.PbsServer {
@@ -174,28 +176,62 @@ func (m serverModel) ToPbsServer(ctx context.Context) pbsclient.PbsServer {
 	SetStringPointerIfNotNull(m.WebapiOidcClientid, &server.WebapiOidcClientid)
 	SetStringPointerIfNotNull(m.WebapiOidcProviderUrl, &server.WebapiOidcProviderUrl)
 
-	// Convert map fields using utility functions
-	server.DefaultChunk = ConvertTypesStringMap(m.DefaultChunk)
-	server.ResourcesAvailable = ConvertTypesStringMap(m.ResourcesAvailable)
-	server.ResourcesDefault = ConvertTypesStringMap(m.ResourcesDefault)
-	server.ResourcesMax = ConvertTypesStringMap(m.ResourcesMax)
-
-	// Convert limit attribute maps from Terraform types to Go maps (only if not empty)
-	ConvertTypesStringMapIfNotEmpty(m.MaxGroupRes, &server.MaxGroupRes)
-	ConvertTypesStringMapIfNotEmpty(m.MaxGroupResSoft, &server.MaxGroupResSoft)
-	ConvertTypesStringMapIfNotEmpty(m.MaxQueuedRes, &server.MaxQueuedRes)
-	ConvertTypesStringMapIfNotEmpty(m.MaxRunRes, &server.MaxRunRes)
-	ConvertTypesStringMapIfNotEmpty(m.MaxRunResSoft, &server.MaxRunResSoft)
-	ConvertTypesStringMapIfNotEmpty(m.MaxUserRes, &server.MaxUserRes)
-	ConvertTypesStringMapIfNotEmpty(m.MaxUserResSoft, &server.MaxUserResSoft)
+	// Convert map fields (null/unknown maps become nil, so they are unset).
+	server.DefaultChunk = serverTypesMapToStringMap(m.DefaultChunk)
+	server.ResourcesAvailable = serverTypesMapToStringMap(m.ResourcesAvailable)
+	server.ResourcesDefault = serverTypesMapToStringMap(m.ResourcesDefault)
+	server.ResourcesMax = serverTypesMapToStringMap(m.ResourcesMax)
+	server.MaxGroupRes = serverTypesMapToStringMap(m.MaxGroupRes)
+	server.MaxGroupResSoft = serverTypesMapToStringMap(m.MaxGroupResSoft)
+	server.MaxQueuedRes = serverTypesMapToStringMap(m.MaxQueuedRes)
+	server.MaxRunRes = serverTypesMapToStringMap(m.MaxRunRes)
+	server.MaxRunResSoft = serverTypesMapToStringMap(m.MaxRunResSoft)
+	server.MaxUserRes = serverTypesMapToStringMap(m.MaxUserRes)
+	server.MaxUserResSoft = serverTypesMapToStringMap(m.MaxUserResSoft)
 
 	return server
+}
+
+// serverTypesMapToStringMap converts a types.Map of strings to a Go map, returning
+// nil for a null, unknown or empty map (which the client treats as "unset").
+func serverTypesMapToStringMap(m types.Map) map[string]string {
+	if m.IsNull() || m.IsUnknown() {
+		return nil
+	}
+	elements := m.Elements()
+	if len(elements) == 0 {
+		return nil
+	}
+	result := make(map[string]string, len(elements))
+	for k, v := range elements {
+		if s, ok := v.(types.String); ok && !s.IsNull() && !s.IsUnknown() {
+			result[k] = s.ValueString()
+		}
+	}
+	return result
+}
+
+// serverStringMapToTypesMap converts a Go string map to a types.Map, returning a
+// typed null map when the source is nil so the shared model matches the schema.
+func serverStringMapToTypesMap(m map[string]string) types.Map {
+	if m == nil {
+		return types.MapNull(types.StringType)
+	}
+	elements := make(map[string]attr.Value, len(m))
+	for k, v := range m {
+		elements[k] = types.StringValue(v)
+	}
+	return types.MapValueMust(types.StringType, elements)
 }
 
 func createServerModel(server pbsclient.PbsServer) serverModel {
 	model := serverModel{
 		ID:   types.StringValue(server.Name), // Use name as ID
 		Name: types.StringValue(server.Name),
+		// unset_attributes is provider-only metadata and is never read from PBS;
+		// default it to a typed null set so the shared model matches both the
+		// resource and data source schemas.
+		UnsetAttributes: types.SetNull(types.StringType),
 	}
 
 	model.AclHostEnable = types.BoolPointerValue(server.AclHostEnable)
@@ -235,56 +271,20 @@ func createServerModel(server pbsclient.PbsServer) serverModel {
 	model.Managers = types.StringPointerValue(server.Managers)
 	model.MaxArraySize = types.Int32PointerValue(server.MaxArraySize)
 	model.MaxConcurrentProvision = types.Int32PointerValue(server.MaxConcurrentProvision)
-	// Convert map attributes for limit settings
-	if server.MaxGroupRes != nil {
-		elements := make(map[string]types.String)
-		for k, v := range server.MaxGroupRes {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxGroupRes = elements
-	}
-	if server.MaxGroupResSoft != nil {
-		elements := make(map[string]types.String)
-		for k, v := range server.MaxGroupResSoft {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxGroupResSoft = elements
-	}
+	model.MaxGroupRes = serverStringMapToTypesMap(server.MaxGroupRes)
+	model.MaxGroupResSoft = serverStringMapToTypesMap(server.MaxGroupResSoft)
 	model.MaxGroupRun = types.Int32PointerValue(server.MaxGroupRun)
 	model.MaxGroupRunSoft = types.Int32PointerValue(server.MaxGroupRunSoft)
 	model.MaxJobSequenceId = types.Int64PointerValue(server.MaxJobSequenceId)
 	model.MaxQueued = types.StringPointerValue(server.MaxQueued)
-	if server.MaxQueuedRes != nil {
-		elements := make(map[string]types.String)
-		for k, v := range server.MaxQueuedRes {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxQueuedRes = elements
-	}
+	model.MaxQueuedRes = serverStringMapToTypesMap(server.MaxQueuedRes)
 	model.MaxRun = types.StringPointerValue(server.MaxRun)
 	model.MaxRunSoft = types.StringPointerValue(server.MaxRunSoft)
-	if server.MaxRunResSoft != nil {
-		elements := make(map[string]types.String)
-		for k, v := range server.MaxRunResSoft {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxRunResSoft = elements
-	}
+	model.MaxRunRes = serverStringMapToTypesMap(server.MaxRunRes)
+	model.MaxRunResSoft = serverStringMapToTypesMap(server.MaxRunResSoft)
 	model.MaxRunning = types.Int32PointerValue(server.MaxRunning)
-	if server.MaxUserRes != nil {
-		elements := make(map[string]types.String)
-		for k, v := range server.MaxUserRes {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxUserRes = elements
-	}
-	if server.MaxUserResSoft != nil {
-		elements := make(map[string]types.String)
-		for k, v := range server.MaxUserResSoft {
-			elements[k] = types.StringValue(v)
-		}
-		model.MaxUserResSoft = elements
-	}
+	model.MaxUserRes = serverStringMapToTypesMap(server.MaxUserRes)
+	model.MaxUserResSoft = serverStringMapToTypesMap(server.MaxUserResSoft)
 	model.MaxUserRun = types.Int32PointerValue(server.MaxUserRun)
 	model.MaxUserRunSoft = types.Int32PointerValue(server.MaxUserRunSoft)
 	model.NodeFailRequeue = types.Int32PointerValue(server.NodeFailRequeue)
@@ -317,18 +317,10 @@ func createServerModel(server pbsclient.PbsServer) serverModel {
 	model.WebapiOidcClientid = types.StringPointerValue(server.WebapiOidcClientid)
 	model.WebapiOidcProviderUrl = types.StringPointerValue(server.WebapiOidcProviderUrl)
 
-	if server.DefaultChunk != nil {
-		model.DefaultChunk = convertStringMapToTypesStringMap(server.DefaultChunk)
-	}
-	if server.ResourcesAvailable != nil {
-		model.ResourcesAvailable = convertStringMapToTypesStringMap(server.ResourcesAvailable)
-	}
-	if server.ResourcesDefault != nil {
-		model.ResourcesDefault = convertStringMapToTypesStringMap(server.ResourcesDefault)
-	}
-	if server.ResourcesMax != nil {
-		model.ResourcesMax = convertStringMapToTypesStringMap(server.ResourcesMax)
-	}
+	model.DefaultChunk = serverStringMapToTypesMap(server.DefaultChunk)
+	model.ResourcesAvailable = serverStringMapToTypesMap(server.ResourcesAvailable)
+	model.ResourcesDefault = serverStringMapToTypesMap(server.ResourcesDefault)
+	model.ResourcesMax = serverStringMapToTypesMap(server.ResourcesMax)
 
 	return model
 }
