@@ -84,7 +84,20 @@ function New-TestData {
         docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test enabled=true"
         docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test resources_default.nodes=1"
         docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue test resources_default.walltime=3600"
-        
+
+        # Create hyphen-test queue for hyphen import testing
+        Write-Host "Creating hyphen-test queue for hyphen import testing..." -ForegroundColor Yellow
+        try {
+            docker compose exec -T pbs /opt/pbs/bin/qmgr -c "create queue hyphen-test queue_type=execution" 2>$null
+        }
+        catch {
+            Write-Host "Queue 'hyphen-test' may already exist" -ForegroundColor Gray
+        }
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue hyphen-test started=true"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue hyphen-test enabled=true"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue hyphen-test priority=100"
+        docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set queue hyphen-test comment='Queue with hyphen for import testing'"
+
         # Set up workq as default queue
         Write-Host "Setting default queue..." -ForegroundColor Yellow
         docker compose exec -T pbs /opt/pbs/bin/qmgr -c "set server default_queue=workq"
@@ -174,6 +187,15 @@ function Test-PbsInstallation {
         }
         catch {
             Write-Host "Error: Test queue 'test' not found" -ForegroundColor Red
+            return $false
+        }
+        
+        # Check if hyphen-test queue exists
+        try {
+            docker compose exec -T pbs /opt/pbs/bin/qmgr -c "list queue hyphen-test" 2>$null | Out-Null
+        }
+        catch {
+            Write-Host "Error: Test queue 'hyphen-test' not found" -ForegroundColor Red
             return $false
         }
         

@@ -11,6 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -42,14 +48,20 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"acl_host_enable": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclHostEnable,
 			},
 			"acl_host_moms_enable": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclHostsMomsEnable,
 			},
 			"acl_hosts": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclHosts,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -61,10 +73,14 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"acl_resv_group_enable": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclResvGroupEnable,
 			},
 			"acl_resv_groups": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclResvGroups,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -76,10 +92,14 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"acl_resv_host_enable": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclResvHostEnable,
 			},
 			"acl_resv_hosts": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclResvHosts,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -91,10 +111,14 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"acl_resv_user_enable": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclResvUserEnable,
 			},
 			"acl_resv_users": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclResvUsers,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -106,6 +130,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"acl_roots": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclRoots,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -117,10 +143,14 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"acl_user_enable": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclUserEnable,
 			},
 			"acl_users": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerAclUsers,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -132,6 +162,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"backfill_depth": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerBackfillDepth,
 				Validators: []validator.Int32{
 					int32validator.AtLeast(0),
@@ -139,6 +171,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"comment": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerComment,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -146,11 +180,15 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"default_chunk": schema.MapAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerDefaultChunk,
 			},
 			"default_qdel_arguments": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerDefaultQdelArguments,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -158,6 +196,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"default_qsub_arguments": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerDefaultQsubArguments,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -165,6 +205,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"default_queue": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerDefaultQueue,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -172,18 +214,26 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"eligible_time_enable": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerEligibleTimeEnable,
 			},
 			"elim_on_subjobs": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerElimOnSubjobs,
 			},
 			"flatuid": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerFlatuid,
 			},
 			"job_history_duration": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerJobHistoryDuration,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -191,10 +241,14 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"job_history_enable": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerJobHistoryEnable,
 			},
 			"job_requeue_timeout": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerJobRequeueTimeout,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -202,6 +256,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"job_sort_formula": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerJobSortFormula,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -209,6 +265,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"jobscript_max_size": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerJobscriptMaxSize,
 				Validators: []validator.String{
 					validators.PbsSize(),
@@ -216,10 +274,14 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"log_events": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerLogEvents,
 			},
 			"mailer": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMailer,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -227,6 +289,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"mail_from": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMailFrom,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -234,6 +298,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"managers": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerManagers,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -241,10 +307,14 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"max_array_size": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMaxArraySize,
 			},
 			"max_concurrent_provision": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMaxConcurrentProvision,
 				Validators: []validator.Int32{
 					int32validator.AtLeast(1),
@@ -252,24 +322,34 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"max_group_res": schema.MapAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxGroupRes,
 			},
 			"max_group_res_soft": schema.MapAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxGroupResSoft,
 			},
 			"max_group_run": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMaxGroupRun,
 			},
 			"max_group_run_soft": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMaxGroupRunSoft,
 			},
 			"max_job_sequence_id": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMaxJobSequenceId,
 				Validators: []validator.Int64{
 					int64validator.Between(9999999, 999999999999),
@@ -277,6 +357,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"max_queued": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMaxQueued,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -284,11 +366,15 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"max_queued_res": schema.MapAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxQueuedRes,
 			},
 			"max_run": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMaxRun,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -296,16 +382,22 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"max_run_res": schema.MapAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxRunRes,
 			},
 			"max_run_res_soft": schema.MapAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxRunResSoft,
 			},
 			"max_run_soft": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMaxRunSoft,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -313,24 +405,34 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"max_running": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMaxRunning,
 			},
 			"max_user_res": schema.MapAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxUserRes,
 			},
 			"max_user_res_soft": schema.MapAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
 				ElementType:         types.StringType,
 				MarkdownDescription: DescServerMaxUserResSoft,
 			},
 			"max_user_run": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMaxUserRun,
 			},
 			"max_user_run_soft": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerMaxUserRunSoft,
 			},
 			"name": schema.StringAttribute{
@@ -342,14 +444,20 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"node_fail_requeue": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerNodeFailRequeue,
 			},
 			"node_group_enable": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerNodeGroupEnable,
 			},
 			"node_group_key": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerNodeGroupKey,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -357,6 +465,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"operators": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerOperators,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -364,6 +474,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"pbs_license_info": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerPbsLicenseInfo,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -371,34 +483,50 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"pbs_license_linger_time": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerPbsLicenseLingerTime,
 			},
 			"pbs_license_max": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerPbsLicenseMax,
 			},
 			"pbs_license_min": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerPbsLicenseMin,
 			},
 			"power_provisioning": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerPowerProvisioning,
 			},
 			"python_gc_min_interval": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerPythonGcCollectMinInterval,
 			},
 			"python_restart_max_hooks": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerPythonRestartMaxHooks,
 			},
 			"python_restart_max_objects": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerPythonRestartMaxObjects,
 			},
 			"python_restart_min_interval": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerPythonRestartMinInterval,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -406,10 +534,14 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"query_other_jobs": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerQueryOtherJobs,
 			},
 			"queued_jobs_threshold": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerQueuedJobsThreshold,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -417,6 +549,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"queued_jobs_threshold_res": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerQueuedJobsThresholdRes,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -424,6 +558,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"reserve_retry_init": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerReserveRetryInit,
 				DeprecationMessage:  "Deprecated",
 				Validators: []validator.Int32{
@@ -432,6 +568,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"reserve_retry_time": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerReserveRetryTime,
 				Validators: []validator.Int32{
 					int32validator.AtLeast(1),
@@ -439,21 +577,29 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"resources_available": schema.MapAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerResourcesAvailable,
 				ElementType:         types.StringType,
 			},
 			"resources_default": schema.MapAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerResourcesDefault,
 				ElementType:         types.StringType,
 			},
 			"resources_max": schema.MapAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerResourcesMax,
 				ElementType:         types.StringType,
 			},
 			"restrict_res_to_release_on_suspend": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerRestrictResToReleaseOnSuspend,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -461,10 +607,14 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"resv_enable": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerResvEnable,
 			},
 			"resv_post_processing_time": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerResvPostProcessingTime,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -472,22 +622,32 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"rpp_highwater": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerRppHighwater,
 			},
 			"rpp_max_pkt_check": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerRppMaxPktCheck,
 			},
 			"rpp_retry": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerRppRetry,
 			},
 			"scheduler_iteration": schema.Int32Attribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerSchedulerIteration,
 			},
 			"webapi_auth_issuers": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerWebapiAuthIssuers,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -495,10 +655,14 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"webapi_enable": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerWebapiEnable,
 			},
 			"webapi_oidc_clientid": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerWebapiOidcClientid,
 				Validators: []validator.String{
 					validators.PbsString(),
@@ -506,6 +670,8 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"webapi_oidc_provider_url": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerWebapiOidcProviderUrl,
 				Validators: []validator.String{
 					validators.PbsString(),

@@ -131,7 +131,114 @@ func TestAccServerResource_importAndUpdate(t *testing.T) {
 	})
 }
 
+// TestAccServerResource_partialImportCleanPlan verifies that importing the server
+// with a minimal configuration and then planning produces a clean, non-destructive
+// plan. Before the fix for issue #101, attributes omitted from configuration were
+// planned as null and turned into destructive qmgr `unset` commands.
+func TestAccServerResource_partialImportCleanPlan(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			// Import the existing server using a minimal (name-only) configuration.
+			{
+				Config:             testAccServerResourceConfigMinimal(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			// A minimal configuration that omits every optional attribute must
+			// produce an empty plan: omitted attributes retain their imported
+			// values instead of being implicitly unset. PlanOnly fails the test
+			// if the plan is non-empty.
+			{
+				Config:   testAccServerResourceConfigMinimal(),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+// TestAccServerResource_partialConfigPreservesAttributes verifies that applying a
+// partial configuration (as shown in the documented example) does not unset
+// attributes that are present on the server but omitted from configuration.
+func TestAccServerResource_partialConfigPreservesAttributes(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			// Import the existing server.
+			{
+				Config:             testAccServerResourceConfigMinimal(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			// Establish known values for several attributes we will later omit.
+			{
+				Config: testAccServerResourceConfigPreserveSetup(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "managers", "operator@*,root@*"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "scheduler_iteration", "444"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "node_fail_requeue", "333"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "max_array_size", "7000"),
+				),
+			},
+			// Apply the documented partial configuration (name + acl_users only).
+			// The attributes set above are omitted here and must be preserved,
+			// not unset. The framework also runs an idempotency plan after this
+			// step, which must be empty.
+			{
+				Config: testAccServerResourceConfigDocumentedPartial(),
+				Check: resource.ComposeTestCheckFunc(
+					// The explicitly configured attribute is applied.
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_users", "admin,staff"),
+					// Omitted attributes retain their previously-set values.
+					resource.TestCheckResourceAttr("pbs_server.pbs", "managers", "operator@*,root@*"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "scheduler_iteration", "444"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "node_fail_requeue", "333"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "max_array_size", "7000"),
+				),
+			},
+		},
+	})
+}
+
 // Helper functions.
+func testAccServerResourceConfigMinimal() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name = "pbs"
+}
+`
+}
+
+func testAccServerResourceConfigPreserveSetup() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name                = "pbs"
+  managers            = "operator@*,root@*"
+  scheduler_iteration = 444
+  node_fail_requeue   = 333
+  max_array_size      = 7000
+}
+`
+}
+
+// testAccServerResourceConfigDocumentedPartial mirrors the documented partial
+// configuration example (examples/resources/pbs_server/basic.tf): only name and
+// acl_users are configured, every other server attribute is omitted.
+func testAccServerResourceConfigDocumentedPartial() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name      = "pbs"
+  acl_users = "admin,staff"
+}
+`
+}
+
 func testAccServerResourceConfigBasic() string {
 	return providerConfig() + `
 resource "pbs_server" "pbs" {
