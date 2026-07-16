@@ -414,6 +414,170 @@ resource "pbs_server" "pbs" {
 `
 }
 
+// TestAccServerResource_partialConfigPreservesMapAttributes verifies that a map
+// limit attribute present on the server (max_run_res) is populated into state on
+// read and preserved across an unrelated update, instead of being destructively
+// unset. This covers the createServerModel gap where max_run_res was never written
+// to state.
+func TestAccServerResource_partialConfigPreservesMapAttributes(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			// Import the existing server.
+			{
+				Config:             testAccServerResourceConfigMinimal(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			// Establish a max_run_res entry on the server.
+			{
+				Config: testAccServerResourceConfigMaxRunRes(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "max_run_res.ncpus", "[u:PBS_GENERIC=10]"),
+				),
+			},
+			// An unrelated update that omits max_run_res must preserve the entry,
+			// not unset it. The framework idempotency plan after this step must
+			// also be empty.
+			{
+				Config: testAccServerResourceConfigMaxRunResUnrelated(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "comment", "max_run_res unrelated change"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "max_run_res.ncpus", "[u:PBS_GENERIC=10]"),
+				),
+			},
+			// Explicitly clear the map attribute via unset_attributes.
+			{
+				Config: testAccServerResourceConfigMaxRunResUnset(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("pbs_server.pbs", "max_run_res.ncpus"),
+				),
+			},
+		},
+	})
+}
+
+func testAccServerResourceConfigMaxRunRes() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name = "pbs"
+  max_run_res = {
+    ncpus = "[u:PBS_GENERIC=10]"
+  }
+}
+`
+}
+
+func testAccServerResourceConfigMaxRunResUnrelated() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name    = "pbs"
+  comment = "max_run_res unrelated change"
+}
+`
+}
+
+func testAccServerResourceConfigMaxRunResUnset() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name             = "pbs"
+  unset_attributes = ["max_run_res"]
+}
+`
+}
+
+// TestAccServerResource_unsetAttributes verifies that a scalar attribute can be
+// explicitly reset via unset_attributes, while an attribute that is merely omitted
+// is still preserved.
+func TestAccServerResource_unsetAttributes(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			// Import the existing server.
+			{
+				Config:             testAccServerResourceConfigMinimal(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			// Establish known values for default_queue and scheduler_iteration.
+			{
+				Config: testAccServerResourceConfigUnsetSetup(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "default_queue", "workq"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "scheduler_iteration", "450"),
+				),
+			},
+			// Explicitly unset default_queue. scheduler_iteration is omitted and
+			// must be preserved (not unset).
+			{
+				Config: testAccServerResourceConfigUnset(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("pbs_server.pbs", "default_queue"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "scheduler_iteration", "450"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "unset_attributes.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccServerResourceConfigUnsetSetup() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name                = "pbs"
+  default_queue       = "workq"
+  scheduler_iteration = 450
+}
+`
+}
+
+func testAccServerResourceConfigUnset() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name             = "pbs"
+  unset_attributes = ["default_queue"]
+}
+`
+}
+
+// TestAccServerResource_unsetAttributesRejectsUnknown verifies that an unknown
+// attribute name in unset_attributes is rejected with a helpful error.
+func TestAccServerResource_unsetAttributesRejectsUnknown(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			// Import the existing server.
+			{
+				Config:             testAccServerResourceConfigMinimal(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			{
+				Config:      testAccServerResourceConfigUnsetUnknown(),
+				ExpectError: regexp.MustCompile("not a pbs_server attribute"),
+			},
+		},
+	})
+}
+
+func testAccServerResourceConfigUnsetUnknown() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name             = "pbs"
+  unset_attributes = ["does_not_exist"]
+}
+`
+}
+
 func testAccServerResourceConfigACLReordered() string {
 	return providerConfig() + `
 resource "pbs_server" "pbs" {

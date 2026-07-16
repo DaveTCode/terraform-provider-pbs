@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"terraform-provider-pbs/internal/pbsclient"
 	validators "terraform-provider-pbs/internal/provider/validators"
 
@@ -19,12 +20,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
 var (
 	_ resource.Resource                = &serverResource{}
 	_ resource.ResourceWithConfigure   = &serverResource{}
 	_ resource.ResourceWithImportState = &serverResource{}
+	_ resource.ResourceWithModifyPlan  = &serverResource{}
 )
 
 func NewServerResource() resource.Resource {
@@ -644,6 +647,11 @@ func (r *serverResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				PlanModifiers:       []planmodifier.Int32{int32planmodifier.UseStateForUnknown()},
 				MarkdownDescription: DescServerSchedulerIteration,
 			},
+			"unset_attributes": schema.SetAttribute{
+				Optional:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescServerUnsetAttributes,
+			},
 			"webapi_auth_issuers": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -742,6 +750,10 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 	// Preserve user-provided ACL formats when semantically equivalent.
 	preserveUserServerAclFormatFromState(&currentState, &updatedState)
 
+	// unset_attributes is provider-only metadata (not a PBS attribute); carry it
+	// forward from prior state so a refresh does not clear it.
+	updatedState.UnsetAttributes = currentState.UnsetAttributes
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
@@ -786,6 +798,9 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 	// Preserve user-provided ACL formats from plan where possible
 	preserveUserServerAclFormat(&planData, &updatedData)
 
+	// unset_attributes is provider-only metadata; persist the configured value.
+	updatedData.UnsetAttributes = planData.UnsetAttributes
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedData)...)
 }
@@ -804,4 +819,103 @@ func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest,
 func (r *serverResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Use the standard passthrough for ID, which will set both id and trigger a Read
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// ModifyPlan implements explicit attribute removal through the unset_attributes set.
+// Because every server attribute is Optional+Computed with UseStateForUnknown,
+// omitting an attribute preserves its imported value. To actively remove an
+// attribute, list its name in unset_attributes: a scalar's planned value is marked
+// unknown (PBS computes the value after the reset) and a map's planned value is
+// marked null (its entries are removed), so Update emits the appropriate qmgr unset.
+func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// No modification on destroy (null plan) or on create/import (null prior state).
+	if req.Plan.Raw.IsNull() || req.State.Raw.IsNull() {
+		return
+	}
+
+	var unsetAttributes types.Set
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("unset_attributes"), &unsetAttributes)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if unsetAttributes.IsNull() || unsetAttributes.IsUnknown() {
+		return
+	}
+
+	var names []string
+	resp.Diagnostics.Append(unsetAttributes.ElementsAs(ctx, &names, false)...)
+	if resp.Diagnostics.HasError() || len(names) == 0 {
+		return
+	}
+
+	planObj := map[string]tftypes.Value{}
+	if err := req.Plan.Raw.As(&planObj); err != nil {
+		resp.Diagnostics.AddError("Unable to read plan", err.Error())
+		return
+	}
+	configObj := map[string]tftypes.Value{}
+	if err := req.Config.Raw.As(&configObj); err != nil {
+		resp.Diagnostics.AddError("Unable to read configuration", err.Error())
+		return
+	}
+	stateObj := map[string]tftypes.Value{}
+	if err := req.State.Raw.As(&stateObj); err != nil {
+		resp.Diagnostics.AddError("Unable to read state", err.Error())
+		return
+	}
+
+	modified := false
+	for _, name := range names {
+		planVal, ok := planObj[name]
+		if !ok {
+			resp.Diagnostics.AddAttributeError(path.Root("unset_attributes"),
+				"Unknown server attribute",
+				fmt.Sprintf("%q is not a pbs_server attribute and cannot be unset.", name))
+			continue
+		}
+		if !isUnsettableServerAttribute(name) {
+			resp.Diagnostics.AddAttributeError(path.Root("unset_attributes"),
+				"Attribute cannot be unset",
+				fmt.Sprintf("%q cannot be listed in unset_attributes. Identity and computed (normalized) attributes cannot be unset.", name))
+			continue
+		}
+		if cfgVal, ok := configObj[name]; ok && !cfgVal.IsNull() {
+			resp.Diagnostics.AddAttributeError(path.Root("unset_attributes"),
+				"Attribute both set and unset",
+				fmt.Sprintf("%q is set in configuration and also listed in unset_attributes. Remove it from one of them.", name))
+			continue
+		}
+		// Nothing to unset if the attribute is already absent from state; leaving it
+		// pinned to its (null) state keeps the plan clean.
+		if stateVal, ok := stateObj[name]; !ok || stateVal.IsNull() {
+			continue
+		}
+		if planVal.Type().Is(tftypes.Map{ElementType: tftypes.String}) {
+			// Unsetting a map removes all of its entries; the server then reports
+			// no value, so a null plan value is consistent with the post-apply read.
+			planObj[name] = tftypes.NewValue(planVal.Type(), nil)
+		} else {
+			// A scalar may revert to a PBS-computed default after unset, so its
+			// value is only known after apply.
+			planObj[name] = tftypes.NewValue(planVal.Type(), tftypes.UnknownValue)
+		}
+		modified = true
+	}
+
+	if resp.Diagnostics.HasError() || !modified {
+		return
+	}
+
+	resp.Plan.Raw = tftypes.NewValue(req.Plan.Raw.Type(), planObj)
+}
+
+// isUnsettableServerAttribute reports whether an attribute may be listed in
+// unset_attributes. Identity and computed (normalized) attributes cannot be unset;
+// all other settable attributes (scalars and maps) qualify.
+func isUnsettableServerAttribute(name string) bool {
+	switch name {
+	case "id", "name", "unset_attributes":
+		return false
+	}
+	return !strings.HasSuffix(name, "_normalized")
 }

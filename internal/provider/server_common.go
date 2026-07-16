@@ -92,6 +92,7 @@ type serverModel struct {
 	RppMaxPktCheck                types.Int32             `tfsdk:"rpp_max_pkt_check"`
 	RppRetry                      types.Int32             `tfsdk:"rpp_retry"`
 	SchedulerIteration            types.Int32             `tfsdk:"scheduler_iteration"`
+	UnsetAttributes               types.Set               `tfsdk:"unset_attributes"`
 	WebapiAuthIssuers             types.String            `tfsdk:"webapi_auth_issuers"`
 	WebapiEnable                  types.Bool              `tfsdk:"webapi_enable"`
 	WebapiOidcClientid            types.String            `tfsdk:"webapi_oidc_clientid"`
@@ -196,6 +197,10 @@ func createServerModel(server pbsclient.PbsServer) serverModel {
 	model := serverModel{
 		ID:   types.StringValue(server.Name), // Use name as ID
 		Name: types.StringValue(server.Name),
+		// unset_attributes is provider-only metadata and is never read from PBS;
+		// default it to a typed null set so the shared model matches both the
+		// resource and data source schemas.
+		UnsetAttributes: types.SetNull(types.StringType),
 	}
 
 	model.AclHostEnable = types.BoolPointerValue(server.AclHostEnable)
@@ -263,6 +268,13 @@ func createServerModel(server pbsclient.PbsServer) serverModel {
 	}
 	model.MaxRun = types.StringPointerValue(server.MaxRun)
 	model.MaxRunSoft = types.StringPointerValue(server.MaxRunSoft)
+	if server.MaxRunRes != nil {
+		elements := make(map[string]types.String)
+		for k, v := range server.MaxRunRes {
+			elements[k] = types.StringValue(v)
+		}
+		model.MaxRunRes = elements
+	}
 	if server.MaxRunResSoft != nil {
 		elements := make(map[string]types.String)
 		for k, v := range server.MaxRunResSoft {

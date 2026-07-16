@@ -7,30 +7,32 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// SetStringPointerIfNotNull sets a string pointer field if the types.String is not null.
+// SetStringPointerIfNotNull sets a string pointer field if the types.String is a
+// known, non-null value. Unknown values are skipped so that attributes flagged for
+// unset (whose planned value is unknown) leave the target nil and produce a qmgr unset.
 func SetStringPointerIfNotNull(field types.String, target **string) {
-	if !field.IsNull() {
+	if !field.IsNull() && !field.IsUnknown() {
 		*target = field.ValueStringPointer()
 	}
 }
 
-// SetBoolPointerIfNotNull sets a bool pointer field if the types.Bool is not null.
+// SetBoolPointerIfNotNull sets a bool pointer field if the types.Bool is a known, non-null value.
 func SetBoolPointerIfNotNull(field types.Bool, target **bool) {
-	if !field.IsNull() {
+	if !field.IsNull() && !field.IsUnknown() {
 		*target = field.ValueBoolPointer()
 	}
 }
 
-// SetInt32PointerIfNotNull sets an int32 pointer field if the types.Int32 is not null.
+// SetInt32PointerIfNotNull sets an int32 pointer field if the types.Int32 is a known, non-null value.
 func SetInt32PointerIfNotNull(field types.Int32, target **int32) {
-	if !field.IsNull() {
+	if !field.IsNull() && !field.IsUnknown() {
 		*target = field.ValueInt32Pointer()
 	}
 }
 
-// SetInt64PointerIfNotNull sets an int64 pointer field if the types.Int64 is not null.
+// SetInt64PointerIfNotNull sets an int64 pointer field if the types.Int64 is a known, non-null value.
 func SetInt64PointerIfNotNull(field types.Int64, target **int64) {
-	if !field.IsNull() {
+	if !field.IsNull() && !field.IsUnknown() {
 		val := field.ValueInt64()
 		*target = &val
 	}

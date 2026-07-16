@@ -20,6 +20,11 @@ The PBS server is a singleton that already exists in your environment. This reso
 resource "pbs_server" "this" {
   name      = "pbs"
   acl_users = "admin,staff"
+
+  # Attributes omitted from configuration keep their imported values (they are
+  # not implicitly unset). To actively reset a scalar attribute back to its PBS
+  # default, list its name here instead of removing it from configuration:
+  # unset_attributes = ["default_queue"]
 }
 ```
 
@@ -122,6 +127,7 @@ terraform import pbs_server.this pbs
 - `rpp_max_pkt_check` (Number) Maximum number of TPP messages processed by the main server thread per iteration.
 - `rpp_retry` (Number) Maximum number of TPP messages processed by the main server thread per iteration.
 - `scheduler_iteration` (Number) In a fault-tolerant setup (multiple pbs_comms), when the first pbs_comm fails partway through a message, this is number of times TPP tries to use the first pbs_comm.
+- `unset_attributes` (Set of String) A set of server attribute names to explicitly unset: scalar attributes are reset to their PBS default and map attributes have all of their entries removed. Because omitting an attribute from configuration preserves its imported value, use this to actively remove an attribute that was previously set. Identity and computed (normalized) attributes cannot be unset, and an attribute cannot appear here and also be set in configuration.
 - `webapi_auth_issuers` (String) Comma-separated list of accepted JWT token issuers. Used only when using JWT tokens generated via hpcgentoken.
 - `webapi_enable` (Boolean) Enables or disables web API support in PBS
 - `webapi_oidc_clientid` (String) Used with external OIDC service. The client identifier generated when registering the application with the OIDC provider. For validation of OIDC ID tokens passed in http(s) requests.

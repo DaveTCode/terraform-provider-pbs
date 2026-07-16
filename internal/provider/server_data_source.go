@@ -392,6 +392,13 @@ func (d *serverDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Computed:            true,
 				MarkdownDescription: DescServerSchedulerIteration,
 			},
+			// unset_attributes only applies to the managed resource; it is exposed
+			// here (always null) so the resource and data source can share a model.
+			"unset_attributes": schema.SetAttribute{
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: DescServerUnsetAttributes,
+			},
 			"webapi_auth_issuers": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: DescServerWebapiAuthIssuers,
