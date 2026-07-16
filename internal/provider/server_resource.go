@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
@@ -755,6 +757,13 @@ func (r *serverResource) Read(ctx context.Context, req resource.ReadRequest, res
 	updatedState.UnsetAttributes = currentState.UnsetAttributes
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Record any explicitly-unset attributes as null so attributes PBS reports at a
+	// default after unset do not drift back into a perpetual diff.
+	resp.Diagnostics.Append(nullifyUnsetAttributesInState(ctx, &resp.State, currentState.UnsetAttributes)...)
 }
 
 func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -803,6 +812,13 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedData)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Record any explicitly-unset attributes as null so attributes PBS reports at a
+	// default after unset do not drift back into a perpetual diff.
+	resp.Diagnostics.Append(nullifyUnsetAttributesInState(ctx, &resp.State, planData.UnsetAttributes)...)
 }
 
 func (r *serverResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -827,6 +843,13 @@ func (r *serverResource) ImportState(ctx context.Context, req resource.ImportSta
 // attribute, list its name in unset_attributes: a scalar's planned value is marked
 // unknown (PBS computes the value after the reset) and a map's planned value is
 // marked null (its entries are removed), so Update emits the appropriate qmgr unset.
+//
+// When unset_attributes itself is unknown at plan time (for example, computed from
+// another resource), the specific names are not yet known. To keep the saved plan
+// stable across the apply-time re-plan (and avoid a known->unknown "invalid plan"
+// error), every candidate scalar is marked unknown. Map attributes cannot be
+// represented as unknown in the model, so they are left pinned and cannot be
+// cleared through a computed unset_attributes value.
 func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// No modification on destroy (null plan) or on create/import (null prior state).
 	if req.Plan.Raw.IsNull() || req.State.Raw.IsNull() {
@@ -838,13 +861,7 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if unsetAttributes.IsNull() || unsetAttributes.IsUnknown() {
-		return
-	}
-
-	var names []string
-	resp.Diagnostics.Append(unsetAttributes.ElementsAs(ctx, &names, false)...)
-	if resp.Diagnostics.HasError() || len(names) == 0 {
+	if unsetAttributes.IsNull() {
 		return
 	}
 
@@ -864,25 +881,62 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		return
 	}
 
+	// validate is only possible when the exact names are known. A set that is
+	// unknown, or that contains unknown/null elements (for example computed from
+	// another resource), cannot be enumerated yet.
+	validate := !unsetAttributes.IsUnknown()
+	if validate {
+		for _, el := range unsetAttributes.Elements() {
+			if el.IsNull() || el.IsUnknown() {
+				validate = false
+				break
+			}
+		}
+	}
+
+	var names []string
+	if validate {
+		resp.Diagnostics.Append(unsetAttributes.ElementsAs(ctx, &names, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(names) == 0 {
+			return
+		}
+	} else {
+		// Conservatively target every candidate scalar (maps excluded).
+		for name, planVal := range planObj {
+			if isUnsettableServerAttribute(name) && !isServerMapAttribute(planVal.Type()) {
+				names = append(names, name)
+			}
+		}
+	}
+
 	modified := false
 	for _, name := range names {
 		planVal, ok := planObj[name]
 		if !ok {
-			resp.Diagnostics.AddAttributeError(path.Root("unset_attributes"),
-				"Unknown server attribute",
-				fmt.Sprintf("%q is not a pbs_server attribute and cannot be unset.", name))
+			if validate {
+				resp.Diagnostics.AddAttributeError(path.Root("unset_attributes"),
+					"Unknown server attribute",
+					fmt.Sprintf("%q is not a pbs_server attribute and cannot be unset.", name))
+			}
 			continue
 		}
 		if !isUnsettableServerAttribute(name) {
-			resp.Diagnostics.AddAttributeError(path.Root("unset_attributes"),
-				"Attribute cannot be unset",
-				fmt.Sprintf("%q cannot be listed in unset_attributes. Identity and computed (normalized) attributes cannot be unset.", name))
+			if validate {
+				resp.Diagnostics.AddAttributeError(path.Root("unset_attributes"),
+					"Attribute cannot be unset",
+					fmt.Sprintf("%q cannot be listed in unset_attributes. Identity and computed (normalized) attributes cannot be unset.", name))
+			}
 			continue
 		}
 		if cfgVal, ok := configObj[name]; ok && !cfgVal.IsNull() {
-			resp.Diagnostics.AddAttributeError(path.Root("unset_attributes"),
-				"Attribute both set and unset",
-				fmt.Sprintf("%q is set in configuration and also listed in unset_attributes. Remove it from one of them.", name))
+			if validate {
+				resp.Diagnostics.AddAttributeError(path.Root("unset_attributes"),
+					"Attribute both set and unset",
+					fmt.Sprintf("%q is set in configuration and also listed in unset_attributes. Remove it from one of them.", name))
+			}
 			continue
 		}
 		// Nothing to unset if the attribute is already absent from state; leaving it
@@ -890,7 +944,7 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		if stateVal, ok := stateObj[name]; !ok || stateVal.IsNull() {
 			continue
 		}
-		if planVal.Type().Is(tftypes.Map{ElementType: tftypes.String}) {
+		if isServerMapAttribute(planVal.Type()) {
 			// Unsetting a map removes all of its entries; the server then reports
 			// no value, so a null plan value is consistent with the post-apply read.
 			planObj[name] = tftypes.NewValue(planVal.Type(), nil)
@@ -907,6 +961,54 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 	}
 
 	resp.Plan.Raw = tftypes.NewValue(req.Plan.Raw.Type(), planObj)
+}
+
+// isServerMapAttribute reports whether the given attribute type is a string map.
+func isServerMapAttribute(attrType tftypes.Type) bool {
+	return attrType.Is(tftypes.Map{ElementType: tftypes.String})
+}
+
+// nullifyUnsetAttributesInState sets each attribute listed in unset to null in the
+// given state. PBS reports some scalar attributes (for example scheduler_iteration)
+// at a default value after an unset rather than removing them; recording them as
+// null keeps the state aligned with the "unset" intent so subsequent plans are
+// clean and do not repeatedly re-issue the qmgr unset.
+func nullifyUnsetAttributesInState(ctx context.Context, state *tfsdk.State, unset types.Set) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if unset.IsNull() || unset.IsUnknown() {
+		return diags
+	}
+
+	var names []string
+	diags.Append(unset.ElementsAs(ctx, &names, false)...)
+	if diags.HasError() || len(names) == 0 {
+		return diags
+	}
+
+	stateObj := map[string]tftypes.Value{}
+	if err := state.Raw.As(&stateObj); err != nil {
+		diags.AddError("Unable to read state", err.Error())
+		return diags
+	}
+
+	modified := false
+	for _, name := range names {
+		if !isUnsettableServerAttribute(name) {
+			continue
+		}
+		stateVal, ok := stateObj[name]
+		if !ok || stateVal.IsNull() {
+			continue
+		}
+		stateObj[name] = tftypes.NewValue(stateVal.Type(), nil)
+		modified = true
+	}
+
+	if modified {
+		state.Raw = tftypes.NewValue(state.Raw.Type(), stateObj)
+	}
+
+	return diags
 }
 
 // isUnsettableServerAttribute reports whether an attribute may be listed in

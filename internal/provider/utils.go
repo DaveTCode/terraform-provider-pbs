@@ -100,7 +100,7 @@ func preserveUserAclFormats(planFields, resultFields []AclFieldPair) {
 	}
 
 	for i := range planFields {
-		if !planFields[i].UserField.IsNull() {
+		if !planFields[i].UserField.IsNull() && !planFields[i].UserField.IsUnknown() {
 			resultFields[i].UserField = planFields[i].UserField
 		}
 	}
@@ -113,7 +113,8 @@ func preserveUserAclFormatsFromState(stateFields, updatedFields []AclFieldPair) 
 	}
 
 	for i := range stateFields {
-		if !stateFields[i].UserField.IsNull() && !updatedFields[i].NormalizedField.IsNull() {
+		if !stateFields[i].UserField.IsNull() && !stateFields[i].UserField.IsUnknown() &&
+			!updatedFields[i].NormalizedField.IsNull() && !updatedFields[i].NormalizedField.IsUnknown() {
 			userFormat := stateFields[i].UserField.ValueString()
 			pbsFormat := updatedFields[i].NormalizedField.ValueString()
 

@@ -578,6 +578,165 @@ resource "pbs_server" "pbs" {
 `
 }
 
+// TestAccServerResource_unsetDefaultReturningScalar verifies that unsetting a
+// scalar which PBS reports at a default value afterwards (scheduler_iteration
+// reverts to 600) does not cause a perpetual diff: the attribute is recorded as
+// null and a second plan with the same configuration is empty.
+func TestAccServerResource_unsetDefaultReturningScalar(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccServerResourceConfigMinimal(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			// Set a custom scheduler_iteration.
+			{
+				Config: testAccServerResourceConfigSchedulerIteration(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "scheduler_iteration", "450"),
+				),
+			},
+			// Unset it. The post-apply idempotency plan must be empty.
+			{
+				Config: testAccServerResourceConfigUnsetSchedulerIteration(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("pbs_server.pbs", "scheduler_iteration"),
+				),
+			},
+			// A second plan with the same configuration must remain clean.
+			{
+				Config:   testAccServerResourceConfigUnsetSchedulerIteration(),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func testAccServerResourceConfigSchedulerIteration() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name                = "pbs"
+  scheduler_iteration = 450
+}
+`
+}
+
+func testAccServerResourceConfigUnsetSchedulerIteration() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name             = "pbs"
+  unset_attributes = ["scheduler_iteration"]
+}
+`
+}
+
+// TestAccServerResource_unsetAclAttribute verifies that an ACL string attribute
+// can be unset without leaving an invalid unknown value in state (the ACL
+// format-preservation path must skip unknown planned values).
+func TestAccServerResource_unsetAclAttribute(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccServerResourceConfigMinimal(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			// Set an ACL user list.
+			{
+				Config: testAccServerResourceConfigAclUsersSet(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "acl_users", "admin,staff"),
+				),
+			},
+			// Unset acl_users; it must be cleared without an unknown-state error.
+			{
+				Config: testAccServerResourceConfigUnsetAclUsers(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("pbs_server.pbs", "acl_users"),
+				),
+			},
+		},
+	})
+}
+
+func testAccServerResourceConfigAclUsersSet() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name            = "pbs"
+  acl_user_enable = true
+  acl_users       = "admin,staff"
+}
+`
+}
+
+func testAccServerResourceConfigUnsetAclUsers() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name             = "pbs"
+  acl_user_enable  = true
+  unset_attributes = ["acl_users"]
+}
+`
+}
+
+// TestAccServerResource_unsetAttributesComputed verifies that an unset_attributes
+// value that is unknown at plan time (computed from another resource) applies
+// cleanly instead of producing an inconsistent final plan.
+func TestAccServerResource_unsetAttributesComputed(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccServerResourceConfigMinimal(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			// Establish a value to unset.
+			{
+				Config: testAccServerResourceConfigUnsetSetup(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "default_queue", "workq"),
+				),
+			},
+			// unset_attributes is derived from a resource output that is unknown at
+			// plan time.
+			{
+				Config: testAccServerResourceConfigUnsetComputed(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("pbs_server.pbs", "default_queue"),
+					// scheduler_iteration was omitted and must be preserved.
+					resource.TestCheckResourceAttr("pbs_server.pbs", "scheduler_iteration", "450"),
+				),
+			},
+		},
+	})
+}
+
+func testAccServerResourceConfigUnsetComputed() string {
+	return providerConfig() + `
+resource "terraform_data" "unset" {
+  input = "default_queue"
+}
+
+resource "pbs_server" "pbs" {
+  name             = "pbs"
+  unset_attributes = [terraform_data.unset.output]
+}
+`
+}
+
 func testAccServerResourceConfigACLReordered() string {
 	return providerConfig() + `
 resource "pbs_server" "pbs" {
