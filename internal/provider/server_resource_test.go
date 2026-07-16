@@ -765,6 +765,97 @@ resource "pbs_server" "pbs" {
 `
 }
 
+// TestAccServerResource_unsetRestoringMap verifies that unsetting a map attribute
+// which PBS restores to a default afterwards (resources_default reverts to
+// ncpus = 1) keeps state equal to that real value and produces a clean second
+// plan (rather than an inconsistent null result).
+func TestAccServerResource_unsetRestoringMap(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccServerResourceConfigMinimal(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			// Set a custom resources_default.ncpus.
+			{
+				Config: testAccServerResourceConfigResourcesDefault(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "resources_default.ncpus", "4"),
+				),
+			},
+			// Unset it: PBS restores ncpus = 1, and state records that real value.
+			{
+				Config: testAccServerResourceConfigUnsetResourcesDefault(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "resources_default.ncpus", "1"),
+				),
+			},
+			// A second plan with the same configuration must remain clean.
+			{
+				Config:   testAccServerResourceConfigUnsetResourcesDefault(),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func testAccServerResourceConfigResourcesDefault() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name = "pbs"
+  resources_default = {
+    ncpus = "4"
+  }
+}
+`
+}
+
+func testAccServerResourceConfigUnsetResourcesDefault() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name             = "pbs"
+  unset_attributes = ["resources_default"]
+}
+`
+}
+
+// TestAccServerResource_unsetAttributesRejectsReadOnly verifies that a PBS
+// read-only attribute (power_provisioning) is rejected from unset_attributes,
+// since a qmgr unset of it always fails.
+func TestAccServerResource_unsetAttributesRejectsReadOnly(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccServerResourceConfigMinimal(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			{
+				Config:      testAccServerResourceConfigUnsetReadOnly(),
+				ExpectError: regexp.MustCompile("cannot be unset"),
+			},
+		},
+	})
+}
+
+func testAccServerResourceConfigUnsetReadOnly() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name             = "pbs"
+  unset_attributes = ["power_provisioning"]
+}
+`
+}
+
 func testAccServerResourceConfigACLReordered() string {
 	return providerConfig() + `
 resource "pbs_server" "pbs" {

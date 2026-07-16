@@ -102,7 +102,7 @@ func TestIsUnsettableServerAttribute(t *testing.T) {
 		}
 	}
 
-	notUnsettable := []string{"id", "name", "unset_attributes", "acl_users_normalized", "acl_hosts_normalized"}
+	notUnsettable := []string{"id", "name", "unset_attributes", "power_provisioning", "acl_users_normalized", "acl_hosts_normalized"}
 	for _, name := range notUnsettable {
 		if isUnsettableServerAttribute(name) {
 			t.Errorf("expected %q to not be unsettable", name)

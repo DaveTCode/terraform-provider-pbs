@@ -47,16 +47,6 @@ func ConvertTypesStringMap(source map[string]types.String) map[string]string {
 	return result
 }
 
-// ConvertTypesStringMapIfNotEmpty converts a map[string]types.String to map[string]string only if the source is not empty.
-func ConvertTypesStringMapIfNotEmpty(source map[string]types.String, target *map[string]string) {
-	if len(source) > 0 {
-		*target = make(map[string]string)
-		for k, v := range source {
-			(*target)[k] = v.ValueString()
-		}
-	}
-}
-
 // ConvertTypesStringMapFiltered converts a map[string]types.String to map[string]string, excluding specified keys.
 func ConvertTypesStringMapFiltered(source map[string]types.String, excludeKeys []string) map[string]string {
 	result := make(map[string]string)

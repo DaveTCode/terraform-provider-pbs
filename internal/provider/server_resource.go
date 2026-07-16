@@ -772,7 +772,7 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	server := planData.ToPbsServer(ctx)
-	_, err := r.client.UpdatePbsServer(server)
+	updatedServer, err := r.client.UpdatePbsServer(server)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Update Resource",
@@ -784,19 +784,9 @@ func (r *serverResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	// Read the updated server to get the actual state including computed fields
-	serverName := planData.Name.ValueString()
-	if serverName == "" && !planData.ID.IsNull() {
-		serverName = planData.ID.ValueString()
-	}
-
-	updatedServer, err := r.client.GetPbsServer(serverName)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read updated server, got error: %s", err))
-		return
-	}
-
-	// Create model from the actual server state
+	// UpdatePbsServer already returns the re-read server (including computed
+	// fields), so use it directly rather than issuing a second read that could
+	// fail after the update itself succeeded.
 	updatedData := createServerModel(updatedServer)
 
 	// Preserve user-provided ACL formats from plan where possible
@@ -932,7 +922,7 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		if !isUnsettableServerAttribute(name) {
 			resp.Diagnostics.AddAttributeError(path.Root("unset_attributes"),
 				"Attribute cannot be unset",
-				fmt.Sprintf("%q cannot be listed in unset_attributes. Identity and computed (normalized) attributes cannot be unset.", name))
+				fmt.Sprintf("%q cannot be listed in unset_attributes. Identity, computed (normalized) and PBS read-only attributes cannot be unset.", name))
 			continue
 		}
 		// Only a conflict when the attribute is configured with a known, non-null
@@ -952,15 +942,10 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		if stateVal, ok := stateObj[name]; !ok || stateVal.IsNull() {
 			continue
 		}
-		if isServerMapAttribute(planVal.Type()) {
-			// Unsetting a map removes all of its entries; the server then reports
-			// no value, so a null plan value is consistent with the post-apply read.
-			planObj[name] = tftypes.NewValue(planVal.Type(), nil)
-		} else {
-			// A scalar may revert to a PBS-computed default after unset, so its
-			// value is only known after apply.
-			planObj[name] = tftypes.NewValue(planVal.Type(), tftypes.UnknownValue)
-		}
+		// Mark the attribute unknown: PBS decides the value after the reset (some
+		// attributes vanish, others revert to a default), so it is only known after
+		// apply. Update converts an unknown value to a qmgr unset.
+		planObj[name] = tftypes.NewValue(planVal.Type(), tftypes.UnknownValue)
 		modified = true
 	}
 
@@ -969,11 +954,6 @@ func (r *serverResource) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 	}
 
 	resp.Plan.Raw = tftypes.NewValue(req.Plan.Raw.Type(), planObj)
-}
-
-// isServerMapAttribute reports whether the given attribute type is a string map.
-func isServerMapAttribute(attrType tftypes.Type) bool {
-	return attrType.Is(tftypes.Map{ElementType: tftypes.String})
 }
 
 // serverUnsetAppliedPrivateKey is the private-state key tracking which
@@ -1036,11 +1016,15 @@ func writeAppliedServerUnsets(ctx context.Context, private privateStateSetter, n
 }
 
 // isUnsettableServerAttribute reports whether an attribute may be listed in
-// unset_attributes. Identity and computed (normalized) attributes cannot be unset;
-// all other settable attributes (scalars and maps) qualify.
+// unset_attributes. Identity, computed (normalized) and PBS read-only attributes
+// cannot be unset; all other settable attributes (scalars and maps) qualify.
 func isUnsettableServerAttribute(name string) bool {
 	switch name {
 	case "id", "name", "unset_attributes":
+		return false
+	// power_provisioning is PBS-managed and rejects manager writes, so a qmgr
+	// unset of it always fails.
+	case "power_provisioning":
 		return false
 	}
 	return !strings.HasSuffix(name, "_normalized")

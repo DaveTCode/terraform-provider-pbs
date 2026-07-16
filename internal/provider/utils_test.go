@@ -28,37 +28,6 @@ func TestConvertTypesStringMap(t *testing.T) {
 	}
 }
 
-func TestConvertTypesStringMapIfNotEmpty(t *testing.T) {
-	// Test empty map - should not modify target
-	var target map[string]string
-	source := map[string]types.String{}
-
-	ConvertTypesStringMapIfNotEmpty(source, &target)
-
-	if target != nil {
-		t.Errorf("Expected target to remain nil for empty source")
-	}
-
-	// Test non-empty map
-	source = map[string]types.String{
-		"key1": types.StringValue("value1"),
-	}
-
-	ConvertTypesStringMapIfNotEmpty(source, &target)
-
-	if target == nil {
-		t.Errorf("Expected target to be initialized")
-	}
-
-	if len(target) != 1 {
-		t.Errorf("Expected 1 item, got %d", len(target))
-	}
-
-	if target["key1"] != "value1" {
-		t.Errorf("Expected 'value1', got %s", target["key1"])
-	}
-}
-
 func TestConvertTypesStringMapFiltered(t *testing.T) {
 	source := map[string]types.String{
 		"key1":  types.StringValue("value1"),
