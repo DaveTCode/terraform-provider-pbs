@@ -4,7 +4,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* resource/pbs_server: Added `unset_attributes`, a set of attribute names to explicitly reset. Scalar attributes are reset to their PBS default and map attributes have all entries removed. Because omitting an attribute now preserves its imported value, this provides an explicit way to remove a previously set attribute ([#101](https://github.com/DaveTCode/terraform-provider-pbs/issues/101)).
+* resource/pbs_server: Added `unset_attributes`, a set of attribute names to explicitly reset. Scalar attributes are reset to their PBS default and map attributes have all entries removed. The value must be known at plan time, and each reset is applied once (tracked in private state) so Terraform state keeps reflecting the real PBS value. Because omitting an attribute now preserves its imported value, this provides an explicit way to remove a previously set attribute ([#101](https://github.com/DaveTCode/terraform-provider-pbs/issues/101)).
 
 BUG FIXES:
 

@@ -580,8 +580,9 @@ resource "pbs_server" "pbs" {
 
 // TestAccServerResource_unsetDefaultReturningScalar verifies that unsetting a
 // scalar which PBS reports at a default value afterwards (scheduler_iteration
-// reverts to 600) does not cause a perpetual diff: the attribute is recorded as
-// null and a second plan with the same configuration is empty.
+// reverts to 600) keeps Terraform state equal to that real PBS value, does not
+// produce a perpetual diff (the one-shot unset is tracked in private state), and
+// stays consistent when the unset marker is later removed.
 func TestAccServerResource_unsetDefaultReturningScalar(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -601,17 +602,26 @@ func TestAccServerResource_unsetDefaultReturningScalar(t *testing.T) {
 					resource.TestCheckResourceAttr("pbs_server.pbs", "scheduler_iteration", "450"),
 				),
 			},
-			// Unset it. The post-apply idempotency plan must be empty.
+			// Unset it: PBS reverts it to its default (600), and state records that
+			// real value. The post-apply idempotency plan must be empty.
 			{
 				Config: testAccServerResourceConfigUnsetSchedulerIteration(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr("pbs_server.pbs", "scheduler_iteration"),
+					resource.TestCheckResourceAttr("pbs_server.pbs", "scheduler_iteration", "600"),
 				),
 			},
-			// A second plan with the same configuration must remain clean.
+			// A second plan with the same configuration must remain clean (the
+			// one-shot unset is not re-issued).
 			{
 				Config:   testAccServerResourceConfigUnsetSchedulerIteration(),
 				PlanOnly: true,
+			},
+			// Removing the unset marker keeps the real value and stays consistent.
+			{
+				Config: testAccServerResourceConfigMinimal(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("pbs_server.pbs", "scheduler_iteration", "600"),
+				),
 			},
 		},
 	})
@@ -688,10 +698,10 @@ resource "pbs_server" "pbs" {
 `
 }
 
-// TestAccServerResource_unsetAttributesComputed verifies that an unset_attributes
-// value that is unknown at plan time (computed from another resource) applies
-// cleanly instead of producing an inconsistent final plan.
-func TestAccServerResource_unsetAttributesComputed(t *testing.T) {
+// TestAccServerResource_unsetAttributesRejectsComputed verifies that an
+// unset_attributes value that is not known at plan time (an element computed from
+// another resource) is rejected with a clear error rather than guessed at.
+func TestAccServerResource_unsetAttributesRejectsComputed(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProviderFactories,
@@ -703,22 +713,9 @@ func TestAccServerResource_unsetAttributesComputed(t *testing.T) {
 				ImportStateId:      "pbs",
 				ImportStatePersist: true,
 			},
-			// Establish a value to unset.
 			{
-				Config: testAccServerResourceConfigUnsetSetup(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("pbs_server.pbs", "default_queue", "workq"),
-				),
-			},
-			// unset_attributes is derived from a resource output that is unknown at
-			// plan time.
-			{
-				Config: testAccServerResourceConfigUnsetComputed(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr("pbs_server.pbs", "default_queue"),
-					// scheduler_iteration was omitted and must be preserved.
-					resource.TestCheckResourceAttr("pbs_server.pbs", "scheduler_iteration", "450"),
-				),
+				Config:      testAccServerResourceConfigUnsetComputed(),
+				ExpectError: regexp.MustCompile("must be known at plan time"),
 			},
 		},
 	})
@@ -733,6 +730,37 @@ resource "terraform_data" "unset" {
 resource "pbs_server" "pbs" {
   name             = "pbs"
   unset_attributes = [terraform_data.unset.output]
+}
+`
+}
+
+// TestAccServerResource_unsetAttributesRejectsNull verifies that a null element in
+// unset_attributes is rejected instead of being treated as a wildcard.
+func TestAccServerResource_unsetAttributesRejectsNull(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccServerResourceConfigMinimal(),
+				ResourceName:       "pbs_server.pbs",
+				ImportState:        true,
+				ImportStateId:      "pbs",
+				ImportStatePersist: true,
+			},
+			{
+				Config:      testAccServerResourceConfigUnsetNull(),
+				ExpectError: regexp.MustCompile("null"),
+			},
+		},
+	})
+}
+
+func testAccServerResourceConfigUnsetNull() string {
+	return providerConfig() + `
+resource "pbs_server" "pbs" {
+  name             = "pbs"
+  unset_attributes = [null]
 }
 `
 }
